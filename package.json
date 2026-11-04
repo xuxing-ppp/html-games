@@ -1,0 +1,13 @@
+{
+  "name": "games-hall",
+  "private": true,
+  "scripts": {
+    "dev": "python3 tools/serve.py",
+    "check": "node tools/check.mjs",
+    "test": "node --test tests/site.test.mjs",
+    "test:browser": "python3 tests/hall_browser.py"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

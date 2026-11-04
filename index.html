@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ece8de">
+  <meta name="description" content="选择一款游戏，开始游玩。赛车、策略、生命模拟与江湖冒险。">
+  <title>游戏大厅</title>
+  <link rel="icon" href="hall/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="hall/style.css">
+  <script defer src="hall/catalog.js"></script>
+  <script defer src="hall/order.js"></script>
+  <script defer src="hall/app.js"></script>
+</head>
+<body>
+  <main class="hall">
+    <header class="masthead"><a class="wordmark" href="./" aria-label="游戏大厅首页"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 10h24v17H4zM9 4h14v6M9 18h6m-3-3v6m9-4h1m2 4h1"/></svg><h1>游戏大厅</h1></a><span id="game-count">7 款游戏</span></header>
+    <div class="collection">
+      <section class="featured" aria-label="当前游戏">
+        <figure class="preview"><img id="preview" src="hall/previews/car_racing.webp" alt="街机赛车实际游戏画面" fetchpriority="high" width="1120" height="700"><span id="preview-genre" class="preview-genre">竞速</span></figure>
+        <div class="game-info" aria-live="polite" aria-atomic="true">
+          <div class="game-heading"><h2 id="game-title">街机赛车</h2><span id="game-version" class="version"></span></div>
+          <p id="game-description"></p>
+          <div class="play-row"><div class="game-meta"><span id="game-input"></span><span id="game-note"></span></div><a id="play" class="play" href="games/car_racing/index.html">开始游戏 <span aria-hidden="true">↗</span></a></div>
+        </div>
+      </section>
+      <nav class="library" aria-label="游戏目录">
+        <div class="library-heading"><h2>选择游戏</h2><span id="position"></span></div>
+        <div id="game-list" class="game-list"></div>
+        <div class="pagination" id="pagination"><button id="previous" aria-label="上一页游戏">←</button><span id="page-number" aria-live="polite"></span><button id="next" aria-label="下一页游戏">→</button></div>
+      </nav>
+    </div>
+  </main>
+  <noscript>请启用 JavaScript，或直接打开各游戏目录中的 index.html。</noscript>
+</body>
+</html>

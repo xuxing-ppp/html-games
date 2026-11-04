@@ -1,0 +1,13 @@
+// Main menu owns mode selection; opening it suspends the battlefield without losing it.
+(function(){
+  const $=id=>document.getElementById(id);
+  let home=true,choice='campaign',hasSession=false,sessionMode='campaign',savedSettings=null;
+  const names={campaign:'征途闯关',sandbox:'自由沙盘',experiment:'战役实验'};
+  function select(mode){choice=mode;for(const [key,id]of Object.entries({campaign:'modeCampaign',sandbox:'modeSandbox',experiment:'modeExperiment'}))$(id).setAttribute('aria-pressed',String(key===mode));$('homeCampaign').hidden=mode!=='campaign';$('homeScenario').hidden=mode!=='experiment';$('homeRules').hidden=mode==='campaign';$('homeMap').hidden=mode==='campaign';$('btnEnter').textContent=mode==='campaign'?'进入征途 →':mode==='sandbox'?'创建沙盘 →':'开始实验 →';$('launchHint').hidden=!hasSession;$('launchHint').textContent=hasSession?'新战场将替换当前布阵。':'';}
+  function sync(){W.Presentation?.refresh();const c=W.Campaign.active;const title=c?W.Campaign.levels[W.Campaign.index].name:names[sessionMode];$('sessionTitle').textContent=title;$('sessionTag').textContent=c?'征途 · '+(W.Campaign.index+1)+' / 8':names[sessionMode];$('campaignBrief').hidden=!c;$('storageTools').hidden=c;}
+  function resume(newSession=false){if(!newSession&&savedSettings){for(const [id,value]of Object.entries(savedSettings))$(id).value=value;$('battleMode').onchange?.();$('scenario').onchange?.();W.Maps?.preview();}if(newSession)W.Presentation?.reset();home=false;hasSession=true;$('homeScreen').hidden=true;$('app').hidden=false;W.Renderer.resize();W.UI.updatePhaseUI();sync();$('btnHome').focus?.();}
+  function open(){if(hasSession&&!home)savedSettings={battleMode:$('battleMode').value,scenario:$('scenario').value,levelSelect:$('levelSelect').value,mapSelect:W.Terrain.current};home=true;const input=W.Game.state.input;input.mouseDown=false;input.panLast=null;for(const k in input.keys)input.keys[k]=false;W.UI.hideTooltip();$('app').hidden=true;$('homeScreen').hidden=false;$('btnResume').hidden=!hasSession;for(const id of ['levelSelect','scenario','battleMode'])$(id).disabled=false;select(choice);$('btnEnter').focus?.();}
+  function enter(){if(choice==='campaign'){if(!W.Campaign.load(Number($('levelSelect').value)))return;}else{if(W.Campaign.active)W.Campaign.leave();else W.Game.clearAll(true);W.Lab.clearHistory();W.Terrain.setMap($('mapSelect').value);if(choice==='experiment')W.Lab.preset();}sessionMode=choice;resume(true);}
+  function init(){for(const [mode,id]of Object.entries({campaign:'modeCampaign',sandbox:'modeSandbox',experiment:'modeExperiment'}))$(id).onclick=()=>select(mode);$('btnEnter').onclick=enter;$('btnResume').onclick=()=>resume();$('btnHome').onclick=open;open();}
+  W.Menu={init,open,resume,enter,sync,get isHome(){return home;}};
+})();

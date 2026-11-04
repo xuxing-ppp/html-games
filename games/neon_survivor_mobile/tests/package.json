@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Development-only browser test dependency; the game itself has no npm dependencies.",
+  "devDependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

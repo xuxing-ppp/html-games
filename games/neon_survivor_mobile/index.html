@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070611">
+<meta name="description" content="Survive the endless horde, collect XP, and evolve your weapons.">
+<!-- PWA / 移动 App 化 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Neon Survivor">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/svg+xml" href="./icon.svg?v=1">
+<link rel="apple-touch-icon" href="./icon.svg?v=1">
+<title>Neon Survivor</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="./version.js"></script>
+</head>
+<body>
+  <!-- 安全区域探测元素(读取 padding 即 env(safe-area-inset-*)) -->
+  <div id="safeTest" class="safe-test"></div>
+
+  <!-- 游戏画布 -->
+  <canvas id="game"></canvas>
+
+  <!-- 浮动摇杆触控层(仅触屏,z-index 低于 HUD/菜单,按钮触摸不被拦截) -->
+  <div id="stickZone" class="stick-zone"></div>
+
+  <!-- 竖屏旋转提示(纯 CSS @media 控制,横屏自动消失) -->
+  <div id="rotateHint" class="rotate-hint">
+    <div class="rotate-icon">📱</div>
+    <p class="rotate-title" data-i18n="rotate.title">Landscape recommended</p>
+    <p class="rotate-sub" data-i18n="rotate.sub">Rotate your device for the best experience</p>
+  </div>
+
+  <!-- HUD 叠层(DOM,pointer-events:none,按钮单独放行) -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div id="lvText" class="lv-tag">Lv 1</div>
+        <div class="hp-wrap">
+          <div class="hp-bar"><div id="hpFill" class="hp-fill"></div></div>
+          <div id="hpText" class="hp-text">100 / 100</div>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div id="timerText" class="timer">0:00</div>
+        <div id="stageTag" class="stage-tag"></div>
+      </div>
+      <div class="hud-right">
+        <div id="killText" class="kills">☠ 0</div>
+        <div id="weaponList" class="weapon-list"></div>
+        <button id="btnPause" class="hud-btn" data-act="pause" data-i18n-title="hud.pause" title="Pause (P)">❚❚</button>
+      </div>
+    </div>
+
+    <!-- 多 Boss 血条(堆叠 ≤4,由 HUD 动态生成) -->
+    <div id="bossBars" class="boss-bars hidden"></div>
+
+    <!-- 低血量警示蒙层 -->
+    <div id="lowHpWarn" class="lowhp hidden"><span class="lowhp-text" data-i18n="hud.low">⚠ CRITICAL HEALTH!</span></div>
+
+    <!-- 经验条(底部全宽) -->
+    <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
+
+    <!-- 提示 -->
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <!-- 虚拟摇杆(仅触屏) -->
+  <div id="stick" class="joystick">
+    <div id="knob" class="knob"></div>
+  </div>
+
+  <!-- 升级选择 -->
+  <div id="levelUp" class="levelup hidden">
+    <div id="lvTitle" class="lv-title">LEVEL UP!</div>
+    <div id="lvCards" class="lv-cards"></div>
+    <div class="lv-hint" data-i18n="level.hint">Click a card or press 1 / 2 / 3</div>
+  </div>
+
+  <!-- 标题界面 -->
+  <div id="titleScreen" class="screen">
+    <div class="screen-card">
+      <h1 class="logo" data-i18n-html="title.logo">Neon <span>Survivor</span></h1>
+      <div class="title-actions">
+        <button class="big-btn new-game-btn" data-act="start" data-i18n="title.new">＋ NEW GAME</button>
+        <button id="btnContinueRun" class="big-btn continue-btn hidden" data-act="continueRun" data-i18n="title.continue">▶ CONTINUE GAME</button>
+        <button class="big-btn exit-btn" data-act="exitGame" data-i18n="title.exit">× EXIT GAME</button>
+      </div>
+      <div class="title-status">
+        <div id="savedRunProgress" class="save-progress hidden"></div>
+        <div class="best-row"><span class="best-label" data-i18n="title.best">BEST:</span><span id="titleBest">0:00</span></div>
+      </div>
+      <div class="hint-row">
+        <span data-i18n="title.move">Move: WASD / Arrow Keys / Joystick</span>
+        <span class="kbd-only" data-i18n="title.pause">Pause: P</span>
+        <span class="kbd-only" data-i18n="title.mute">Mute: M</span>
+        <span class="kbd-only" data-i18n="title.auto">Auto: O</span>
+      </div>
+      <div class="control-deck">
+        <div class="settings-row" data-i18n-aria="settings.language" aria-label="Language">
+          <span class="language-label" data-i18n="settings.language">Language</span>
+          <button class="language-btn active" data-act="setLanguage" data-lang="en">English</button>
+          <button class="language-btn" data-act="setLanguage" data-lang="zh-CN">中文</button>
+          <button class="mini-btn" id="titleSound" data-act="toggleSound">🔊 SFX: ON</button>
+          <button class="mini-btn" id="titleFx" data-act="toggleFx">⚡ SAVER: OFF</button>
+        </div>
+        <div class="vol-row">
+          <label class="vol-cell"><span data-i18n="settings.music">🎵 Music</span><input type="range" class="vol-slider vol-music" min="0" max="100" value="100"></label>
+          <label class="vol-cell"><span data-i18n="settings.sfx">🔊 SFX</span><input type="range" class="vol-slider vol-sfx" min="0" max="100" value="100"></label>
+        </div>
+      </div>
+      <div class="author-row">by XuXing &amp; GLM &amp; GPT · <span id="titleVersion" data-game-version="neon_survivor_mobile"></span></div>
+    </div>
+  </div>
+
+  <!-- 浏览器不允许脚本关闭页面时的退出降级页 -->
+  <div id="exitScreen" class="screen hidden">
+    <div class="screen-card exit-card">
+      <div class="exit-glyph">×</div>
+      <h2 data-i18n="exit.title">GAME EXITED</h2>
+      <p class="tagline" data-i18n="exit.message">You can now close this browser tab.</p>
+    </div>
+  </div>
+
+  <!-- 新游戏覆盖单槽存档确认 -->
+  <div id="newGameConfirmScreen" class="screen hidden">
+    <div class="screen-card confirm-card">
+      <div class="confirm-glyph">⚠</div>
+      <h2 data-i18n="save.confirmTitle">OVERWRITE SAVED RUN?</h2>
+      <p class="tagline" data-i18n="save.confirmText">Starting a new game will delete the current saved run.</p>
+      <div class="btn-row">
+        <button class="big-btn danger-btn" data-act="confirmNewGame" data-i18n="save.confirmNew">＋ START NEW GAME</button>
+        <button class="mini-btn" data-act="cancelNewGame" data-i18n="save.cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 选角界面(第二步:选角色 + 难度) -->
+  <div id="charSelectScreen" class="screen hidden">
+    <div class="screen-card wide">
+      <h2 data-i18n="char.title">SELECT CHARACTER &amp; DIFFICULTY</h2>
+      <div class="diff-row">
+        <span class="diff-label" data-i18n="char.difficulty">Difficulty</span>
+        <button class="mini-btn diff-btn" data-act="setDiff" data-diff="chill">Chill</button>
+        <button class="mini-btn diff-btn" data-act="setDiff" data-diff="normal">Normal</button>
+        <button class="mini-btn diff-btn" data-act="setDiff" data-diff="hard">Hard</button>
+        <button class="mini-btn diff-btn" data-act="setDiff" data-diff="nightmare">Nightmare</button>
+      </div>
+      <div id="charCards" class="char-grid"></div>
+      <div id="charDetail" class="char-detail"></div>
+      <div class="lv-hint" data-i18n="char.hint">Tap an icon for details · Character themes only restrict starting weapons</div>
+      <div class="btn-row">
+        <button class="big-btn" data-act="toWeapon" data-i18n="char.next">▶ NEXT: SELECT WEAPON</button>
+        <button class="mini-btn" data-act="toStage" data-i18n="char.back">◀ BACK TO STAGES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 起手武器界面(第三步) -->
+  <div id="weaponSelectScreen" class="screen hidden">
+    <div class="screen-card wide weapon-terminal">
+      <h2 data-i18n="weapon.title">NEON ARMORY TERMINAL</h2>
+      <div class="weapon-select-layout">
+        <div id="startWeaponList" class="start-weapon-list"></div>
+        <div id="startWeaponDetail" class="start-weapon-detail"></div>
+      </div>
+      <div class="btn-row">
+        <button class="big-btn" data-act="beginRun" data-i18n="weapon.start">▶ START GAME</button>
+        <button class="mini-btn" data-act="toCharBack" data-i18n="weapon.back">◀ BACK TO CHARACTERS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 选关界面(第一步:选图) -->
+  <div id="selectScreen" class="screen hidden">
+    <div class="screen-card wide">
+      <h2 data-i18n="stage.title">SELECT STAGE</h2>
+      <div id="selectStages" class="lv-cards"></div>
+      <div class="lv-hint" data-i18n="stage.hint">Choose a stage, then press Continue</div>
+      <div class="btn-row">
+        <button class="big-btn" data-act="toChar" data-i18n="common.continue">▶ CONTINUE</button>
+        <button class="mini-btn" data-act="menu" data-i18n="common.title">⌂ BACK TO TITLE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 无尽模式确认(通关后) -->
+  <div id="endlessPromptScreen" class="screen hidden">
+    <div class="screen-card">
+      <h2 data-i18n="endless.title">🎉 STAGE CLEARED!</h2>
+      <div id="endlessInfo" class="best-row"></div>
+      <div id="endlessStats" class="best-row"></div>
+      <p class="tagline" data-i18n="endless.desc">Enter Endless Mode? Enemies keep growing stronger and Boss waves return periodically.</p>
+      <button class="big-btn" data-act="endlessYes" data-i18n="endless.yes">∞ ENTER ENDLESS MODE</button>
+      <button class="mini-btn" data-act="endlessNo" data-i18n="endless.no">✓ END RUN</button>
+    </div>
+  </div>
+
+  <!-- 暂停界面(左:装备/数值,右:设置/动作) -->
+  <div id="pauseScreen" class="screen hidden">
+    <div class="screen-card pause-card">
+      <h2 data-i18n="pause.title">PAUSED</h2>
+      <div class="pause-body">
+        <div id="pauseArsenal" class="arsenal"></div>
+        <div class="pause-side">
+          <button class="big-btn" data-act="resume" data-i18n="pause.resume">▶ RESUME</button>
+          <button class="mini-btn" data-act="restart" data-i18n="pause.restart">↻ RESTART</button>
+          <button class="mini-btn save-exit-btn" data-act="saveExit" data-i18n="pause.saveExit">▣ SAVE &amp; EXIT</button>
+          <div class="side-divider"></div>
+          <button class="mini-btn btn-sound-toggle" data-act="toggleSound">🔊 SFX: ON</button>
+          <button class="mini-btn btn-fx-toggle" data-act="toggleFx">⚡ SAVER: OFF</button>
+          <button class="mini-btn auto-toggle" data-act="toggleAuto">🤖 AUTO: OFF</button>
+          <button class="mini-btn eshot-toggle" data-act="toggleEshotMark">🔴 BULLET MARKS: OFF</button>
+          <div class="side-divider"></div>
+          <label class="vol-cell"><span data-i18n="settings.music">🎵 Music</span><input type="range" class="vol-slider vol-music" min="0" max="100" value="100"></label>
+          <label class="vol-cell"><span data-i18n="settings.sfx">🔊 SFX</span><input type="range" class="vol-slider vol-sfx" min="0" max="100" value="100"></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 暂停界面重新开始确认 -->
+  <div id="restartConfirmScreen" class="screen hidden">
+    <div class="screen-card confirm-card restart-confirm-card">
+      <div class="confirm-glyph">⚠</div>
+      <h2 data-i18n="restart.confirmTitle">RESTART THIS RUN?</h2>
+      <p class="tagline" data-i18n="restart.confirmText">Current progress will be lost. This cannot be undone.</p>
+      <div class="btn-row">
+        <button class="big-btn danger-btn" data-act="confirmRestart" data-i18n="restart.confirm">↻ RESTART RUN</button>
+        <button class="mini-btn" data-act="cancelRestart" data-i18n="restart.cancel">KEEP PLAYING</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结算界面 -->
+  <div id="gameoverScreen" class="screen hidden">
+    <div class="screen-card">
+      <h2 id="goTitle" data-i18n="gameover.dead">YOU HAVE FALLEN</h2>
+      <div id="goStage" class="best-row"></div>
+      <div id="goNewBest" class="new-best" data-i18n="gameover.newbest">★ NEW RECORD! ★</div>
+      <div class="stats-grid">
+        <div><span class="stat-num" id="goTime">0:00</span><span class="stat-lbl" data-i18n="gameover.time">SURVIVAL TIME</span></div>
+        <div><span class="stat-num" id="goLevel">1</span><span class="stat-lbl" data-i18n="gameover.level">LEVEL</span></div>
+        <div><span class="stat-num" id="goKills">0</span><span class="stat-lbl" data-i18n="gameover.kills">KILLS</span></div>
+        <div><span class="stat-num" id="goEvo">0</span><span class="stat-lbl" data-i18n="gameover.evos">EVOLUTIONS</span></div>
+      </div>
+      <div id="goWeapons" class="arsenal"></div>
+      <div class="best-row"><span class="best-label" data-i18n="gameover.best">PERSONAL BEST:</span><span id="goBest">0:00</span></div>
+      <button class="big-btn" data-act="restart" data-i18n="gameover.again">↻ PLAY AGAIN</button>
+      <button class="mini-btn" data-act="menu" data-i18n="common.title">⌂ BACK TO TITLE</button>
+    </div>
+  </div>
+
+  <!-- 脚本:严格按依赖顺序加载(经典 script,file:// 可用) -->
+  <script src="retire-offline.js"></script>
+  <script>window.SV = window.SV || {};</script>
+  <script src="js/util.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/pool.js"></script>
+  <script src="js/spatial.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/weapons.js"></script>
+  <script src="js/waves.js"></script>
+  <script src="js/upgrades.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/menus.js"></script>
+  <script src="js/auto.js"></script>
+  <script src="js/icon.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+var GAME_VERSION = "2.10.6";

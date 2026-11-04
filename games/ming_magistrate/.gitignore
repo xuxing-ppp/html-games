@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+test-results/
+playwright-report/
+
+# 本地维护原图、参考图和可再生成的发行包；运行 WebP 必须入库。
+/assets/originals/
+/assets/reference/
+/releases/
+/coverage/

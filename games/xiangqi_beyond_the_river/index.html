@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#172322"><title>楚河行 · Xiangqi: Beyond the River</title><link rel="stylesheet" href="game/board.css"><link rel="stylesheet" href="game/style.css"><link rel="stylesheet" href="game/shadowplay.css"><link rel="stylesheet" href="game/teaching.css"><script src="./version.js"></script>
+</head>
+<body>
+<svg class="svg-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="i-lantern" viewBox="0 0 64 64"><path d="M23 12V8h18v4M18 16h28l6 12-5 19H17l-5-19zM18 16l-1 31m29-31 1 31M14 28h36M23 51h18M32 52v9"/></symbol>
+<symbol id="i-lantern-art" viewBox="0 0 64 64"><path class="lamp-handle" d="M24 12V5h16v7"/><path class="lamp-paper" d="m15 17 4-4h26l4 4 5 14-6 17-3 4H19l-4-4-5-17z"/><path class="lamp-frame" d="M16 16h32M16 49h32M20 17l-3 14 3 18m24-32 3 14-3 18M23 55h18M27 56v6m10-6v6M32 55v9"/></symbol>
+<symbol id="i-pause" viewBox="0 0 64 64"><path d="M24 15v34M40 15v34"/></symbol>
+<symbol id="i-check" viewBox="0 0 64 64"><path d="m12 33 14 14 28-30"/></symbol>
+<symbol id="i-pawn" viewBox="0 0 64 64"><path d="M38 5v51M32 11l6-8 6 8M12 28l10-12 10 12-3 17-7 10-7-10zM15 31h14M22 22v26"/></symbol>
+<symbol id="i-rook" viewBox="0 0 64 64"><path d="M10 28h36v17H10zM15 28V14h25v14M18 18h19M20 10h16M46 34l8-16M8 46h42"/><circle cx="18" cy="48" r="8"/><circle cx="40" cy="48" r="8"/></symbol>
+
+<symbol id="i-knight" viewBox="0 0 64 64"><path d="m23 7 10 7 9-2 7 15-12 9-9-6-4 6 17 8 2 8H18l3-18-8-5 7-14zM15 57h33"/><circle class="cut" cx="35" cy="22" r="2"/></symbol>
+<symbol id="i-king" viewBox="0 0 64 64"><path d="M15 25 23 13l9-5 9 5 8 12-5 18H20zM8 24l10 6M56 24l-10 6M21 49h22M17 55h30M26 24h12M32 15v18"/></symbol>
+<symbol id="i-hero" viewBox="0 0 64 64"><path d="M11 24 32 9l21 15zM8 26h48M25 29c0 15 14 15 14 0M22 40 13 57h36l-8-17M48 30l9 27M46 40l8-3"/></symbol>
+<symbol id="i-sword" viewBox="0 0 64 64"><path d="m15 49 33-36 5-3-2 10-32 34M10 40l15 14M8 58l9-10"/></symbol>
+<symbol id="i-shield" viewBox="0 0 64 64"><path d="m32 7 20 8-3 22-17 19-17-19-3-22zM32 16v29M22 28h20"/></symbol>
+<symbol id="i-push" viewBox="0 0 64 64"><path d="M8 32h39M34 17l15 15-15 15M56 13v38"/></symbol>
+<symbol id="i-step" viewBox="0 0 64 64"><path d="m17 9 14 5-6 24 22 8v10H13V42l7-22M38 13l10 5M37 25l17 5"/></symbol>
+<symbol id="i-swap" viewBox="0 0 64 64"><path d="M9 21h44L41 9M55 43H11l12 12M53 21 41 33M11 43l12-12"/></symbol>
+<symbol id="i-hook" viewBox="0 0 64 64"><path d="M37 7v31c0 20-25 20-25 2V29l9 9M29 7h16"/></symbol>
+<symbol id="i-spike" viewBox="0 0 64 64"><path d="M7 51 17 24l10 27 10-37 11 37 8-22 5 22z"/></symbol>
+<symbol id="i-star" viewBox="0 0 64 64"><path d="m32 5 6 20 21 7-21 7-6 20-6-20-21-7 21-7z"/></symbol>
+<symbol id="i-heart" viewBox="0 0 64 64"><path d="M32 53 10 31C-2 14 18 2 32 19 46 2 66 14 54 31z"/></symbol>
+<symbol id="i-energy" viewBox="0 0 64 64"><path d="m32 5 19 27-19 27-19-27z"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 64 64"><path d="M10 32h42M37 17l15 15-15 15"/></symbol>
+<symbol id="i-play" viewBox="0 0 64 64"><path d="m23 13 26 19-26 19z"/></symbol>
+<symbol id="i-close" viewBox="0 0 64 64"><path d="m18 18 28 28M46 18 18 46"/></symbol>
+<symbol id="i-stack" viewBox="0 0 64 64"><rect x="18" y="10" width="30" height="39" rx="3"/><path d="M12 17v37h30M26 23h14M26 31h14"/></symbol>
+<symbol id="i-undo" viewBox="0 0 64 64"><path d="M14 24h25a15 15 0 0 1 0 30H26M14 24l12-12M14 24l12 12"/></symbol>
+<symbol id="i-help" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24"/><path d="M24 24c0-12 22-12 17 1-2 5-9 4-9 12M32 45v1"/></symbol>
+<symbol id="i-home" viewBox="0 0 64 64"><path d="M10 28 32 10l22 18M17 25v29h12V37h7v17h12V25"/></symbol>
+<symbol id="i-menu" viewBox="0 0 64 64"><path d="M13 18h38M13 32h38M13 46h38"/></symbol>
+<symbol id="i-clock" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23"/><path d="M32 17v16l11 7"/></symbol>
+<symbol id="i-skull" viewBox="0 0 64 64"><path d="M17 40C-2 5 67-5 49 40l-8 6v10H23V46z"/><circle cx="24" cy="29" r="4"/><circle cx="41" cy="29" r="4"/><path d="m32 35-3 5h6zM28 49v7M36 49v7"/></symbol>
+<symbol id="i-pit" viewBox="0 0 64 64"><ellipse cx="32" cy="30" rx="23" ry="12"/><path d="M9 30v9c0 17 46 17 46 0v-9M32 8v20M25 21l7 7 7-7"/></symbol>
+<symbol id="i-burst" viewBox="0 0 64 64"><path d="m32 7 6 15 16-6-8 16 12 9-19 1-7 16-6-16-20-1 13-9-8-16 16 6z"/></symbol>
+<symbol id="i-draw" viewBox="0 0 64 64"><path d="M15 16h27v37H15zM24 10h27v36M22 32h13M29 25v14"/></symbol>
+<symbol id="i-flame" viewBox="0 0 64 64"><path d="M32 6c5 19-16 19-9 34 4-10 11-8 12-20 22 20 15 37-3 37C10 57 5 34 19 21c-2 12 3 13 4 15C20 21 32 20 32 6z"/></symbol>
+<symbol id="i-cannon" viewBox="0 0 64 64"><path d="M12 37h32l8-12-4-6-35 11zM17 41h27M12 52h39"/><circle cx="22" cy="46" r="8"/><circle cx="43" cy="46" r="8"/></symbol><symbol id="i-flag" viewBox="0 0 64 64"><path d="M16 55V8l32 6-8 10 8 9-32-5M8 56h20"/></symbol><symbol id="i-mountain" viewBox="0 0 64 64"><path d="m5 50 14-28 9 13L39 10l20 40zM14 42l6-11 7 9M34 31l5-11 8 15M7 54h49"/></symbol><symbol id="i-swallow" viewBox="0 0 64 64"><path d="m5 17 23 15 4-18 7 14 21-18-13 27-13 4-13 14 4-17zM28 32l9 2"/></symbol><symbol id="i-wave" viewBox="0 0 64 64"><path d="M6 25q9-12 18 0t18 0 18 0M6 39q9-12 18 0t18 0 18 0"/></symbol><symbol id="i-eye" viewBox="0 0 64 64"><path d="M5 32q27-34 54 0-27 34-54 0z"/><circle cx="32" cy="32" r="9"/></symbol><symbol id="i-coin" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24"/><path d="M25 25h14v14H25z"/></symbol><symbol id="i-fire" viewBox="0 0 64 64"><path d="M34 7C15 26 6 37 19 51c18 15 40-8 28-25-2 12-8 9-8 9S42 20 34 7z"/></symbol><symbol id="i-tent" viewBox="0 0 64 64"><path d="m9 54 23-43 23 43zM22 54l10-24 10 24M25 8l14 17"/></symbol><symbol id="i-sound" viewBox="0 0 64 64"><path d="M10 25h12l14-12v38L22 39H10zM44 23q9 9 0 18M50 15q17 17 0 34"/></symbol><symbol id="i-muted" viewBox="0 0 64 64"><path d="M10 25h12l14-12v38L22 39H10zM44 25l13 14M57 25 44 39"/></symbol><symbol id="i-music" viewBox="0 0 64 64"><path d="M25 44V14l27-6v31M25 23l27-6"/><ellipse cx="17" cy="46" rx="8" ry="6"/><ellipse cx="44" cy="41" rx="8" ry="6"/></symbol><symbol id="i-sfx" viewBox="0 0 64 64"><path d="M11 26v12M20 18v28M29 9v46M38 18v28M47 23v18M56 28v8"/></symbol></defs></svg>
+<div id="app"></div>
+<div id="toast" role="status"></div>
+<script src="game/data.js"></script><script src="game/journey.js"></script><script src="game/arenas.js"></script><script src="game/engine.js"></script><script src="game/audio.js"></script><script src="game/view.js"></script>
+<script src="game/lessons.js"></script><script src="game/app.js"></script>
+</body></html>

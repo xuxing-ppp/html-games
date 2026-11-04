@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# 文档(开发备忘,不入仓库)
+note.md
+
+# Node / 测试(若以后引入)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# test
+test_figure/
+tests/*.ndjson
+tests/*.tsv
+tests/*.png
+
+# trailer
+trailer/
+
+# 音视频制作中间产物；保留生成脚本和 audio/ 中的运行 MP3。
+/test_audio*/**/*.wav
+/test_audio*/**/*.flac
+/test_audio*/**/*.aiff
+/test_audio*/**/*.mp4
+/test_audio*/**/*.mov
+
+# 本游戏的测试、浏览器报告与覆盖率产物；测试脚本和固定数据入库。
+/test-results/
+/playwright-report/
+/coverage/

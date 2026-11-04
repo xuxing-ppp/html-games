@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAR LAB · 战争沙盘</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/toybox.css">
+<link rel="stylesheet" href="css/battlefield.css">
+<script src="./version.js"></script>
+</head>
+<body>
+<main id="homeScreen" aria-label="模式选择">
+  <header class="home-top"><span class="game-version" data-game-version="war_simulator"></span><button id="btnResume" class="quiet" hidden>继续当前战场 ↗</button></header>
+  <section class="home-intro"><div class="home-title"><h1>战争<span>沙盘</span><i>！</i></h1></div><div class="toy-duel" aria-hidden="true"><div class="toy-army red"><img data-unit-art="roman_swordsman" data-team="red" alt=""><img data-unit-art="giant" data-team="red" alt=""><img data-unit-art="archer" data-team="red" alt=""></div><span class="duel-vs">×</span><div class="toy-army blue"><img data-unit-art="mage" data-team="blue" alt=""><img data-unit-art="spartan_spearman" data-team="blue" alt=""><img data-unit-art="shielder" data-team="blue" alt=""></div></div></section>
+  <div class="mode-grid" role="group" aria-label="选择游戏模式">
+    <button id="modeCampaign" class="mode-card" aria-pressed="true"><span class="mode-number">⚑</span><b>征途闯关</b></button>
+    <button id="modeSandbox" class="mode-card" aria-pressed="false"><span class="mode-number">✦</span><b>自由沙盘</b></button>
+    <button id="modeExperiment" class="mode-card" aria-pressed="false"><span class="mode-number">⚔</span><b>战役实验</b></button>
+  </div>
+  <section class="launch-panel" aria-label="战场设置">
+    <div id="homeCampaign"><section id="campaignPanel"><div class="campaign-heading">选择关卡</div><select id="levelSelect" aria-label="选择关卡"></select><div class="tool-row"><button id="btnCampaign">进入关卡</button><button id="btnLeaveCampaign" hidden>自由沙盘</button></div></section></div>
+    <div id="homeScenario" hidden><label>战役实验<select id="scenario"><option value="balanced">均衡交锋</option><option value="swarm">巨人与蜂群</option><option value="arrows">盾墙与箭雨</option><option value="arcane">奥术混战</option></select></label><button id="btnScenario" class="wide">载入战役 ↗</button><p id="scenarioDesc">步兵掩护远程，双方同等编制。试试改变阵型。</p></div>
+    <div id="homeRules" hidden><label>胜利规则<select id="battleMode"><option value="classic">歼灭战</option><option value="control">据点争夺</option><option value="storm">风暴决战</option></select></label><p id="modeDesc">击败全部敌军；180 秒后按剩余生命比例结算。</p></div>
+    <div id="homeMap" hidden><label>选择地图<select id="mapSelect" aria-label="选择地图"></select></label><div class="map-preview"><canvas id="mapPreview" width="192" height="144" aria-label="地图预览"></canvas><p id="mapDesc"></p></div></div>
+    <div class="launch-action"><p id="launchHint" hidden></p><button id="btnEnter" class="wide">进入征途 →</button></div>
+  </section>
+  
+</main>
+<div id="app" hidden>
+  <header id="masthead"><div class="brand">战争沙盘</div><span class="edition" id="sessionTitle">自由沙盘</span><button id="btnHome" class="quiet">← 返回</button><button id="btnHelp" class="quiet">?</button></header>
+  <section id="deployment" aria-label="兵种与部署"><nav id="deploymentTabs" aria-label="部署分类"><button data-side-tab="roster" aria-pressed="true">兵种</button><button data-side-tab="deploy" aria-pressed="false">布阵</button><button data-side-tab="storage" aria-pressed="false">存档</button></nav>
+  <aside id="sidebar">
+    <div class="sb-title"><strong id="selectedUnitName">部落勇士</strong><button id="btnUnitDetails" aria-expanded="false">兵种详情 ↗</button></div><div id="filters"><button data-filter="all" class="active">全部</button><button data-filter="melee">近战</button><button data-filter="ranged">远程</button></div>
+    
+    <input id="unitSearch" type="search" placeholder="找兵种…" aria-label="搜索兵种"><div id="unitList"></div><div class="unit-pager"><button id="unitPrev" aria-label="上一页兵种">←</button><span id="unitPage" aria-live="polite"></span><button id="unitNext" aria-label="下一页兵种">→</button></div>
+    <div class="sb-foot">
+      <div class="rand-row"><input id="budgetInput" type="number" value="300" min="0" step="50" title="每边预算"><button class="batch-btn" id="btnRandom">🎲 随机配兵(每边)</button></div>
+    </div>
+  </aside>
+  <aside id="commandPanel" aria-label="部署工具"><div class="sb-title"><span id="commandTitle">布阵工具</span> <button id="btnCloseCommand" aria-label="关闭部署工具">×</button></div><div data-command-page="deploy"><section class="mission-summary"><span id="sessionTag">自由沙盘</span><strong id="campaignBudget" hidden></strong><p id="campaignBrief"></p></section><label>部署阵型<select id="formation"><option value="single">单兵</option><option value="line">纵列 · 5 人</option><option value="wedge">锋矢 · 6 人</option><option value="cluster">方阵 · 9 人</option></select></label><div class="tool-row"><button id="btnInspect">选择 / 移动</button><button id="btnErase">橡皮擦</button><button id="btnUndo">撤销</button></div></div><div data-command-page="unit" hidden><div id="unitDetail"></div></div><div data-command-page="storage" hidden><section id="storageTools"><p>保存到这台设备</p><div class="tool-row"><button id="btnSave">保存布阵</button><button id="btnLoad">读取布阵</button></div></section></div></aside>
+  </section>
+  <main id="stage">
+    <div id="battleHud"><div class="army red"><small>红方</small><b id="redCount">0</b><span id="redBudget"></span><div class="strength"><i id="redStrength"></i></div></div><div class="battle-clock"><small id="phaseLabel">准备部署</small><b id="battleTime">00:00</b><span id="objectiveLabel">歼灭全部敌军</span></div><div class="army blue"><small>蓝方</small><b id="blueCount">0</b><span id="blueBudget"></span><div class="strength"><i id="blueStrength"></i></div></div></div>
+    <canvas id="canvas" aria-label="战术沙盘：左侧部署红军，右侧部署蓝军"></canvas>
+    <div id="fieldTools"><button id="btnFit" title="全景">⊡ 全景</button><button id="btnZoomIn" aria-label="放大">＋</button><button id="btnZoomOut" aria-label="缩小">−</button><button id="btnGrid">网格</button><button id="btnPan">移动镜头</button></div>
+    <div id="inspectPanel" hidden></div><div id="fieldCaption"><span>红方部署</span><span>蓝方部署</span></div>
+    <div id="toast"></div>
+    <div id="banner"><div class="banner-box"><h2 id="bannerTitle">胜利</h2><p id="bannerSub">点击下方按钮再战或重置</p><button class="tb-btn" id="btnRematch" title="Tab">🔁 再战一局</button> <button class="tb-btn" id="btnNextLevel" hidden>下一关 →</button> <button class="tb-btn" id="btnBannerReset" title="R">↺ 重置战场</button></div></div>
+  </main>
+
+  <footer id="toolbar">
+    <button class="tb-btn" id="btnTools" aria-expanded="false">☰ 部署栏</button><button class="tb-btn" id="btnStart" title="Tab">▶ 开始战斗</button>
+    <button class="tb-btn" id="btnReset" title="R">↺ 重置战场</button>
+    <button class="tb-btn" id="btnClear" title="C">✕ 清空全部</button>
+    <button class="tb-btn" id="btnPause" title="Space">⏸ 暂停</button>
+    <button class="tb-btn" id="btnSlow" title="M">🐢 慢动作</button>
+    <div class="tb-spacer"></div>
+    <div class="tb-hint">左键放置/拖拽连放 · 右键删除 · 滚轮缩放 · Tab开始 · Space暂停 · M慢动作 · R重置 · C清空 · WASD平移 · G网格</div>
+  </footer>
+</div>
+<div id="tooltip"></div><dialog id="helpDialog"><h2>你的战场，你的实验。</h2><p>选择兵种 → 点按沙盘布阵 → 开始战斗。左红右蓝，拖动可以连续部署。阵型一次放置多名士兵；橡皮擦用于触屏删除。</p><p>据点争夺：中心圈内只有一方时积累分数，先到 30 分获胜。风暴决战：10 秒后安全圈收缩，圈外持续受伤。</p><p>鼠标滚轮缩放，WASD / 方向键平移。触屏可用全景、缩放与移动镜头按钮。选择 / 移动工具可以查看单位并拖动调整站位，战斗中点击单位查看状态。闯关模式只能调整红军，删除士兵返还预算。空格暂停，M 慢动作，R 回到布阵，G 网格。</p><p>树林内移速 80%，浅水内移速 60%。岩石阻挡士兵、近战与弹道；爆炸仍有范围伤害。地图在创建沙盘或实验前选择，现有闯关使用开阔草原。</p><p>闯关星级：获胜一星，半数存活一星，花费不超过预算的 85% 再得一星。胜利解锁下一关，最佳星级自动保存。</p><button id="btnCloseHelp" class="wide">明白，开始实验</button></dialog>
+
+<script src="js/namespace.js"></script>
+<script src="js/util.js"></script>
+<script src="js/config.js"></script>
+<script src="js/roster.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/projectiles.js"></script>
+<script src="js/specials.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/terrain.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/abilities.js"></script>
+<script src="js/game.js"></script>
+<script src="js/lab.js"></script>
+<script src="js/campaign.js"></script>
+<script src="js/interaction.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/presentation.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>

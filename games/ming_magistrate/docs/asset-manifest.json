@@ -1,0 +1,335 @@
+{
+  "format": "WebP",
+  "quality": 84,
+  "method": 6,
+  "sharp_yuv": true,
+  "resized": false,
+  "images": [
+    {
+      "file": "clerk-account-ink",
+      "width": 1672,
+      "height": 941,
+      "original_bytes": 2769532,
+      "original_sha256": "d99953e5aec8589ae853b197d7b5dc83a48e5130e1bf41167f804e52a5bf2c70",
+      "runtime_bytes": 287650,
+      "runtime_sha256": "b56a8b3956a508287fb028a280216e886a9463a719f7d68fb9ae522516a7cf43"
+    },
+    {
+      "file": "county-atlas",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3625483,
+      "original_sha256": "000c0826c46e4c76595f923922706a5b17a46947ef5a499d755315702a6cd823",
+      "runtime_bytes": 447936,
+      "runtime_sha256": "0116fa97b8d3080e961a179ae21a35b2c3503474e192d89b0b3f339920e9df4f"
+    },
+    {
+      "file": "county-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2648487,
+      "original_sha256": "ff5ad57121165b40fb17f3e3c9b8281f03d329697b783a80e916c0224e3815ae",
+      "runtime_bytes": 192834,
+      "runtime_sha256": "06793ffee73b200686d9a653ff04df17f26f10abceeb3d7b8b9a5494777825b9"
+    },
+    {
+      "file": "desk-night-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2704740,
+      "original_sha256": "4eb098e0a84c7b33abf8af712e691c128883255db6f7a9f0c55e693e21b85c39",
+      "runtime_bytes": 236924,
+      "runtime_sha256": "a078242595ddb49baa3e009a37ae45a748acd2edac075f3a80a23ebb4eeca9da"
+    },
+    {
+      "file": "desk-scene",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2911972,
+      "original_sha256": "6d4c80e727eda49d825a0a5521d79ef9bf0d98ae6b768331dd556ce9961e3cbd",
+      "runtime_bytes": 239746,
+      "runtime_sha256": "8843a4e79b6acb358663f50f90d4ef8086b3be55abdfddb3ed0c7ee3fb2e03b9"
+    },
+    {
+      "file": "ending-exile-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3172298,
+      "original_sha256": "8ae8196a7f7aba523010317a90d794104d4a7b83d3cf99bd9078c5edf80a6584",
+      "runtime_bytes": 342556,
+      "runtime_sha256": "37677e6eb990aa23e7f4e8acd68f0949748393f1d0277e488a732e3e59258f26"
+    },
+    {
+      "file": "ending-justice-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2938709,
+      "original_sha256": "0faf27b3898e280033497d37d05af97e465a21dc37d83e6c3715c6e3037c3342",
+      "runtime_bytes": 330086,
+      "runtime_sha256": "5843df8d0951317c939c676e7cd9ebb5a028cfe9a59da5a0df7493883a4f5a06"
+    },
+    {
+      "file": "ending-town-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2913640,
+      "original_sha256": "a7d64b047f00c865c87e5d38fe97d1cd43143f9959cf5db96983f70494faf200",
+      "runtime_bytes": 336446,
+      "runtime_sha256": "b57db671ca56a0944a4423f68dc6869ac615bc6cd171fb64643d99b851df1186"
+    },
+    {
+      "file": "enforcement-grain-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3053081,
+      "original_sha256": "32fdb7cb19fbd27d8f619aca708c23a496a85046e84f7765011ab6f1813eb85c",
+      "runtime_bytes": 319166,
+      "runtime_sha256": "5e36901c2d897e3ae7af1498108cec2197ed048016a2159567e4c35c1225dbca"
+    },
+    {
+      "file": "estate-dock-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3348393,
+      "original_sha256": "ab1e750fa9afa42db8ee0b9f30aad1ba4685f280c3652d180f8f3480d596b0ef",
+      "runtime_bytes": 386618,
+      "runtime_sha256": "7e01d14a2e6356bb1b05118c986a7810e68ae86c49776cf10c8689237c6aa8b3"
+    },
+    {
+      "file": "farmland-autumn-consistent",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2856869,
+      "original_sha256": "9461c782a53e276b3a10a417a47d1e4178ed43cb65f8808ee3d83d2d77ccc8a3",
+      "runtime_bytes": 312962,
+      "runtime_sha256": "e94c41dd9161c27d2292131e862d84783e71d261dc1301c3ca7ec7676c3ca572"
+    },
+    {
+      "file": "farmland-scene-consistent",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2805569,
+      "original_sha256": "c8df56b758893b42c1907d37b9aa0dfacf71fc49830b55d93c7f7b2374b9990d",
+      "runtime_bytes": 275202,
+      "runtime_sha256": "c7fd7a45152d59feced791cc966e6ee2f0a7fa1136704461c19ea8a5572e2e8a"
+    },
+    {
+      "file": "granary-audit-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3024635,
+      "original_sha256": "c72e2c5069f306d59d4190abf5e23196a06ce37cb8eb4e069f4c989e1b70a06b",
+      "runtime_bytes": 313020,
+      "runtime_sha256": "9a93e2b1daf18d26d91544e12ddd26a77b4f0d18f1593206ebad889e4ac21e41"
+    },
+    {
+      "file": "hai-meeting-ink",
+      "width": 1671,
+      "height": 941,
+      "original_bytes": 2929421,
+      "original_sha256": "8d85374f15530eba608e8dbbfcf6f31bb7a158fcc4e141b28ccb21cf66793c38",
+      "runtime_bytes": 288398,
+      "runtime_sha256": "c32493c5ef21f0bd3acbc3ba2b7a65591cf4da1459be82b9ca8ae98a9cf6906a"
+    },
+    {
+      "file": "hai-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2878310,
+      "original_sha256": "733823767967f8eb721a0587905f3ee8dbe38c7dfd8115f63b031836146a9a78",
+      "runtime_bytes": 272710,
+      "runtime_sha256": "711ecbc8c669bc0d0704e1023b3a076f7fd60b28e1b409f45a11f8758eb16222"
+    },
+    {
+      "file": "letter-folio",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2639276,
+      "original_sha256": "7d1514c5b6af67077809c44f9a35204521b2483da5a615b6039744a33e2d8d88",
+      "runtime_bytes": 163916,
+      "runtime_sha256": "c0bce095f109d0b148bc4bc71e7596b111a67c582d750ad6b6527bbf03964564"
+    },
+    {
+      "file": "lin-hearing-ink",
+      "width": 1672,
+      "height": 941,
+      "original_bytes": 2876685,
+      "original_sha256": "93397c75b5828dcf7efb01ac6a3de2e6aecc600f6cb505103774c0b529a8d4f1",
+      "runtime_bytes": 303462,
+      "runtime_sha256": "9dac72a848d790a59f2b0fc599ffc16e3b676091cf1a5f39cd11f9a6500307e1"
+    },
+    {
+      "file": "market-scene",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3292886,
+      "original_sha256": "f59aa96deeb819ecb8e3eabbaa906e42582ed0adde838174dda5f9902830265c",
+      "runtime_bytes": 379414,
+      "runtime_sha256": "fa439641c40fde8298796f3b6ac3af580f34e7c0e71239d49944fd7cd01b1727"
+    },
+    {
+      "file": "mystery-governor-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3084557,
+      "original_sha256": "b8ca7e626ae9d2c7510217a8b91f2002b67f9979942aa1a66b8e0520bfb864ea",
+      "runtime_bytes": 347938,
+      "runtime_sha256": "2a1206599c32b9960989831a8ade2f6e10100e269ea958dee2927e5acba49254"
+    },
+    {
+      "file": "mystery-restitution-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3070690,
+      "original_sha256": "1ca0bc805aa8ac5c9c7ff2d3386f90f9e7b494b8c1fd54993045f543eb1a96fd",
+      "runtime_bytes": 312134,
+      "runtime_sha256": "064a721f42508e61fb21c0a43c374a61ad0c8cf3a4ff53e7b761ca03902606cf"
+    },
+    {
+      "file": "mystery-review-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3044498,
+      "original_sha256": "bfd8255eab7c3d5e1b5a145c0180320abcc4c429707bb3c55ee539919d781efd",
+      "runtime_bytes": 310374,
+      "runtime_sha256": "6f2cf6cbe1fa279d7efa4ecf0c3302e36d1df85e2f196224524b807dc84a4d64"
+    },
+    {
+      "file": "mystery-writer-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3028545,
+      "original_sha256": "0100f5b7828d0029b86678f08e8768d622463e97bc6acdd19ff19aac317c3662",
+      "runtime_bytes": 306456,
+      "runtime_sha256": "b15ff46aa88e28d62174a76b054509e21f349cab116de4b1cd31b9cdef403e8c"
+    },
+    {
+      "file": "north-hearing-ink",
+      "width": 1672,
+      "height": 941,
+      "original_bytes": 2831184,
+      "original_sha256": "f468cd972971187355d94b1aea694b56309aef6a6e5ab8a9921a65ebefacf986",
+      "runtime_bytes": 302900,
+      "runtime_sha256": "f3eea36c2e345eb9dc2b135bdf8c1c421b654cac6efa3ab877ca435d19aba15c"
+    },
+    {
+      "file": "north-hearing-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2739274,
+      "original_sha256": "064b19ccf486bb22a3af99f55395199fce0d1ac9ee563bb33118f2acc6c44446",
+      "runtime_bytes": 284822,
+      "runtime_sha256": "f76701d9d785d9882525d1cee194c2b3f928186a314ee4b5df0233f4f1726b85"
+    },
+    {
+      "file": "north-repair-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3295200,
+      "original_sha256": "ac4397fa64f3981fa0f9410adc912d87b7b44a7bdd94a0417e8d96ddaad54378",
+      "runtime_bytes": 394218,
+      "runtime_sha256": "ea27f2504f367ff70005b107c75c3d98d06e189bd2b9e94ec53e47bbcbe6fbc3"
+    },
+    {
+      "file": "opening-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2933286,
+      "original_sha256": "16609aed1ac74a842a5dfcf8606d3cfd8d04d1f380f61da2929f86d49f5af9d5",
+      "runtime_bytes": 297856,
+      "runtime_sha256": "58dd4f852b452b04f038bcb6d3c6fe25ef4a97e8e6aa9b5d74cef69dc7ee1040"
+    },
+    {
+      "file": "opening-scene-ink",
+      "width": 1672,
+      "height": 941,
+      "original_bytes": 3014973,
+      "original_sha256": "6ea0c6ed3b57e7a063ad768f71a5e2bff6452422f8737d70f94be63d06630c93",
+      "runtime_bytes": 315270,
+      "runtime_sha256": "138edaff6dd6bd16819d27c61ab7257fe60479c598a919a34623e98d2034d0cc"
+    },
+    {
+      "file": "relief-doorway-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2823966,
+      "original_sha256": "26ccd61fd2b898898a9f56307aa80dbd47fb0efbf7f691240ddf94289644acc0",
+      "runtime_bytes": 314144,
+      "runtime_sha256": "c12b039d0e3c22cafd50d6264761c4ab0756eb69dc9d5c03ce06efe0cd3eef85"
+    },
+    {
+      "file": "review-hearing-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2613649,
+      "original_sha256": "df823a610791572e663aa7b3babdf6874067cd916e17d09cdf6026ab00ce5bf1",
+      "runtime_bytes": 257998,
+      "runtime_sha256": "f4f6a3cc2cf4a8a5924708a4f7431d954218238b1636a8111f7f414cd9a6fd53"
+    },
+    {
+      "file": "river-night-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3030837,
+      "original_sha256": "283fdb4323c28b38195e59741d12b6245ad97d7f6a21b7e5fa0ffff8391507ef",
+      "runtime_bytes": 318328,
+      "runtime_sha256": "e1cf88ad3f564d1ea7b8374503409900b6cdd4e2be0b9bf53866a202cecd2063"
+    },
+    {
+      "file": "river-rain",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3389016,
+      "original_sha256": "8eb93c3cea02d036d49265e424e47674c114bb00cfbf8614f22c16578ec541f8",
+      "runtime_bytes": 370412,
+      "runtime_sha256": "8261a4d48cd97411147e3a22d3b86e480f9e760cef16807110c8148c91565a07"
+    },
+    {
+      "file": "river-scene",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3420492,
+      "original_sha256": "db780aac912a6b791dbce0aa0709862aea93d2acf635f003856a3b9943a40eb9",
+      "runtime_bytes": 387836,
+      "runtime_sha256": "831de2cf5ab53074a041c000ce2f5fa57266d370de52487fddbf136ecc139d09"
+    },
+    {
+      "file": "south-doorway-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 3107850,
+      "original_sha256": "cadac93f8cfd125f4b54ef2aca6086da309afa9987b3256cb47381d33489c846",
+      "runtime_bytes": 368686,
+      "runtime_sha256": "3b04e7f517492e1b829c1d7bba5d97471d284fe18b89143afd7096b8b6d37bc8"
+    },
+    {
+      "file": "village-relief-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2981268,
+      "original_sha256": "863907e0bfa39a458b80f310d510c1ac090afa5dfd28594f39cebecf3fc21d65",
+      "runtime_bytes": 322968,
+      "runtime_sha256": "1290d3404ccf003be9bed46eb789ea3f5fb1ff4383af8110c0b72665fd8ce0b8"
+    },
+    {
+      "file": "winter-relief-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2906031,
+      "original_sha256": "53ba180fef3a7375ae6507824d717b905a8fcb4d2bc2f8500ff0f694b23b0bbb",
+      "runtime_bytes": 307784,
+      "runtime_sha256": "8fffd5300f1bf827d318ed79a36b54a6d25d18720ce5875b369773872f3e3a7e"
+    },
+    {
+      "file": "xuan-paper",
+      "width": 1254,
+      "height": 1254,
+      "original_bytes": 2304573,
+      "original_sha256": "078b4a6871f5077952edb77525381ec50d33e5badc950e1d73d8441fa9ff11ae",
+      "runtime_bytes": 103246,
+      "runtime_sha256": "cc34a9b172501763b52eee83e63b2ef6016afc5e847cb5cce1ca029023afb9a8"
+    }
+  ],
+  "original_bytes": 107009875,
+  "runtime_bytes": 11052416
+}

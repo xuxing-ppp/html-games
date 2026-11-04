@@ -1,0 +1,7 @@
+work/
+.DS_Store
+
+# 本游戏的测试、浏览器报告与覆盖率产物；测试脚本和固定数据入库。
+/test-results/
+/playwright-report/
+/coverage/

@@ -1,0 +1,8 @@
+{
+  "name": "ming-magistrate-tests",
+  "private": true,
+  "scripts": {
+    "test": "node --test engine.test.mjs content.test.mjs art.test.mjs endings.test.mjs",
+    "test:browser": "python3 mystery-browser.py"
+  }
+}

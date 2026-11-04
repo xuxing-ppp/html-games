@@ -1,0 +1,15 @@
+{
+  "name": "kart-rush-terrain",
+  "private": true,
+  "type": "module",
+  "description": "Offline 3D terrain racer with jumps, vertical loops and split screen",
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "python3 tests/browser_smoke.py",
+    "test:layout": "python3 tests/layout_browser.py",
+    "test:ai": "python3 tests/ai_browser.py",
+    "stop": "node tools/dev.mjs --stop",
+    "test:steering": "python3 tests/steering_browser.py"
+  }
+}

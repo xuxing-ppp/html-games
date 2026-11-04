@@ -1,0 +1,19 @@
+{
+  "name": "Neon Survivor",
+  "short_name": "Neon Survivor",
+  "description": "Survive the endless horde, collect XP, and evolve your weapons.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "landscape",
+  "background_color": "#070611",
+  "theme_color": "#070611",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icon.svg?v=1", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg?v=1", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

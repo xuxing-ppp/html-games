@@ -1,0 +1,63 @@
+/* Player actions stay at hand; the stage remains the visual centre. */
+.player-panel{min-height:0}.hand-grid{flex:1;min-height:90px;align-content:start;overflow:auto}
+.ready-state{flex:none;font-size:13px;line-height:1.5;color:var(--gold)}
+.battle-controls{flex:none;gap:5px}.battle-controls .preview-result:empty{display:none}
+.player-lamp{padding-top:7px;border-top:1px dashed #b6915744}
+.player-lamp .tactics-heading{display:flex;justify-content:space-between;align-items:center;gap:4px;font-size:16px}
+.player-lamp .tactics-heading small{font:12px var(--body);color:#b8a788}
+.player-lamp .lamp-arts{gap:5px;margin:5px 0 0}
+.player-lamp .lamp-arts button{position:relative;padding:4px 1px 5px;gap:2px;min-height:56px;display:grid;grid-template-columns:18px auto;justify-content:center;align-items:center}
+.player-lamp .lamp-arts small{grid-column:1/-1}
+.player-lamp .lamp-arts .icon{width:18px;height:18px}.player-lamp .lamp-arts b{font-size:17px}
+.player-lamp .lamp-arts small{font:12px/1.4 var(--body);white-space:nowrap}
+.power-strip{flex-wrap:wrap}.power-icon:focus-visible{outline:2px solid var(--gold)}
+.trial-record{width:100%;border-bottom:1px solid var(--line);padding-bottom:14px;line-height:1.8}
+.lesson-library{gap:18px}.lesson-library .page-heading{display:flex;align-items:center;justify-content:space-between;flex:none}
+.lesson-library .page-heading h2{font:36px var(--han);color:#e6c48a}.lesson-intro{font-size:16px;color:var(--muted);flex:none}
+.lesson-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:22px}
+.lesson-grid button{position:relative;justify-content:center;gap:12px;border:0;border-bottom:2px solid #b28a4755;border-radius:0;background:linear-gradient(155deg,#9d7a3c24,#211e1788);padding:25px;isolation:isolate}
+.lesson-grid button:hover{background:linear-gradient(155deg,#9d7a3c44,#211e1788);border-color:#deb168}
+.lesson-grid button>.icon{position:absolute;right:18px;bottom:22px;width:70px;height:70px;color:#bc985322;z-index:-1}
+.lesson-grid h3{font:26px var(--han);color:#ead0a0}.lesson-grid .lesson-number{font:26px Georgia;color:#a98b59}
+.lesson-grid button>span:last-of-type{font-size:15px;color:#b7a786}
+.lesson-hint{flex:none;min-height:100px;padding:10px 2px 0;display:flex;flex-direction:column;align-items:stretch;gap:10px;border-top:1px dashed #b28a4755}
+.lesson-hint>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.lesson-hint b{flex:1;font:17px/1.6 var(--body);color:#f0dbaf}
+.lesson-hint>div:last-child{justify-content:flex-end}.lesson-hint .btn{min-height:32px;padding:5px 11px}
+.lesson-count{font:14px Georgia;color:#bda16d}.lesson-target:after{content:'';position:absolute;inset:4%;border:3px solid #668d62;background:#a6cb831b;z-index:8;pointer-events:none}
+.lesson-feedback{font:14px/1.6 var(--body);color:#c9b486;margin:0;padding-left:9px;border-left:2px solid #a38149}.lesson-outcome{color:#e3bf7b}
+.lesson-required{outline:2px solid #dfb66e!important;outline-offset:2px;box-shadow:0 0 18px #d6a25044!important}
+.modal-navigation{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.modal-navigation .btn{min-height:36px;padding:6px 13px;white-space:nowrap}
+.help-modal{width:min(880px,100%)}.help-grid .service{border-radius:0;border:0;border-bottom:1px solid #aa8a5144;background:#d6ae5c08;padding:16px}
+.help-grid .service b{font:23px var(--han);color:#e6cc9e}.help-grid .service span{font-size:14px;color:#aa9c7e}
+.help-reference{width:100%;color:#c3b295;font-size:15px;line-height:1.9}.help-reference summary{cursor:pointer;padding:8px 0}.help-reference h3{font:21px var(--han);margin:14px 0 4px;color:#e0c18a}
+.concept-modal{width:min(1040px,100%);height:min(900px,calc(100dvh - 40px));padding:20px}
+.concept-modal>header{margin-bottom:10px}.concept-modal h2{font:30px var(--han)}
+.concept-modal>.modal-body{flex:1;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;align-items:stretch;padding:2px 4px 4px;overflow:auto}
+.concept-modal .concept-text{font:16px/1.7 var(--body);max-width:none;margin:0}
+.lesson-player{display:grid;grid-template-rows:auto minmax(150px,1fr) repeat(var(--demo-tail,2),auto);gap:10px;min-height:0;width:100%}
+.lesson-player:has(.demo-variants){grid-template-rows:auto minmax(150px,1fr) repeat(var(--demo-tail,3),auto)}
+.demo-vitals{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;color:#bda783;font-size:14px;line-height:24px}
+.demo-vitals b{font:18px Georgia;color:#f0d39e}
+.lesson-stage{min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px}
+.demo-arena{position:relative;height:100%;max-width:100%;min-height:0;aspect-ratio:7/8}
+.lesson-stage .demo-arena>.board{height:100%;width:100%;max-height:none;aspect-ratio:unset;filter:drop-shadow(0 6px 10px #0007)}
+.demo-arena .piece-hp{font-size:13px;min-width:18px}.demo-arena .order{display:none}
+.demo-annotations{position:absolute;inset:0;pointer-events:none;z-index:12}
+.demo-annotations>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1;pointer-events:none}
+.demo-move-line{fill:none;stroke:#65bdce;stroke-width:6;stroke-dasharray:10 4;marker-end:url(#demo-move-arrow)}
+.demo-attack-line{fill:none;stroke:#c94f38;stroke-width:8;stroke-dasharray:13 4;marker-end:url(#demo-attack-arrow)}
+.demo-mark{position:absolute;border:2px solid transparent;display:flex;align-items:flex-end;justify-content:center;z-index:2}
+.demo-mark>span{font:12px/1.35 var(--body);background:#262217ed;color:#f2dfb6;padding:1px 3px;white-space:nowrap;transform:translateY(35%);border:1px solid #b79c6a88}
+.demo-target{border:3px solid #83b982;background:#95be7725}.demo-danger{background:#c74e3444;border-color:#be5e40}.demo-future{border:2px dashed #89b6bf;background:#3b667522}
+.demo-weak{border-color:#fff0d2}.demo-eye{border:3px solid #e2af58;border-radius:50%}.demo-impact{background:#a4472833}.demo-impact>span{color:#ffd1a1;font-size:16px}.demo-enemy{border-color:#d3ab6f}
+.demo-legend{font-size:13px;line-height:1.5;color:#baa98a;text-align:center}
+.demo-caption{font-size:16px;line-height:1.7;min-height:28px;margin:0;text-align:center;color:#f1dcac}
+.demo-card-cue{display:inline-flex;align-items:center;gap:5px;background:#e4c98d;color:#453321;padding:1px 8px;margin-right:9px;border-bottom:2px solid #a8452b;font-family:var(--han)}.demo-card-cue .icon{width:17px;height:17px}
+.demo-controls{display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap}.demo-controls .btn{min-height:36px;padding:7px 14px;font-size:15px}.demo-controls>span{font:13px Georgia;color:#b69c74;min-width:42px;text-align:center}
+.demo-variants{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;border-top:1px solid #ad8b4f44;padding-top:8px}.demo-variants>span{font-size:13px;color:#b8a27e}.demo-variants .btn{font-size:13px;min-height:29px;padding:4px 8px}
+@media(min-height:781px) and (max-height:980px){.hand-grid .card{min-height:116px;padding:8px 7px 6px}.hand-grid .card-illustration{height:36px;margin-bottom:4px}.hand-grid .card-illustration>.icon{width:36px;height:36px}.hand-grid .card h3{font-size:24px}}
+@media(max-height:780px){.player-panel{gap:6px}.battle-controls{gap:4px}.battle-controls .stance-buttons .btn{min-height:34px}.hand-grid .card{min-height:87px}.player-lamp{padding-top:5px}.player-lamp .tactics-heading{font-size:15px}.player-lamp .lamp-arts button{min-height:42px;padding-block:3px}.player-lamp .lamp-arts .icon{width:16px;height:16px}.player-lamp .lamp-arts b{font-size:16px}.lesson-library{padding:22px 4vw;gap:12px}.lesson-grid{gap:16px}.lesson-grid button{padding:18px}.lesson-grid h3{font-size:24px}.lesson-hint{min-height:92px;gap:6px}.lesson-hint b{font-size:16px}.concept-modal{padding:16px}.concept-modal h2{font-size:27px}.concept-modal .concept-text{font-size:15px;line-height:1.65}.lesson-player{gap:8px}.demo-caption{font-size:15px;line-height:1.6}.demo-vitals{gap:20px}.demo-controls .btn{min-height:34px}}
+@media(max-width:1000px){.lesson-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:10px}.lesson-grid button{padding:12px;gap:5px}.lesson-grid h3{font-size:21px}.lesson-grid .lesson-number{font-size:19px}.demo-vitals{gap:14px}}
+
+.lesson-evidence{display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:center}.lesson-evidence>div{flex:1;min-width:145px;display:flex;flex-direction:column;gap:3px;padding:5px 10px;border-left:2px solid #a68548;background:#bb955c0c}.lesson-evidence span{font:13px/1.5 var(--body);color:#baaa8a}.lesson-evidence b{font:15px/1.5 var(--body);color:#f0d39b;font-weight:500}.lesson-hint .lesson-evidence{justify-content:flex-start}.tether-summary{font:14px/1.5 var(--body);color:#bfb08d}
+.lesson-momentum{flex:none;font:14px/1.5 var(--body);color:#e7c68b}.momentum>small{font:13px var(--body);color:#cbb385}

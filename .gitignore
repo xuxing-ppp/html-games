@@ -1,0 +1,30 @@
+# Operating systems and local editors
+.DS_Store
+._*
+.AppleDouble/
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Installed development dependencies, caches and local environment
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.cache/
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+
+# Generated website and test artifacts (keep test scripts and fixtures)
+/test-results/
+/playwright-report/
+/coverage/
