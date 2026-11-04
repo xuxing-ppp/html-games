@@ -91,5 +91,5 @@
 
 > Precise identity/costume correction to the supplied Chinese ink-wash illustration. Change ONLY the HAT on the rust-red-robed merchant at the FAR RIGHT EDGE. He is Xu Shenxing, a civilian grain merchant, not a government officer. REMOVE the long horizontal black official hat wings from HIS hat and replace HIS hat with a small plain dark soft cloth merchant cap tied close to the head, with NO wings and NO gold ornaments. Keep his same face, beard, expression, red robe, body, position and hands. Do not alter the black winged official cap of the DARK-GRAY-ROBED prefect immediately to his left, or the BLUE magistrate, or seated gray-bearded reviewer. All other people, objects, architecture, composition, original 3:2 dimensions, palette and light must remain unchanged. Preserve existing clean broad xieyi ink-and-pale-color brushwork, no added speckles, realistic shading, fabric texture, patterns, text or symbols. Only far-right merchant's hat.
 
-北渡横竖清理另加约束：收据约前臂宽，不画作铺满整桌的舆图；保持主角俯身与经手人侧向翻册。所有候选均先看原尺寸，最终版本再核三档字号、桌面、手机与短横屏中的实际裁切。未选的候选不加入项目和离线包。
+北渡横竖清理另加约束：收据约前臂宽，不画作铺满整桌的舆图；保持主角俯身与经手人侧向翻册。所有候选均先看原尺寸，最终版本再核三档字号、桌面、手机与短横屏中的实际裁切。未选的候选不加入项目。
 

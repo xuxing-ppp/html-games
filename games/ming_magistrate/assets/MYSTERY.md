@@ -34,4 +34,4 @@
 
 本轮采用内置 image_gen 编辑模式，前轮提示见 [INK-PROMPTS.md](INK-PROMPTS.md)，前轮26幅清稿及人物连续性补齐见 [INK-CLEANUP.md](INK-CLEANUP.md)，后续分镜与身份检查见 [SCENE-IDENTITY.md](SCENE-IDENTITY.md)，北渡修船、暮色城镇与结局人物定向修整见 [THREE-ART-REVISION.md](THREE-ART-REVISION.md)。原图在项目内保存，工具默认输出也保留在生成目录。旧构图与旧运行副本在引用确认后清理，不随月份混入。
 
-压缩质量84，保持原始尺寸。更新素材后执行 `python3 tools/prepare_assets.py --pack`。
+压缩质量84，保持原始尺寸。更新素材后执行 `python3 tools/prepare_assets.py`。

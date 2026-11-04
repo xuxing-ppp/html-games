@@ -103,4 +103,4 @@ npm run test:browser
 
 更新大厅预览图：先启动本地服务，再运行 `python3 tools/capture-previews.py`，需要开发工具 Playwright、Chromium 和 cwebp。生成的是实际游戏画面的压缩 WebP，不将截图原图入库。
 
-大明县令新克隆不包含原图，常规测试校验运行图。保有本地原图时可在其目录运行 `CHECK_SOURCE_ASSETS=1 node --test tests/art.test.mjs`。离线 ZIP 用 `python3 tools/prepare_assets.py --pack-only` 生成，留在本地。
+大明县令新克隆不包含原图，常规测试校验运行图。保有本地原图时可在其目录运行 `CHECK_SOURCE_ASSETS=1 node --test tests/art.test.mjs`。GitHub Pages 直接加载仓库中的运行资源。

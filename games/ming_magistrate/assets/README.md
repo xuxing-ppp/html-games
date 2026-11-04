@@ -8,6 +8,6 @@
 
 基础乡野、河岸、舆图和纸页保留对应墨色画法，早期提示见`SCENES.md`、`VARIANTS.md`。失效构图与旧运行图已移除。
 
-精确证据由HTML/SVG呈现，全部画面离线加载，无CDN；原图不进入交付ZIP。维护命令：`python3 tools/prepare_assets.py --pack`，仅改代码用`--pack-only`。
+精确证据由 HTML/SVG 呈现。GitHub Pages 从仓库加载 WebP，无 CDN 依赖。更新原图后运行 `python3 tools/prepare_assets.py`。
 
-新克隆只包含可直接运行的 WebP，无需原图。常规素材测试校验全部运行图；本地保有原图时，可执行 `CHECK_SOURCE_ASSETS=1 node --test tests/art.test.mjs` 额外校验原图。无原图时使用 `python3 tools/prepare_assets.py --pack-only` 打包。生成 ZIP 保留本地，不入 Git。
+新克隆只包含可直接运行的 WebP，无需原图。常规素材测试校验全部运行图；本地保有原图时，可执行 `CHECK_SOURCE_ASSETS=1 node --test tests/art.test.mjs` 额外校验原图。

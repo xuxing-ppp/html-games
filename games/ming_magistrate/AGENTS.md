@@ -10,5 +10,5 @@
 - 全部场景统一为淡设色水墨，保留墨线、纸色和留白，不用写实图套色替代重绘。同一县衙保持白墙灰瓦围合院落、石铺庭院、木廊柱及同一院门，不因横竖版或昼夜改变建筑。人物与背景须用同一写意概括程度，不能局部细画皮肤、发丝或衣服纹样。水墨层次靠线条、淡墨与留白，不用密集黑点、做旧噪声和满屏斑驳表现画风。各场景分别安排明暗，不因统一画风而全局提亮；夜景必须在缩略图中也能认出是夜晚。
 - 任期主角32–35岁，有薄髭和短颏须，以核仓图为参考。多年后保留脸型再自然衰老。见 assets/MYSTERY.md。
 - 修改规则或内容后运行 node --test tests/engine.test.mjs tests/content.test.mjs tests/art.test.mjs tests/endings.test.mjs。布局修改实际运行 tests/mystery-browser.py 并查看画面，覆盖桌面、短横屏、手机和三档字号。
-- 更新源码或素材后重打 releases/ming-magistrate-offline.zip。仅打包用 python3 tools/prepare_assets.py --pack-only；重压缩并打包用 --pack。
+- GitHub Pages 直接从仓库加载游戏源码和运行资源。更新原图后运行 python3 tools/prepare_assets.py 生成 WebP 和校验清单。
 - 不留下临时依赖、截图、报告或缓存。自动通关不能代替普通新玩家理解验证。

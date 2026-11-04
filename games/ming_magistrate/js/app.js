@@ -10,7 +10,7 @@
  const currentGame=()=>state.replay??state.game;
  function snapshot(){const page=state.ui.pages.at(-1),body=dialog?.querySelector('.library-body');if(page&&body){page.top=body.scrollTop;page.disclosures=[...dialog.querySelectorAll('details[data-disclosure-key]')].map(n=>[n.dataset.disclosureKey,n.open]);}}
  function focus(key){if(!key)return;[...(dialog??gameRoot??root).querySelectorAll('button,input,textarea,select')].find(n=>n.dataset.focusKey===key||n.textContent===key)?.focus({preventScroll:true});}
- function push(type,args={}){snapshot();const active=document.activeElement;state.ui.pages.push({type,...args,top:0,origin:active?.dataset.focusKey??active?.textContent});render({game:false});}
+ function push(type,args={}){snapshot();const active=document.activeElement;state.ui.pages.push({type,...args,top:0,origin:active?.dataset.focusKey??active?.textContent});if(type==='document'&&currentGame()?.documents[args.id])M.sound.play('paper');render({game:false});}
  function back(){snapshot();const page=state.ui.pages.pop();render({game:false});focus(page?.origin);}
  function close(){const origin=state.ui.pages[0]?.origin;state.ui.pages=[];render({game:false});focus(origin);}
  function set(change){snapshot();Object.assign(state.ui,change);render({game:'selectedItem' in change||'endingAct' in change,motion:'endingAct' in change});}
@@ -19,7 +19,14 @@
  function dispatch(action,redraw=true){
   const game=currentGame();if(!game)return;snapshot();const previousError=state.error,next=M.reduce(game,action);if(next===game)return;
   const moved=next.node!==game.node||next.phase!==game.phase||next.explorationFocus!==game.explorationFocus;
-  if(['place','pair','order'].includes(action.type))state.ui.guidesDone.add(M.puzzles[M.currentNode(game).puzzle]?.kind);
+  if(['place','pair','order'].includes(action.type)){
+   state.ui.guidesDone.add(M.puzzles[M.currentNode(game).puzzle]?.kind);
+   M.sound.play('tap');
+  }
+  if(action.type==='submitPuzzle'){
+   if(next.feedback?.kind==='correct')M.sound.play('seal');
+   if(next.feedback?.kind==='wrong')M.sound.play('retry');
+  }
   if(state.replay)state.replay=next;else{state.game=next;state.saved=next;state.error=M.writeSave(next);}
   if(moved){state.ui.selectedItem=null;state.ui.pages=[];}
   const surfaceChanged=!['hint','note','editNote','removeNote'].includes(action.type)||previousError!==state.error;

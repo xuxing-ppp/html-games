@@ -2,11 +2,11 @@
 
 嘉靖四十年（1561），你来到浙江净水，接任县令。从吴秋娘的一张催粮单开始，跟随人物和故事查清四件相连的案子，在最后复审中解释粮食、凭据与各人的责任。
 
+**当前版本见 [version.js](version.js)。**
+
 ## 开始游玩
 
-双击 `index.html`，选择「开始游戏」或「继续游戏」。也可解压 `releases/ming-magistrate-offline.zip` 后双击其中的 `index.html`。不需要安装、服务器或联网，同一份文件可静态部署。
-
-游戏只需要 `index.html`、`js/`、`css/`、`assets/runtime/`。原画、维护工具和测试不随离线包交付。
+从 GitHub Pages 的游戏大厅进入《大明县令》，选择「开始游戏」或「继续游戏」。本地开发可直接双击 `index.html`。
 
 ## 怎样办案
 
@@ -26,7 +26,7 @@
 
 ## 案卷、舆图与阅读
 
-「案卷」收录已证案情、材料、人物往来、剧情回顾与史料笺。「帮助与设置」放操作说明、教学回放、动态效果、存档说明和重新开始，不重复放案情资料。
+「案卷」收录已证案情、材料、人物往来、剧情回顾与史料笺。「帮助与设置」放操作说明、教学回放、动态效果、声音、存档说明和重新开始，不重复放案情资料。
 
 查阅页面可逐层「返回」，也可「关闭」回到原场景。Esc优先返回上一级，在根页面关闭。返回保留材料摆放、选择、阅读位置与入口焦点。
 
@@ -52,11 +52,20 @@
 node --test tests/engine.test.mjs tests/content.test.mjs tests/art.test.mjs tests/endings.test.mjs
 ```
 
-浏览器检查使用已有Python Playwright：`python3 tests/mystery-browser.py`。可通过 `MING_BROWSER_PATH` 指定Chromium，`MING_URL` 指向静态地址或解压后的离线入口。这些是维护工具，不是游玩依赖。
+浏览器检查使用已有Python Playwright：`python3 tests/mystery-browser.py`。可通过 `MING_BROWSER_PATH` 指定Chromium，`MING_URL` 指向静态地址或本地入口。这些是维护工具，不是游玩依赖。
 
-图片更新后执行 `python3 tools/prepare_assets.py --pack`；仅修改脚本时可用 `--pack-only` 重新打包。
+更新原图后执行 `python3 tools/prepare_assets.py`，生成 WebP 和校验清单。
 
 浏览器验收覆盖流程、布局与正常动态效果，另需结合首次试玩观察玩家能否读懂线索、是否清楚下一步。
+
+## 版本更新记录
+
+### v1.0.1 — 2026-11-05
+
+- 新增约 85 秒的原创循环配乐。箫领奏，古筝在句尾回应，低拨弦落在第一、第三拍。配乐在首次操作后播放，切到后台时暂停，回到前台后续播。
+- 新增翻阅文书、整理纸签和提交结果的音效。整理正确时响起落印声，需要重试时播放轻木音。
+- 「帮助与设置 → 声音」新增背景音乐和音效两条独立的 0–100% 音量滑杆。调整即时生效，刷新后保留。
+- 移除离线 ZIP 及打包命令。GitHub Pages 直接从仓库加载游戏源码和运行资源。
 
 ## 显示版本
 

@@ -7,7 +7,6 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
-import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINALS = ROOT / 'assets' / 'originals'
@@ -47,29 +46,8 @@ def compress(quality):
           f"({100 * (1 - manifest['runtime_bytes'] / manifest['original_bytes']):.1f}% smaller). Originals unchanged.")
 
 
-def pack():
-    # Explicit allowlist: never ship originals, tests, tools, caches or development docs.
-    files = [ROOT / 'index.html', ROOT / 'version.js']
-    files += sorted((ROOT / 'css').glob('*.css'))
-    files += sorted((ROOT / 'js').rglob('*.js'))
-    files += sorted(RUNTIME.glob('*.webp'))
-    if not list(RUNTIME.glob('*.webp')):
-        raise SystemExit('Missing assets/runtime/*.webp. Compress the originals first.')
-    destination = ROOT / 'releases' / 'ming-magistrate-offline.zip'
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(destination, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for path in files:
-            archive.write(path, 'ming_magistrate/' + path.relative_to(ROOT).as_posix())
-    print(f'Offline package: {destination.relative_to(ROOT)} ({destination.stat().st_size:,} bytes; {len(files)} files).')
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--quality', type=int, default=84, choices=range(1, 101), metavar='1..100')
-    parser.add_argument('--pack', action='store_true', help='also create a runtime-only offline zip')
-    parser.add_argument('--pack-only', action='store_true', help='package existing runtime files without recompression')
     args = parser.parse_args()
-    if not args.pack_only:
-        compress(args.quality)
-    if args.pack or args.pack_only:
-        pack()
+    compress(args.quality)

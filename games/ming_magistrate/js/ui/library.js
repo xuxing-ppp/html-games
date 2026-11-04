@@ -3,7 +3,7 @@
  'use strict';const M=globalThis.Ming,{el}=M;
  const B=(t,fn,p={})=>el('button',{onClick:fn,...p},t);
  const prose=(...p)=>el('div',{className:'reader-prose'},p.map(t=>el('p',null,t)));
- const labels={records:'案卷',dossier:'案情与材料',people:'人物与往来',recap:'剧情回顾',sources:'史料笺',bibliography:'完整书目',creation:'创作说明',help:'帮助与设置',instructions:'操作说明',motion:'动态效果',saveInfo:'当前存档说明',font:'字体大小',map:'净水县境',notes:'随手记',hint:'当前谜题提示',restart:'重新开始游戏？',limited:'结束本轮补证？',trade:'接受限定责任的交易？'};
+ const labels={records:'案卷',dossier:'案情与材料',people:'人物与往来',recap:'剧情回顾',sources:'史料笺',bibliography:'完整书目',creation:'创作说明',help:'帮助与设置',instructions:'操作说明',motion:'动态效果',sound:'声音',saveInfo:'当前存档说明',font:'字体大小',map:'净水县境',notes:'随手记',hint:'当前谜题提示',restart:'重新开始游戏？',limited:'结束本轮补证？',trade:'接受限定责任的交易？'};
  function title(page){return page.type==='document'?M.mysteryDocuments[page.id]?.title:page.type==='person'?M.people[page.id]?.name:page.type==='source'?M.sources[page.id]?.title:page.type==='place'?M.places[page.id]?.name:page.type==='term'?page.term:labels[page.type]??'查阅';}
  function Document(v,id){const d=M.mysteryDocuments[id];if(!d||!v.game?.documents[id])return prose('这份材料尚未获得。');const meta=v.game.documents[id];return el('article',{className:'original-document'},el('div',{className:'document-origin'},el('p',null,d.kind,' · 相关人物：',M.people[d.person]&&B(M.personCaption(d.person),()=>v.push('person',{id:d.person}),{className:'document-person','data-focus-key':'person-link-'+d.person,'aria-label':'人物资料：'+M.personCaption(d.person)})),el('p',null,'事情发生：',d.eventDate),el('p',null,'文书写于：',d.written==='查访当日'?meta.acquired:d.written),el('p',null,'材料来自：',meta.via)),d.text.map((p,index)=>el('section',null,el(M.Prose,{text:p,onTerm:term=>v.push('term',{term}),readingKey:`document-${id}-${index}`}),v.game.chapter>=3&&B('摘入随手记',()=>{v.dispatch({type:'note',text:p,document:id});v.toast('已摘入随手记');}))));}
  function Dossier(v){const g=v.game,chapter=v.ui.recordChapter??g.chapter;return el('div',null,el('nav',{className:'record-tabs'},M.chapters.slice(0,g.chapter+1).map((label,i)=>B(label,()=>v.set({recordChapter:i}),{'aria-pressed':i===chapter}))),el('h3',null,'已证事实'),Object.entries(g.facts).filter(([id])=>M.factDefinitions[id].chapter===chapter).map(([id,f])=>el('article',{className:'fact-entry'},el('p',null,M.factDefinitions[id].text),f.sources.map(id=>B(M.mysteryDocuments[id].title,()=>v.push('document',{id}))))),!Object.keys(g.facts).some(id=>M.factDefinitions[id].chapter===chapter)&&prose('暂无已证事实。'),el('h3',null,'已得材料'),el('div',{className:'record-list'},Object.keys(g.documents).filter(id=>g.documents[id].chapter===chapter).map(id=>B([el('strong',null,M.mysteryDocuments[id].title),el('span',null,M.mysteryDocuments[id].kind,' · ',M.mysteryDocuments[id].eventDate)],()=>v.push('document',{id}),{'data-document-id':id}))));}
@@ -22,8 +22,19 @@
   if(page.type==='source'){const s=M.sources[page.id];content=el('div',null,prose(...s.paragraphs),s.connection&&el('section',{className:'source-connection'},el('h3',null,'与本案的关系'),el('p',null,s.connection)),s.quote&&el('blockquote',null,s.quote),el('h3',null,'出处'),s.references.map(r=>el('p',null,M.bibliography.find(b=>b.id===r.book).title,' · ',r.locator,r.url&&el('a',{href:r.url,target:'_blank',rel:'noopener noreferrer'},'完整出处（需联网）'))));}
   if(page.type==='bibliography')content=el('div',null,M.bibliography.map(b=>el('article',{className:'source-topic'},el('h3',null,b.title),prose(b.edition,b.locator),el('a',{href:b.url,target:'_blank',rel:'noopener noreferrer'},'完整出处（需联网）'))));
   if(page.type==='creation')content=prose('故事发生在嘉靖四十年的浙江。净水县、主角与地方案件为创作；海瑞、戚继光、胡宗宪等真实人物的会面及书信，依时代背景编写。');
-  if(page.type==='help')content=el('div',null,menu([['操作说明','instructions'],['减少动态效果','motion'],['当前存档说明','saveInfo']]),B('重看教学',v.startReplay),g&&B('返回标题',()=>{v.close();v.home();}),g&&B('重新开始',()=>v.push('restart')));
+  if(page.type==='help')content=el('div',null,menu([['操作说明','instructions'],['减少动态效果','motion'],['声音','sound'],['当前存档说明','saveInfo']]),B('重看教学',v.startReplay),g&&B('返回标题',()=>{v.close();v.home();}),g&&B('重新开始',()=>v.push('restart')));
   if(page.type==='instructions')content=el('div',{className:'instructions-copy'},el('dl',{className:'operation-reference'},[['归类','选纸签 → 选归属'],['排序','上移／下移'],['对照','两边各选一项']].map(([name,method])=>el('div',null,el('dt',null,name),el('dd',null,method)))),prose('整理好后，点“出示整理结果”。'),el('details',{'data-disclosure-key':'keyboard'},el('summary',null,'键盘操作'),prose('Tab 选择控件，回车或空格确认，Esc 返回。')));
+  if(page.type==='sound')content=el('div',{className:'sound-controls'},[['music','背景音乐'],['effects','音效']].map(([key,label])=>{
+   const volume=M.sound.get(key),id='sound-'+key;
+   const value=el('span',{className:'sound-value','aria-hidden':'true'},volume+'%');
+   return el('div',{className:'sound-control'},el('label',{for:id},label),value,
+    el('input',{id,type:'range',min:0,max:100,value:volume,'aria-valuetext':volume+'%','data-focus-key':id,onInput:event=>{
+     const slider=event.currentTarget,level=slider.valueAsNumber;
+     M.sound.set(key,level);
+     value.textContent=level+'%';
+     slider.setAttribute('aria-valuetext',level+'%');
+    }}));
+  }));
   if(page.type==='motion')content=el('div',null,v.systemReduced&&prose('已跟随系统减少动态效果。'),B(v.reduced?'减少动态效果：开':'减少动态效果：关',()=>v.setReduced(!v.reduced),{'aria-pressed':v.reduced,disabled:v.systemReduced}));
   if(page.type==='saveInfo')content=prose('进度自动保存在当前浏览器。换浏览器、换文件地址或清理浏览数据后，可能无法继续。','若出现保存失败提醒，请暂时保留页面。');
   if(page.type==='font')content=el('div',null,el('div',{className:'font-choices'},[[18,'小'],[20,'中'],[22,'大']].map(([size,label])=>B([el('span',{style:{'font-size':size+'px'}},'净水一页'),el('strong',null,label,v.font===size?' · 当前':'')],()=>v.setFont(size),{'aria-pressed':v.font===size,'data-font-size':size,'data-focus-key':'font-'+size}))));
