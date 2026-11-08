@@ -238,13 +238,61 @@
   source={node,gain};
  }
 
+ // Environmental loops are quiet, local and independent of the musical score.
+ let atmosphere=null,ambientSource=null,ambientBuffer=new Map();
+ const lastCue=new Map();
+ function stopAmbience(){if(!ambientSource)return;const {node,gain}=ambientSource;ambientSource=null;const t=context.currentTime;gain.gain.cancelScheduledValues(t);gain.gain.setTargetAtTime(0,t,.09);node.stop(t+.45);}
+ function environmentBuffer(kind){
+  if(ambientBuffer.has(kind))return ambientBuffer.get(kind);
+  const rate=context.sampleRate,length=12,buffer=context.createBuffer(2,rate*length,rate);
+  let seed=91;
+  for(let channel=0;channel<2;channel++){
+   const data=buffer.getChannelData(channel);let smooth=0,deep=0;
+   for(let i=0;i<data.length;i++){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    const random=seed/2147483648-1,t=i/rate;
+    smooth+=(random-smooth)*.035;deep+=(smooth-deep)*.009;
+    const edge=Math.min(1,t/.3,(length-t)/.3);
+    let sample=0;
+    if(kind.includes('river'))sample+=deep*.27*(.7+.3*Math.sin(t*Math.PI/3))+smooth*.035*(1+Math.sin(t*2.1));
+    if(kind==='rain')sample+=smooth*.13+Math.sin(2*Math.PI*720*t)*Math.exp(-(((t%1.7)-.16)**2)*700)*.009;
+    if(kind.includes('night'))sample+=deep*.15+Math.sin(2*Math.PI*2350*t)*Math.max(0,Math.sin(t*Math.PI/2))**18*.007;
+    if(kind==='river')sample+=Math.sin(2*Math.PI*116*t)*Math.exp(-(((t%4)-.8)**2)*55)*.007;
+    data[i]=sample*Math.max(0,edge);
+   }
+  }
+  ambientBuffer.set(kind,buffer);return buffer;
+ }
+ function syncAmbience(){
+  if(!ready()||!preferences.effects||!atmosphere){stopAmbience();return;}
+  if(ambientSource?.kind===atmosphere)return;
+  stopAmbience();
+  const node=context.createBufferSource(),gain=context.createGain();node.buffer=environmentBuffer(atmosphere);node.loop=true;
+  gain.gain.setValueAtTime(0,context.currentTime);gain.gain.linearRampToValueAtTime(.65,context.currentTime+.6);
+  node.connect(gain).connect(effects);node.start();ambientSource={node,gain,kind:atmosphere};
+ }
+ function setScene(kind){const next=['river','rain','night','river-night'].includes(kind)?kind:null;if(atmosphere===next)return;atmosphere=next;syncAmbience();}
+ function deskCue(cue,at){
+  if(['slip','sort','select','ledger'].includes(cue)){
+   const specs={slip:[.08,1300,.09],sort:[.10,1050,.12],select:[.04,2100,.045],ledger:[.14,900,.18]};
+   const [level,band,length]=specs[cue];rustle(at,level,band,length);
+   if(cue==='sort'||cue==='ledger')rustle(at+.065,level*.55,band*1.4,length*.7);
+   if(cue==='slip'||cue==='select')tone(context,effects,{at,hz:cue==='select'?520:270,endHz:210,length:.045,level:.025});
+  }else if(cue==='knock'||cue==='block'){
+   const beats=cue==='knock'?[0,.17]:[0,.11,.26];
+   for(const offset of beats){tone(context,effects,{at:at+offset,hz:cue==='knock'?155:105,endHz:78,length:.11,level:.07});rustle(at+offset,.035,640,.08);}
+  }else if(cue==='steps'){
+   for(const offset of [0,.26,.54]){rustle(at+offset,.08,570,.09);tone(context,effects,{at:at+offset,hz:115,endHz:72,length:.09,level:.035});}
+  }else if(cue==='handover'){rustle(at,.10,1550,.14);rustle(at+.11,.06,1000,.12);}
+ }
+
  function syncAudio(){
   if(effects){
    const now=context.currentTime;
    effects.gain.cancelScheduledValues(now);
    effects.gain.setTargetAtTime(visible()?preferences.effects/100:0,now,.008);
   }
-  syncMusic();
+  syncMusic();syncAmbience();
  }
 
  function unlock(){
@@ -282,10 +330,11 @@
 
  function play(cue){
   if(!preferences.effects||!visible())return;
-  const requested=performance.now();
+  const requested=performance.now();if(requested-(lastCue.get(cue)??-Infinity)<85)return;lastCue.set(cue,requested);
   function sound(){
    if(!ready()||!preferences.effects||performance.now()-requested>200)return;
    const at=context.currentTime+.005;
+   deskCue(cue,at);
    if(cue==='paper'){
     rustle(at,.14,1850,.14);
     rustle(at+.047,.075,3100,.09);
@@ -329,5 +378,5 @@
  document.addEventListener('visibilitychange',()=>{syncAudio();unlock();});
  addEventListener('pagehide',()=>{pageActive=false;syncAudio();});
  addEventListener('pageshow',()=>{pageActive=true;syncAudio();unlock();});
- globalThis.Ming.sound={get:key=>preferences[key],set,play};
+ globalThis.Ming.sound={get:key=>preferences[key],set,play,setScene};
 })();

@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import{M,act,step,solve,campaign}from'./support/game.mjs';
 const reload=g=>M.parseSave(JSON.stringify(g));
 test('new campaign is scene-first and has no clock, budget, legacy reader or field report',()=>{const g=M.initial();assert.equal(g.node,'arrival');for(const key of ['money','elapsed','deadline','extensions','drafts','legacy'])assert(!(key in g));assert.equal(M.preserveBeforeRestart,undefined);assert.equal(M.archivedRecords,undefined);assert.deepEqual(reload(g),g);});
-test('teaching and real cases use the same three puzzle operations',()=>{const ids=Object.keys(M.puzzles);assert.equal(ids.length,15);assert.deepEqual([...new Set(ids.map(id=>M.puzzles[id].kind))].sort(),['compare','match','order']);const g=campaign({until:'names-close'}).game;for(const id of ['tutorial-compare','tutorial-order','names-match','names-compare'])assert(g.solved.includes(id));assert.equal(g.outcomes.length,0);});
+test('teaching and real cases use the same three puzzle operations',()=>{const ids=Object.keys(M.puzzles);assert.equal(ids.length,21);assert.deepEqual([...new Set(ids.map(id=>M.puzzles[id].kind))].sort(),['compare','match','order']);const g=campaign({until:'names-close'}).game;for(const id of ['tutorial-compare','tutorial-order','names-match','names-compare'])assert(g.solved.includes(id));assert.equal(g.outcomes.length,0);});
 test('wrong attempts are specific and free; no answer or advancing is forced',()=>{let g=campaign({until:'tutorial-compare'}).game;g=act(g,{type:'hint'});const before={node:g.node,docs:structuredClone(g.documents),facts:structuredClone(g.facts)};g=act(g,{type:'pair',side:0,field:'person'});g=act(g,{type:'pair',side:1,field:'person'});for(let i=0;i<8;i++)g=act(g,{type:'submitPuzzle'});assert.equal(g.phase,'node');assert.equal(g.node,before.node);assert.deepEqual(g.documents,before.docs);assert.deepEqual(g.facts,before.facts);assert.equal(g.feedback.text,M.puzzles["tutorial-compare"].wrong);assert.match(g.feedback.text,/交没交过/);assert(!g.solved.length);assert.equal(M.reduce(g,{type:'advance'}),g);});
 test('hints are only requested explicitly and stay local to the current puzzle',()=>{let g=campaign({until:'tutorial-order'}).game;assert(!g.hints[g.node]);for(let i=0;i<4;i++)g=act(g,{type:'hint'});assert.equal(g.hints[g.node],3);assert(!g.solved.includes(g.node));const h=step(solve(g));assert(!h.hints['names-match']);});
 test('partial matching, compare picks and sequence positions survive reload',()=>{for(const id of ['names-match','double-compare','document-order']){let g=campaign({until:id}).game,p=M.puzzles[id];if(p.kind==='match')g=act(g,{type:'place',item:p.items[0].id,target:p.targets[1].id});else if(p.kind==='compare')g=act(g,{type:'pair',side:0,field:p.panels[0].fields[0].id});else g=act(g,{type:'order',order:[...p.items.map(x=>x.id)].reverse()});assert.deepEqual(reload(g),g);}});
@@ -23,3 +23,30 @@ test('opening and every puzzle can progress without requesting hints or visiting
 test('previous current-format teaching marks remain valid without being required',()=>{const g=campaign().game;g.completed.push('learn-document','learn-records','learn-recap');g.hints['tutorial-compare']=1;assert.deepEqual(reload(g),g);});
 
 test('winning a later review round does not claim earlier voluntarily unproved rounds were accepted',()=>{let g=campaign({until:'trial-duty',fail:['trial-old']}).game;g=solve(g);assert.match(g.feedback.text,/前两轮.*证明缺口/);assert(!g.feedback.text.includes('均予撤销'));g=act(g,{type:'advance'});assert.equal(g.verdict,'partial');});
+
+test('all 81 optional side-story combinations preserve proof paths and choice-specific responses',()=>{
+ const ids=['names-side','boat-side','relief-side','autumn-side'];
+ for(let bits=0;bits<81;bits++){
+  let value=bits;const sideChoices={};for(const id of ids){sideChoices[id]=M.sceneById[id].options[value%3].value;value=Math.floor(value/3);}
+  const g=campaign({sideChoices,exploreOrder:bits%2?['scribe']:['courier','scribe']}).game;
+  assert.equal(g.verdict,'complete');assert.equal(g.solved.length,21);assert.deepEqual(reload(g),g);
+  for(const id of ids)assert.equal(g.answers[id],sideChoices[id]);
+  assert(g.documents.escort_record);assert(g.documents.copy_trace);assert(g.documents.boat_tally);assert(g.documents.relief_chain);
+ }
+});
+test('branch grants have real timing, and unearned branch materials and forged choices are rejected',()=>{
+ for(const [id,early,later] of [['names-side','copy_trace','counterfoil'],['boat-side','boat_recant','boat-followup'],['relief-side','granary_daily','daily-record'],['autumn-side','witness_protection','escort-blocked']]){
+  let g=campaign({until:id}).game;assert(!g.documents[early],id);
+  while(g.beat<M.currentNode(g).beats.length-1)g=act(g,{type:'advance'});
+  const original=structuredClone(g);g=act(g,{type:'choose',value:M.sceneById[id].options[0].value});assert(g.documents[early]);
+  assert.equal(M.reduce(g,{type:'choose',value:'skip'}),g);
+  original.documents[early]=g.documents[early];assert.throws(()=>reload(original));
+  const h=campaign({until:later,sideChoices:{[id]:'skip'}}).game;assert(h.documents[early],later);
+ }
+ const g=campaign().game;g.choices.namesApproach='invented';assert.throws(()=>reload(g));
+});
+test('old content revisions are retained until an explicit restart is written',()=>{
+ const previous=globalThis.localStorage,old=JSON.stringify({...M.initial(),version:2,contentRevision:undefined});let raw=old;
+ globalThis.localStorage={getItem:()=>raw,setItem:(_k,v)=>{raw=v;}};
+ try{const loaded=M.readSave();assert.equal(loaded.saved,null);assert.equal(loaded.replaceRequired,true);assert.match(loaded.error,/剧情与证据已更新/);assert.equal(raw,old);assert.equal(M.writeSave(M.initial()),'');assert.equal(JSON.parse(raw).version,3);}finally{globalThis.localStorage=previous;}
+});

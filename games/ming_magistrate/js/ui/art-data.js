@@ -1,6 +1,10 @@
 /* Scene crops fill their frame; maps use their own uncropped coordinate space. */
 (()=>{const M=globalThis.Ming;
  M.artCatalog={
+  'names-dispute':{file:'names-dispute-ink',portrait:'names-dispute-portrait-ink',focus:[.5,.52],cast:['you','north','south','elder'],setting:'south',action:'两户与里长核问催单'},
+  'boat-recant':{file:'boat-recant-ink',portrait:'boat-recant-portrait-ink',focus:[.5,.55],cast:['you','boat','zhou'],setting:'dock',action:'另问补述、雇主在后'},
+  'relief-dispute':{file:'relief-dispute-ink',portrait:'relief-dispute-portrait-ink',focus:[.5,.54],cast:['you','lin','widow','family'],setting:'relief',action:'拒签争议字据、核借米'},
+  'escort-night':{file:'escort-night-ink',portrait:'escort-night-portrait-ink',focus:[.5,.58],cast:['you','zhou','scribe'],setting:'dock',action:'夜间护送、拉绳拦阶'},
   county:{file:'county-ink',focus:[.55,.48]},opening:{file:'opening-scene-ink',portrait:'opening-portrait-ink',focus:[.53,.43]},hai:{file:'hai-meeting-ink',portrait:'hai-portrait-ink',focus:[.55,.43]},
   desk:{file:'desk-scene',focus:[.5,.5]},court:{file:'opening-scene-ink',portrait:'opening-portrait-ink',focus:[.53,.43]},land:{file:'farmland-scene-consistent',focus:[.22,.47]},river:{file:'river-scene',focus:[.5,.50]},market:{file:'market-scene',focus:[.45,.5]},letter:{file:'letter-folio',focus:[.5,.5]},
   'farmland-autumn':{file:'farmland-autumn-consistent',focus:[.48,.48]},'granary-audit':{file:'granary-audit-ink',focus:[.46,.22]},'river-rain':{file:'river-rain',focus:[.45,.42]},'river-night':{file:'river-night-ink',focus:[.5,.5]},'desk-night':{file:'desk-night-ink',focus:[.46,.42]},'winter-relief':{file:'winter-relief-ink',focus:[.54,.47]},'village-relief':{file:'village-relief-ink',focus:[.51,.45]},

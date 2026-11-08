@@ -4,11 +4,15 @@
  const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x),unique=a=>Array.isArray(a)&&new Set(a).size===a.length,ints=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
  function parseState(g){
   const fail=()=>{throw Error('当前进度无法继续，请重新开始游戏。');};
-  if(!object(g)||g.version!==2||g.ruleset!=='scene-mystery'||!M.sceneById[g.node]||g.chapter!==M.sceneById[g.node].chapter||!['node','result','ending'].includes(g.phase)||!ints(g.beat,0,30))fail();
+  if(!object(g)||g.version!==3||g.contentRevision!=='mystery-expanded'||g.ruleset!=='scene-mystery'||!M.sceneById[g.node]||g.chapter!==M.sceneById[g.node].chapter||!['node','result','ending'].includes(g.phase)||!ints(g.beat,0,30))fail();
   for(const k of ['documents','facts','puzzleWork','hints','answers','choices','read','map'])if(!object(g[k]))fail();
   for(const k of ['solved','life','trial','outcomes','completed','history','seenNodes','people','terms','knownPlaces','visitedPlaces','explored','notes'])if(!Array.isArray(g[k]))fail();
   const max=M.sceneById[g.node].index;if(!unique(g.seenNodes)||g.seenNodes.length!==max+1||g.seenNodes.some((id,i)=>id!==M.sceneNodes[i].id)||g.seenNodes.some(id=>!M.sceneById[id]||M.sceneById[id].index>max)||!g.seenNodes.includes(g.node))fail();
   const allowed=new Set(g.seenNodes.flatMap(id=>M.sceneById[id].grant??[]));
+  for(const [id,value] of Object.entries(g.answers)){const n=M.sceneById[id],o=n?.options?.find(o=>o.value===value);if(!o||!g.seenNodes.includes(id))fail();for(const d of o.grant??[])allowed.add(d);}
+  for(const n of M.sceneNodes.slice(0,max))if(n.type==='choice'&&g.answers[n.id]===undefined)fail();
+  for(const [key,value] of Object.entries(g.choices)){if(key==='trade'){if(value!==true||g.answers.settlement!=='trade')fail();}else if(!M.sceneNodes.some(n=>n.key===key&&g.answers[n.id]===value))fail();}
+  for(const [id,value] of Object.entries(g.answers))if(g.choices[M.sceneById[id].key]!==value)fail();
   for(const id of g.explored){if(!M.explorationVisits[id]||g.chapter<3)fail();for(const d of M.explorationVisits[id].grant)allowed.add(d);}
   if([...allowed].some(id=>!g.documents[id]))fail();
   for(const[id,d]of Object.entries(g.documents))if(!allowed.has(id)||!M.mysteryDocuments[id]||!object(d)||!ints(d.chapter,0,g.chapter)||typeof d.via!=='string'||typeof d.acquired!=='string')fail();
@@ -38,7 +42,7 @@
   for(const[id,c]of Object.entries(g.read)){const base=M.sceneById[id],v=id.startsWith('visit-')?M.explorationVisits[id.slice(6)]:null;if(!base&&!v||!ints(c,1,30)||base&&!g.seenNodes.includes(id)||v&&!g.explored.includes(id.slice(6)))fail();}
   return g;
  }
- function readSave(){try{const raw=localStorage.getItem(KEY);return {saved:raw?parseState(JSON.parse(raw)):null,error:''};}catch{return {saved:null,error:'当前进度无法继续，可以重新开始游戏。'};}}
+ function readSave(){let raw;try{raw=localStorage.getItem(KEY);const parsed=raw?JSON.parse(raw):null;if(parsed&&parsed.contentRevision!=='mystery-expanded')return {saved:null,replaceRequired:true,error:'剧情与证据已更新，旧版进度需重新开始。原进度会保留到你确认替换；字号和声音设置保留。'};return {saved:parsed?parseState(parsed):null,replaceRequired:false,error:''};}catch{return {saved:null,replaceRequired:!!raw,error:'当前进度无法继续，可以确认后重新开始游戏。'};}}
  function writeSave(g){try{parseState(g);const raw=JSON.stringify(g);localStorage.setItem(KEY,raw);if(localStorage.getItem(KEY)!==raw)throw Error();return '';}catch{return '本次进度未能保存，请保留当前页面；关闭后可能丢失。';}}
  Object.assign(M,{KEY,parseState,parseSave:raw=>parseState(JSON.parse(raw)),readSave,writeSave});
 })();

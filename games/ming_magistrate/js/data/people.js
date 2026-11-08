@@ -93,7 +93,7 @@
   add('north',heard('names-close',2),'更正回单送到后，他让周衡把“不再催取”又念了一遍，才放下小锯。旧纸没有被丢掉，新纸也要好好留着，免得下回又得背粮跑一趟。');
   add('south',heard('south-visit',2),'母亲病重，家中存粮换了药，人没能留下，三石欠粮仍在。他认欠，只求分期，也不肯让北渡的同名人替自己交。');
   add('south',heard('names-close',3),'查清后，南桥欠粮另记，按家中难处分期。那张误送到北渡的催单，不再把两个人的日子挤在同一个名字下面。');
-  add('boat',heard('boat-story',4),'他认得旧石桥、陆庄西埠，也认自己撑过的前两船；后两船与再往下的去向，只能说听过。他喝过酒，几更记不牢，桥下换过长篙却记得清楚。');
+  add('boat',heard('boat-story',4),'他原先说能认四船，却只讲了自己撑过的两船；下游只说听同行讲。他记不得几更，倒记得旧桥与换篙，哪些话可靠还待独立原记相核。');
   add('boat',proved('boat-scope'),'核过供述后，他亲见的航段单独留用。后半程由收领与脚行记录接续，他不必为了把故事讲全，替没走过的水路作证。');
   add('courier',heard('visit-courier',2),'三月的收发簿逐日留下取稿、送单、返回的记录。他能认陶承简初九回仓验粮，也提醒你，守驿舍的人不能替谁证明一生清白。');
   add('courier',proved('planned')&&heard('visit-courier',2),'收发日子与清单草稿彼此对上，初九才临时起意的供述由此露出缺口。他坚持先翻的那本簿，留住了几个月前的一段先后。');
@@ -115,6 +115,8 @@
   add('scribe',heard('visit-scribe',4),'你答应只问亲见亲写的事，安排另处问话与家人通信。他才松开攥着的袖口，逐字认下原稿，涂去的一行也原样留下。');
   add('censor',heard('trial-intro',1),'复审开堂，他先分出三问：旧亏的时间、三月交粮的次数、各人实际所做。原据按问项出示，尚缺的仍可继续补证。');
   add('censor',(g?.trial??[]).some(r=>r.supported),'已经出示并获得采纳的证明，逐项写进复审记录。堂上不以一项问清，便省去其余问项。');
+  const sideHistory={elder:['names-side','namesApproach',{private:'他先在分开问话中交出转抄留痕，承认求缓与补错住处须分别交代。',public:'两户在场时，他要求先核底稿；补记住处究竟怎样发生，仍待核对原件。',skip:'你先核原册，没有展开求缓争执；他的送达经手仍随查证留下。'}],boat:['boat-side','boatApproach',{separate:'另处补述时，他收回把听说算亲见的部分，也谈到怕失去雇工。',ledger:'你先调独立脚行存记，再核他改口的缘故，旧供与补述分别留存。',skip:'雇工纠纷暂未追问，补述与修篙存记仍按常规调取。'}],family:['relief-side','reliefApproach',{records:'你先核仓门日记，救急另发，拒签旧争议字据没有阻断领取。',neighbours:'你先保留垫米原话和借记，没有要求邻人把借米改成赠米。',skip:'门口争执交林阿蘅分开登记，救急照办，旧册与借记随后相核。'}],scribe:['autumn-side','autumnApproach',{protect:'你先安排另处问话与家属通信，保护不以按指定说法供述为条件。',seal:'你先点封来纸附件，并安排他在明处等候护送。',skip:'你按常规安排护送和调卷，药债另记，没有将援助本身写成罪。'}]};
+  const side=sideHistory[id];if(side&&heard(side[0],M.sceneById[side[0]].beats.length+1)){const text=side[2][g?.choices?.[side[1]]];if(text)middle.push(text);}
   const act=g?.phase==='ending'?(reading.endingActRead??-1):-1,full=g?.verdict==='complete';
   if(act>=0){
    const ruling={you:full?'复审撤销了旧亏与侵吞赈粮的相关指控。你当日怎样签收，也仍如实留在裁定里。':g.verdict==='settlement'?'你接受另交四百石和赔偿，换得调任；呈文将责任限定为县内错账，完整追责到此止步。':g.verdict==='partial'?'复审核清了一部分证明，你留任限期补办，其余缺口仍在待查的一卷。':'复审证明不足，你因交接失察、赈用说明不清被免去知县职务，须交回县印。',gu:full?'复审后停职，原卷封存，知情与销账责任移交审办。':g.verdict==='settlement'||g.verdict==='dismissed'?'此次结案后继续履职，完整责任未获追究。':g?.trial?.[2]?.supported?'相关经手停办此案钱粮，接受审办。':'完整知情责任尚未证成，未受本案完整处分。',xu:full?'复审后相关账簿与粮产被查封，设单与转售责任移交审办。':g.verdict==='settlement'?'退补交易履行后，他来道贺调任，仍旧周到；设单责任未获追究。':g.verdict==='dismissed'?'转售与设单的完整责任未能追究，退补按契执行。':g?.trial?.[2]?.supported?'相关经手停办此案钱粮，接受审办。':'完整知情责任仍有证明缺口，未受完整处分。',clerk:full?'改账的责任另列审办，认罪与协查情况一并留卷。':'已有供述与原册对应的改账受到处分。',lu:full?'相关账簿与粮产查封，应还欠粮继续追缴。':'已经承认的退补依契执行，其他责任依本次裁定分项处理。',shen:g.verdict==='partial'?'回程船上，他把待办的一卷放到你手边，问明日先办哪件事。':g.verdict==='dismissed'?'交印出门，他提着初到净水时的旧行囊等你。行囊里重了几卷尚未办完的事。':g.verdict==='settlement'?'调任文书到后，他将县副卷收入箱底，问你是否一并带走。':'堂上终于逐项读明原据。他将县副卷重新理平，那一年留下的纸终于有了回音。'};

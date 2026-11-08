@@ -48,7 +48,7 @@ def solve_ui(page,p,method="click"):
  activate(page.locator('[data-submit-puzzle]'));assert state(page)['phase']=='result'
 def journey(page,route):
  page.evaluate('(k)=>localStorage.removeItem(k)',KEY);page.reload();ready(page);page.get_by_role('button',name='开始游戏',exact=True).click()
- for turn in range(250):
+ for turn in range(600):
   g=state(page)
   if g['phase']=='ending':break
   n=page.evaluate('(g)=>Ming.currentNode(g)',g)
@@ -88,7 +88,7 @@ with sync_playwright() as p:
  # Scene-first start, no old-save reader or archive operation; current saves still continue.
  page.evaluate('(k)=>localStorage.setItem(k,JSON.stringify({version:1,ruleset:"linked-v2"}))',KEY);page.reload()
  assert page.get_by_role('button',name='开始游戏',exact=True).count();assert not page.get_by_role('button',name='继续游戏',exact=True).count();assert '旧履职' not in page.locator('body').inner_text()
- page.get_by_role('button',name='开始游戏',exact=True).click();assert state(page)['version']==2;assert '明朝嘉靖四十年' in page.locator('.dialogue-reading').inner_text()
+ page.get_by_role('button',name='开始游戏',exact=True).click();assert page.get_by_role('button',name='确认重新开始',exact=True).is_visible();page.get_by_role('button',name='确认重新开始',exact=True).click();assert state(page)['version']==3;assert '明朝嘉靖四十年' in page.locator('.dialogue-reading').inner_text()
  # Partial puzzle work, originals, navigation stack, font and focus restore.
  load(page,'names-match');page.locator('[data-select-item="n-field"]').click();page.locator('[data-target="south"]').click();before=state(page)
  page.get_by_role('button',name='案卷',exact=True).click();assert page.locator('dialog').get_by_role('button',name='操作说明',exact=True).count()==0

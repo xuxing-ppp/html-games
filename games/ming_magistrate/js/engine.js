@@ -19,7 +19,7 @@
   if(n.type==='explore')for(const p of Object.keys(M.explorationVisits))if(!g.knownPlaces.includes(p))g.knownPlaces.push(p);
   record(g);return true;
  }
- function initial(){const g={version:2,ruleset:'scene-mystery',node:'arrival',chapter:0,phase:'node',beat:0,documents:{},facts:{},puzzleWork:{},solved:[],hints:{},answers:{},choices:{},life:[],trial:[],outcomes:[],completed:[],history:[],read:{},seenNodes:[],people:['you','shen'],terms:[],knownPlaces:['county','yamen','warehouse'],visitedPlaces:[],explored:[],explorationFocus:null,map:{zoom:1,x:0,y:0,selected:'county'},notes:[],nextNote:1,feedback:null,verdict:null};enter(g,'arrival');return g;}
+ function initial(){const g={version:3,contentRevision:'mystery-expanded',ruleset:'scene-mystery',node:'arrival',chapter:0,phase:'node',beat:0,documents:{},facts:{},puzzleWork:{},solved:[],hints:{},answers:{},choices:{},life:[],trial:[],outcomes:[],completed:[],history:[],read:{},seenNodes:[],people:['you','shen'],terms:[],knownPlaces:['county','yamen','warehouse'],visitedPlaces:[],explored:[],explorationFocus:null,map:{zoom:1,x:0,y:0,selected:'county'},notes:[],nextNote:1,feedback:null,verdict:null};enter(g,'arrival');return g;}
  function sources(g,p){const ids=p.sources.filter(id=>own(g,id));if(p.id==='document-order'&&!own(g,'courier_register'))for(const id of ['scribe_statement','clerk_alibi'])if(own(g,id))ids.push(id);return [...new Set(ids)];}
  function work(g,p){return g.puzzleWork[p.id]??(p.kind==='order'?{order:p.items.map(i=>i.id)}:p.kind==='match'?{placements:{}}:{pair:[null,null]});}
  function grade(p,w){if(p.kind==='order')return Array.isArray(w.order)&&p.answer.length===w.order.length&&p.answer.every((x,i)=>x===w.order[i]);if(p.kind==='compare')return Array.isArray(w.pair)&&p.answer.every((x,i)=>x===w.pair[i]);return p.items.every(i=>w.placements?.[i.id]===p.answer[i.id]);}
@@ -49,7 +49,7 @@
   }
   if(a.type==='choose'&&n.type==='choice'&&g.phase==='node'&&g.beat===n.beats.length-1&&g.answers[n.id]===undefined){
    const o=n.options.find(o=>o.value===a.value);if(!o)return g;if(n.id==='settlement'&&o.value==='trade'&&!a.confirmed)return g;
-   const h=copy(g);h.answers[n.id]=o.value;h.choices[n.key]=o.value;
+   const h=copy(g);h.answers[n.id]=o.value;h.choices[n.key]=o.value;grant(h,o.grant,`${n.title}：${o.label}`);
    if(n.life!==undefined){if(h.life.length!==n.life)return g;h.life.push(o.value);}
    log(h,n.title,o.label);
    if(n.id==='settlement'&&o.value==='trade'){h.choices.trade=true;end(h,'settlement');return h;}

@@ -12,3 +12,5 @@
 - 修改规则或内容后运行 node --test tests/engine.test.mjs tests/content.test.mjs tests/art.test.mjs tests/endings.test.mjs。布局修改实际运行 tests/mystery-browser.py 并查看画面，覆盖桌面、短横屏、手机和三档字号。
 - GitHub Pages 直接从仓库加载游戏源码和运行资源。更新原图后运行 python3 tools/prepare_assets.py 生成 WebP 和校验清单。
 - 不留下临时依赖、截图、报告或缓存。自动通关不能代替普通新玩家理解验证。
+
+- v1.1有21题、四条可略过支线。分支改变材料取得时机与回应，常规调卷取得独立材料后汇合；不以护送危险推定幕后主使。新内容格式 version:3/contentRevision:mystery-expanded，旧进度确认前不覆盖。

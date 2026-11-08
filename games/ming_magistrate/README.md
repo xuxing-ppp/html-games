@@ -52,13 +52,21 @@
 node --test tests/engine.test.mjs tests/content.test.mjs tests/art.test.mjs tests/endings.test.mjs
 ```
 
-浏览器检查使用已有Python Playwright：`python3 tests/mystery-browser.py`。可通过 `MING_BROWSER_PATH` 指定Chromium，`MING_URL` 指向静态地址或本地入口。这些是维护工具，不是游玩依赖。
+浏览器检查使用已有Python Playwright：`python3 tests/mystery-browser.py`；新增分镜与声音检查为 `python3 tests/expansion-browser.py`。可通过 `MING_BROWSER_PATH` 指定Chromium，`MING_URL` 指向静态地址或本地入口。这些是维护工具，不是游玩依赖。
 
 更新原图后执行 `python3 tools/prepare_assets.py`，生成 WebP 和校验清单。
 
 浏览器验收覆盖流程、布局与正常动态效果，另需结合首次试玩观察玩家能否读懂线索、是否清楚下一步。
 
 ## 版本更新记录
+
+### v1.1.0 — 2026-11-08
+
+- 四案新增人情与利益纠纷、船工改口及夜间护送受阻，剧情量约为原版1.8倍，保留主线和结局框架。
+- 两道短教程之后进入正式推理，共二十一道整理题。正式排序结合引用和经手关系，对照需核独立凭据。
+- 四条支线可选择介入方法或略过，影响旁证取得时机和人物回应，均保留完整翻案路径。
+- 新增四组横竖水墨分镜、展卷与纸签声音，以及河埠、雨景、夜间环境声，沿用音乐和音效两条音量滑杆。
+- 旧版进度需确认重新开始，确认前保留；字号、声音和动态效果设置保留。
 
 ### v1.0.1 — 2026-11-05
 

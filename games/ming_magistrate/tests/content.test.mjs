@@ -44,3 +44,16 @@ test('public document dates match the later court date, while writing and delive
  assert.equal(M.sceneById['confession-intro'].date,'九月初八');
  assert(M.mysteryDocuments.confession.eventDate.includes('五月'));
 });
+
+test('expanded campaign has four optional disputes, sufficient sources before each task and short teaching',()=>{
+ const sides=M.sceneNodes.filter(n=>n.sideStory);assert.equal(sides.length,4);assert(sides.every(n=>n.options.length===3&&n.options.some(o=>o.value==='skip')));
+ for(const p of Object.values(M.puzzles)){
+  const g=campaign({until:p.id}).game;
+  for(const id of p.sources)if(id!=='courier_register')assert(g.documents[id],p.id+' '+id);
+  if(p.kind==='order'&&!p.id.startsWith('tutorial'))for(const i of p.items)assert(!/初[一二三四五六七八九十]|十一月/.test(i.text),p.id);
+ }
+ const dialogue=M.sceneNodes.flatMap(n=>[...n.beats.map(b=>b.text??''),...(n.options??[]).flatMap(o=>o.reply.map(b=>b[1]))]).join('');assert(dialogue.length>=15500);
+ assert(M.sceneById['names-intro'].beats[0].text.includes('提示仍由你主动请求'));
+ assert(M.mysteryDocuments.cargo_marks.text.join('').includes('车牌可复用'));
+ assert(M.mysteryDocuments.escort_record.text.join('').includes('不能认定许家指使'));
+});

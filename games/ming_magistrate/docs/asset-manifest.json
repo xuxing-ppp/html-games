@@ -6,6 +6,24 @@
   "resized": false,
   "images": [
     {
+      "file": "boat-recant-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2796693,
+      "original_sha256": "8e3951bd8181fe860d1d00301b6f88b0ef2854f14cff9b8f2d1d0284c29dcd24",
+      "runtime_bytes": 232870,
+      "runtime_sha256": "798ee098b59850cb8e927c2bf32675de15d10bca27400d799199389f561c08d3"
+    },
+    {
+      "file": "boat-recant-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2475481,
+      "original_sha256": "fea23c81da9355b63bc5688641b4ef0bf1cc10b74213be377876f86d52b469a9",
+      "runtime_bytes": 165970,
+      "runtime_sha256": "896c2ea3d373f7209965c7be60b09385c5dd6555a83bde37d17ae9d778a6b2ce"
+    },
+    {
       "file": "clerk-account-ink",
       "width": 1672,
       "height": 941,
@@ -85,6 +103,24 @@
       "original_sha256": "32fdb7cb19fbd27d8f619aca708c23a496a85046e84f7765011ab6f1813eb85c",
       "runtime_bytes": 319166,
       "runtime_sha256": "5e36901c2d897e3ae7af1498108cec2197ed048016a2159567e4c35c1225dbca"
+    },
+    {
+      "file": "escort-night-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2698344,
+      "original_sha256": "abe132d4f9b49812ba20926371f1abd394f2bba7b4251bd53aa4b21aff552093",
+      "runtime_bytes": 190758,
+      "runtime_sha256": "844365feff759ea17f69a7b6425a8bffe59634b4aa06ae75bb20549386853203"
+    },
+    {
+      "file": "escort-night-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2182003,
+      "original_sha256": "751c6cdfeffad1425e779a0f35b597ee89bd0a9bce86254a3d83a22d58df8bb4",
+      "runtime_bytes": 112338,
+      "runtime_sha256": "ddf8cb9c7f5fa87af36a480b154d5e4e144bd83e5e48385a25acfadd6ee5876d"
     },
     {
       "file": "estate-dock-ink",
@@ -204,6 +240,24 @@
       "runtime_sha256": "b15ff46aa88e28d62174a76b054509e21f349cab116de4b1cd31b9cdef403e8c"
     },
     {
+      "file": "names-dispute-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2601516,
+      "original_sha256": "cbb7d9c304cb0ba4def937c036218d57ac2ae1806c1b55a2f987749122c39a7b",
+      "runtime_bytes": 228408,
+      "runtime_sha256": "e19260d190083aef8fa0e19711d16e6b07971de7529538c5a79a95c91796736e"
+    },
+    {
+      "file": "names-dispute-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2346118,
+      "original_sha256": "9dc83c02a49e6cf9186b12163448d2c943ea8b24dbc149d96afbe5540b08efc7",
+      "runtime_bytes": 173318,
+      "runtime_sha256": "d45f627c706fe15d10491bec2808974c1c942c4cf6ce48d81678632517f60723"
+    },
+    {
       "file": "north-hearing-ink",
       "width": 1672,
       "height": 941,
@@ -247,6 +301,24 @@
       "original_sha256": "6ea0c6ed3b57e7a063ad768f71a5e2bff6452422f8737d70f94be63d06630c93",
       "runtime_bytes": 315270,
       "runtime_sha256": "138edaff6dd6bd16819d27c61ab7257fe60479c598a919a34623e98d2034d0cc"
+    },
+    {
+      "file": "relief-dispute-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2411613,
+      "original_sha256": "d22ea299ef79142b762b97cfd6ee4c934fbb76578d3f8ac58f60ddcbc16d4837",
+      "runtime_bytes": 188786,
+      "runtime_sha256": "00a67e89455a415636308f8c9ee211126e4c416faa46fa691a4c480682539d89"
+    },
+    {
+      "file": "relief-dispute-portrait-ink",
+      "width": 1086,
+      "height": 1448,
+      "original_bytes": 2250420,
+      "original_sha256": "c940cb6267866b16559082384e4730ba7317a0baf12697f0f826d75fe73ae3d2",
+      "runtime_bytes": 154060,
+      "runtime_sha256": "e7b393ab6a927985da7b15098155cabc43e62d9859d03681feb16601cfb5be84"
     },
     {
       "file": "relief-doorway-ink",
@@ -330,6 +402,6 @@
       "runtime_sha256": "cc34a9b172501763b52eee83e63b2ef6016afc5e847cb5cce1ca029023afb9a8"
     }
   ],
-  "original_bytes": 107009875,
-  "runtime_bytes": 11052416
+  "original_bytes": 126772063,
+  "runtime_bytes": 12498924
 }

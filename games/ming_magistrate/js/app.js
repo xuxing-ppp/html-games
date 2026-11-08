@@ -3,14 +3,15 @@
  'use strict';
  const M=globalThis.Ming,root=document.getElementById('root'),loaded=M.readSave(),motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
  const freshUI=()=>({pages:[],selectedItem:null,endingAct:0,endingActRead:-1,guidesDone:new Set()});
- const state={game:null,saved:loaded.saved,error:loaded.error,font:20,reduced:false,replay:null,ui:freshUI()};
+ const state={game:null,saved:loaded.saved,error:loaded.error,replaceRequired:loaded.replaceRequired,font:20,reduced:false,replay:null,ui:freshUI()};
  try{const size=Number(localStorage.getItem('jingshui.reading-size'));if([18,20,22].includes(size))state.font=size;state.reduced=localStorage.getItem('jingshui.reduced-motion')==='true';}catch{}
+ const heardCues=new Set();
  let gameRoot=null,dialog=null,disposeGame=()=>{},disposeLibrary=()=>{},gameDirty=false,toastTimer,replayReturn=null;
  const reduced=()=>state.reduced||motionPreference.matches;
  const currentGame=()=>state.replay??state.game;
  function snapshot(){const page=state.ui.pages.at(-1),body=dialog?.querySelector('.library-body');if(page&&body){page.top=body.scrollTop;page.disclosures=[...dialog.querySelectorAll('details[data-disclosure-key]')].map(n=>[n.dataset.disclosureKey,n.open]);}}
  function focus(key){if(!key)return;[...(dialog??gameRoot??root).querySelectorAll('button,input,textarea,select')].find(n=>n.dataset.focusKey===key||n.textContent===key)?.focus({preventScroll:true});}
- function push(type,args={}){snapshot();const active=document.activeElement;state.ui.pages.push({type,...args,top:0,origin:active?.dataset.focusKey??active?.textContent});if(type==='document'&&currentGame()?.documents[args.id])M.sound.play('paper');render({game:false});}
+ function push(type,args={}){snapshot();const active=document.activeElement;state.ui.pages.push({type,...args,top:0,origin:active?.dataset.focusKey??active?.textContent});if(type==='document'&&currentGame()?.documents[args.id])M.sound.play(/簿|册|索引/.test(M.mysteryDocuments[args.id]?.title??'')?'ledger':'paper');render({game:false});}
  function back(){snapshot();const page=state.ui.pages.pop();render({game:false});focus(page?.origin);}
  function close(){const origin=state.ui.pages[0]?.origin;state.ui.pages=[];render({game:false});focus(origin);}
  function set(change){snapshot();Object.assign(state.ui,change);render({game:'selectedItem' in change||'endingAct' in change,motion:'endingAct' in change});}
@@ -21,7 +22,7 @@
   const moved=next.node!==game.node||next.phase!==game.phase||next.explorationFocus!==game.explorationFocus;
   if(['place','pair','order'].includes(action.type)){
    state.ui.guidesDone.add(M.puzzles[M.currentNode(game).puzzle]?.kind);
-   M.sound.play('tap');
+   M.sound.play({place:'slip',pair:'select',order:'sort'}[action.type]);
   }
   if(action.type==='submitPuzzle'){
    if(next.feedback?.kind==='correct')M.sound.play('seal');
@@ -36,7 +37,7 @@
    if(action.type==='submitPuzzle'&&next.feedback?.kind==='wrong')requestAnimationFrame(()=>{const feedback=gameRoot?.querySelector('.puzzle-feedback');feedback?.focus({preventScroll:true});feedback?.scrollIntoView({block:'nearest'});});
   }
  }
- function restart(){state.game=M.initial();state.saved=state.game;state.replay=null;state.ui=freshUI();M.resetReaders();M.resetPaperReading();state.error=M.writeSave(state.game);render({motion:true});}
+ function restart(){heardCues.clear();state.replaceRequired=false;state.game=M.initial();state.saved=state.game;state.replay=null;state.ui=freshUI();M.resetReaders();M.resetPaperReading();state.error=M.writeSave(state.game);render({motion:true});}
  function resume(){state.game=state.saved;state.ui=freshUI();render();}
  function home(){state.game=null;state.ui.pages=[];render();}
  function disposeAll(){disposeLibrary();disposeGame();disposeLibrary=disposeGame=()=>{};M.cancelSceneTransitions();}
@@ -46,6 +47,9 @@
  function view(){return {...state,reduced:reduced(),systemReduced:motionPreference.matches,game:currentGame(),replay:!!state.replay,dispatch,set,push,back,close,setFont,setReduced,restart,resume,home,startReplay,endReplay,toast};}
  function mountSurface(surface){const readers=M.mountReaders(surface),art=M.mountArt(surface);return()=>{readers();art();};}
  function render({game=true,motion=false}={}){
+  const sounding=currentGame(),soundNode=sounding?M.currentNode(sounding):null;
+  M.sound.setScene(sounding?.phase==='ending'?null:soundNode?.ambience);
+  if(sounding&&sounding.phase==='node'){const b=M.sceneBeats(sounding)[sounding.beat],key=`${state.replay?'replay':'game'}:${soundNode.id}:${sounding.beat}`;if(b?.cue&&!heardCues.has(key)){heardCues.add(key);M.sound.play(b.cue);}}
   if(currentGame()?.phase==='ending')state.ui.endingActRead=Math.max(state.ui.endingActRead,state.ui.endingAct);
   const active=document.activeElement,key=active?.dataset.focusKey,selection=active&&'selectionStart'in active?{a:active.selectionStart,b:active.selectionEnd}:null;
   root.style.setProperty('--reading-size',state.font+'px');root.dataset.reduced=String(reduced());
@@ -67,7 +71,7 @@
    for(const n of gameRoot.querySelectorAll('details[data-disclosure-key]'))if(details.has(n.dataset.disclosureKey))n.open=details.get(n.dataset.disclosureKey);
    disposeGame=mountSurface(gameRoot);startTransition?.();
    const g=currentGame();
-   if(state.replay&&g.node==='names-close'&&g.beat===M.sceneBeats(g).length-1){const advance=gameRoot.querySelector('[data-advance]');advance?.replaceWith(M.el(M.Action,{label:'结束教学回放',onClick:endReplay}));}
+   if(state.replay&&g.node==='tutorial-order'&&g.phase==='result'){const advance=gameRoot.querySelector('[data-advance]');advance?.replaceWith(M.el(M.Action,{label:'结束教学回放',onClick:endReplay}));}
   }
   // Reader navigation keeps its own lifetime; pending game changes apply on close.
   const disclosures=new Map(state.ui.pages.at(-1)?.disclosures??[]);
