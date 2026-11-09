@@ -188,15 +188,15 @@ with sync_playwright() as p:
   page.set_viewport_size({'width':w,'height':h})
   for fixture in ['tutorial-compare','names-match','document-order']:
    load(page,fixture,22);puzzle=page.evaluate('(g)=>Ming.puzzles[g.node]',state(page));solve_ui(page,puzzle);bounds(page)
-  load(page,'county-intro',22);page.get_by_role('button',name='放大',exact=True).click();page.get_by_role('button',name='复位',exact=True).click();world=page.locator('.atlas-world').bounding_box();assert abs(world['width']/world['height']-1.5)<.01;page.locator('.place-actions .ink-action').click();assert state(page)['node']=='yamen'
+  load(page,'to-dock',22);page.get_by_role('button',name='放大',exact=True).click();page.get_by_role('button',name='复位',exact=True).click();world=page.locator('.atlas-world').bounding_box();assert abs(world['width']/world['height']-1.5)<.01;page.locator('.place-actions .ink-action').click();assert state(page)['node']=='boat-story'
   load(page,'trial-old',22);page.get_by_role('button',name='按现有范围裁定',exact=True).click();page.get_by_role('button',name='自愿结束本轮补证',exact=True).click();assert state(page)['trial'][0]['supported']==False
-  load(page,'settlement',22);contained(page,'[data-show-choices]');page.locator('[data-show-choices]').click();assert page.evaluate('document.activeElement.hasAttribute("data-choice-value")');page.locator('[data-choice-value="trade"]').click();page.get_by_role('button',name='接受退补交易',exact=True).click();assert state(page)['verdict']=='settlement'
+  load(page,'settlement-choice',22);contained(page,'[data-show-choices]');page.locator('[data-show-choices]').click();assert page.evaluate('document.activeElement.hasAttribute("data-choice-value")');page.locator('[data-choice-value="trade"]').click();page.get_by_role('button',name='接受退补交易',exact=True).click();assert state(page)['verdict']=='settlement'
   print('TOUCH/SHORT interactions',w,h,'passed',flush=True)
  count=0
  for w,h in ([] if '--interactions-only' in sys.argv else VIEWPORTS):
   page.set_viewport_size({'width':w,'height':h})
   for font in [18,20,22]:
-   for name in ['arrival','boats-intro','restitution','trial-intro','qiuniang','county-intro','tutorial-compare','tutorial-order','names-match','double-compare','autumn-explore','document-order','hai-meeting','settlement','trial-old','result','office','letters']:
+   for name in ['arrival','boats-intro','restitution','trial-intro','qiuniang','to-dock','tutorial-compare','tutorial-order','names-match','double-compare','autumn-explore','document-order','hai-meeting','settlement-choice','trial-old','hearing-duty','corridor','delivery-result','result','office','letters']:
     
     try:load(page,name,font);page.wait_for_timeout(60);bounds(page)
     except Exception:
@@ -204,9 +204,9 @@ with sync_playwright() as p:
     if name in ['arrival','boats-intro','restitution','trial-intro','qiuniang','hai-meeting','result']:
      contained(page,'[data-advance]');contained(page,'.scene-quick button');assert page.locator('.scene-quick').bounding_box()['y']+page.locator('.scene-quick').bounding_box()['height']<=page.locator('.scene-art').bounding_box()['y']+page.locator('.scene-art').bounding_box()['height']+1
     if name in ['tutorial-compare','tutorial-order','names-match','double-compare','document-order','trial-old']:contained(page,'[data-submit-puzzle]')
-    if name=='county-intro':contained(page,'.place-actions .ink-action')
+    if name=='to-dock':contained(page,'.place-actions .ink-action')
     if name=='autumn-explore':contained(page,'.exploration-footer .ink-action')
-    if name=='settlement':
+    if name=='settlement-choice':
      contained(page,'[data-show-choices]')
      for option in page.locator('[data-choice-value]').all():option.scroll_into_view_if_needed();assert option.is_visible()
     if name in ['office','letters']:contained(page,'.ending-panel footer .ink-action')

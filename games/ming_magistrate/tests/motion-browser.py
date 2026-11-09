@@ -79,6 +79,15 @@ with sync_playwright() as p:
  assert any(any(0<p['opacity']<1 for p in f['layers']) for f in frames),frames
  assert page.locator('.scene-outgoing').count()==0
  print('CROSSFADE: one 220 ms transition; intermediate frames remain covered by a loaded opaque picture',flush=True)
+ # A new image within one scene also crossfades; adjacent beats using it stay still.
+ load(page,'corridor');page.get_by_role('button',name='上一段',exact=True).click();page.wait_for_timeout(250)
+ page.get_by_role('button',name='上一段',exact=True).click();page.wait_for_timeout(250)
+ assert page.locator('.scene-art').get_attribute('data-art-key')=='review-hearing'
+ page.evaluate('sceneMotions=[]');page.locator('[data-advance]').click();page.wait_for_timeout(300)
+ assert page.locator('.scene-art').get_attribute('data-art-key')=='review-corridor'
+ assert page.evaluate('sceneMotions.map(x=>x.key)')==['review-corridor']
+ page.locator('[data-advance]').click();page.wait_for_timeout(250)
+ assert page.evaluate('sceneMotions.length')==1
  # Delay decoding while the player continues through multiple scenes, then release out of order.
  load(page,'life-0');page.locator('[data-choice-value="office"]').click()
  page.evaluate('''window.pendingDecodes=[];window.nativeDecode=HTMLImageElement.prototype.decode;

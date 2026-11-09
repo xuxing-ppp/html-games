@@ -5,13 +5,14 @@
  const current=g=>M.sceneById[g.node];
  const visit=g=>g.explorationFocus?M.explorationVisits[g.explorationFocus]:null;
  function node(g){const v=visit(g);return v?{...v,id:`visit-${g.explorationFocus}`,type:'visit',chapter:3,date:'九月',goal:'听完原话，再回舆图选择下一步'}:current(g);}
- function beats(g){const n=node(g),reply=n.options?.find(o=>o.value===g.answers[n.id])?.reply??[];return [...(n.beats??[]),...reply.map(b=>({speaker:b[0],text:b[1]}))].map(b=>({...b,text:b.variable==='receipt'?M.receiptReplies[g.choices.receipt]:b.text}));}
+ function beats(g){const n=node(g),reply=n.options?.find(o=>o.value===g.answers[n.id])?.reply??[];return [...(n.beats??[]),...reply.map(b=>({speaker:b[0],text:b[1]}))].map(b=>({...b,text:b.variable==='receipt'?M.receiptReplies[g.choices.receipt]:b.choiceEcho?M.sideConsequences[b.choiceEcho][g.choices[b.choiceEcho]]:b.text}));}
  function record(g){const n=node(g),b=beats(g)[g.beat];if(!b)return;g.read[n.id]=Math.max(g.read[n.id]??0,g.beat+1);if(b.speaker&&b.speaker!=='narrator'&&!g.people.includes(b.speaker))g.people.push(b.speaker);}
  function grant(g,ids=[],via){for(const id of ids)if(!own(g,id))g.documents[id]={chapter:g.chapter,via,acquired:node(g).date};}
  function enter(g,id){
   const n=M.sceneById[id];if(!n)return false;g.node=id;g.chapter=n.chapter;g.beat=0;g.phase='node';g.feedback=null;g.explorationFocus=null;
   if(!g.seenNodes.includes(id))g.seenNodes.push(id);grant(g,n.grant,n.title);
   for(const place of n.places??[])if(!g.knownPlaces.includes(place))g.knownPlaces.push(place);
+  for(const place of n.visitPlaces??[])if(!g.visitedPlaces.includes(place))g.visitedPlaces.push(place);
   for(const p of n.people??[])if(!g.people.includes(p))g.people.push(p);
   for(const t of n.terms??[])if(!g.terms.includes(t))g.terms.push(t);
   for(const c of n.completed??[])if(!g.completed.includes(c))g.completed.push(c);
@@ -19,7 +20,7 @@
   if(n.type==='explore')for(const p of Object.keys(M.explorationVisits))if(!g.knownPlaces.includes(p))g.knownPlaces.push(p);
   record(g);return true;
  }
- function initial(){const g={version:3,contentRevision:'mystery-expanded',ruleset:'scene-mystery',node:'arrival',chapter:0,phase:'node',beat:0,documents:{},facts:{},puzzleWork:{},solved:[],hints:{},answers:{},choices:{},life:[],trial:[],outcomes:[],completed:[],history:[],read:{},seenNodes:[],people:['you','shen'],terms:[],knownPlaces:['county','yamen','warehouse'],visitedPlaces:[],explored:[],explorationFocus:null,map:{zoom:1,x:0,y:0,selected:'county'},notes:[],nextNote:1,feedback:null,verdict:null};enter(g,'arrival');return g;}
+ function initial(){const g={version:3,contentRevision:'mystery-expanded.2',ruleset:'scene-mystery',node:'arrival',chapter:0,phase:'node',beat:0,documents:{},facts:{},puzzleWork:{},solved:[],hints:{},answers:{},choices:{},life:[],trial:[],outcomes:[],completed:[],history:[],read:{},seenNodes:[],people:['you','shen'],terms:[],knownPlaces:['county','yamen','warehouse'],visitedPlaces:[],explored:[],explorationFocus:null,map:{zoom:1,x:0,y:0,selected:'county'},notes:[],nextNote:1,feedback:null,verdict:null};enter(g,'arrival');return g;}
  function sources(g,p){const ids=p.sources.filter(id=>own(g,id));if(p.id==='document-order'&&!own(g,'courier_register'))for(const id of ['scribe_statement','clerk_alibi'])if(own(g,id))ids.push(id);return [...new Set(ids)];}
  function work(g,p){return g.puzzleWork[p.id]??(p.kind==='order'?{order:p.items.map(i=>i.id)}:p.kind==='match'?{placements:{}}:{pair:[null,null]});}
  function grade(p,w){if(p.kind==='order')return Array.isArray(w.order)&&p.answer.length===w.order.length&&p.answer.every((x,i)=>x===w.order[i]);if(p.kind==='compare')return Array.isArray(w.pair)&&p.answer.every((x,i)=>x===w.pair[i]);return p.items.every(i=>w.placements?.[i.id]===p.answer[i.id]);}
@@ -77,7 +78,7 @@
    if(!h.solved.includes(p.id))h.solved.push(p.id);
    for(const f of p.facts)h.facts[f]={sources:sources(h,p),via:p.id};
    if(p.trialRound!==undefined)trialRecord(h,p,true);
-   log(h,p.title,p.factText);h.phase='result';h.feedback={kind:'correct',text:p.trialRound===2&&h.trial.some(r=>!r.supported)?'本轮各人的行为与责任得到核明。前两轮已经留下的证明缺口仍然保留，主审将分别说明哪些指控撤销、哪些事项继续补办，不把本轮采信当成全案完整翻案。':p.success};return h;
+   log(h,p.title,p.factText);h.phase='result';h.feedback={kind:'correct',text:p.trialRound===2&&h.trial.some(r=>!r.supported)?'本轮各人的行为与责任得到核明。前两轮已经留下的证明缺口仍然保留，主审将分别说明哪些指控撤销、哪些事项继续补办，不把本轮采信当成全案完整翻案。':p.success,...(p.resultReaction?{reaction:copy(p.resultReaction)}:{})};for(const speaker of [p.resultSpeaker,p.resultReaction?.speaker])if(speaker&&speaker!=='narrator'&&!h.people.includes(speaker))h.people.push(speaker);return h;
   }
   if(a.type==='limitRound'&&p.trialRound!==undefined&&a.confirmed){const h=copy(g);trialRecord(h,p,false);log(h,p.title,'主动结束本轮补证，按现有范围裁定。');h.phase='result';h.feedback={kind:'limited',text:'本轮未形成完整证明，主审只采能核实的部分。你已明确选择结束本轮补证；后续轮次仍可分别说明。'};return h;}
   return g;

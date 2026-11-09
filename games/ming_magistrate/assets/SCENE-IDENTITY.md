@@ -53,11 +53,11 @@
 
 ### 南桥与灾户访谈、递状
 
-**relief-doorway-ink**；原图：village-relief-ink
+**relief-doorway-ink**；维护时以同名现用原图为编辑目标
 
 > Keep 3:2 landscape, same house doorway, river bridge, May daylight direction and quiet clean ink. Completely re-stage the foreground to match this household interview. Widow Wang is a worried 30–35-year-old woman with black hair in a low bun, plain dark-brown robe and pale collar, standing at the doorway with TWO small children just behind her. Luo Suzhen, another woman around 35 in ochre-gray robes and tidy bun, stands nearby holding a small folded private letter at her waist. Lin Aheng, woman about30 with a neat hairpin bun and gray-green robe, stands beside Wang with a petition tucked at her side, one hand inviting her to sit on a low stool. On RIGHT, the same blue-robed magistrate has put the ledger down on a low bench and BENDS SLIGHTLY to listen at the family's eye level, hands relaxed near the record, not standing upright staring down at paper as in source. No elderly basket woman, no male household head, no grain baskets being offered. A respectful unresolved conversation, not a distribution or happy ending. Preserve protagonist identity, simple faces and coherent anatomy. Preserve background building relations, not original character blocking.
 
-**south-doorway-ink**；原图：village-relief-ink
+**south-doorway-ink**；维护时以同名现用原图为编辑目标
 
 > Keep 3:2 landscape, same rural wooden door, white wall, river bridge and cool pale winter daylight, with muted winter plants instead of lush May leaves. Re-stage foreground. Remove the two basket-holding elderly people. Nanqiao Wu Changsheng is a younger male farmer about30, clean-shaven long face, dark low cloth cap, charcoal-gray plain robe, standing in his doorway with empty hands gathered at waist, speaking openly. Folded old white mourning cloth lies on a stool near the threshold. The same magistrate in blue stands to the RIGHT but now turns SIDEWAYS toward the doorway, closed document lowered to his left side while his right hand lightly indicates a place to sit. He looks at the man, not down at an open page. A grey-robed assistant waits farther behind with a closed folio. Clearly different pose and staging from the source village interview. No women, children, baskets or grain distribution. Keep same protagonist face, mustache and chin beard; clean same ink language.
 
@@ -67,7 +67,7 @@
 
 ### 复审与执行
 
-**review-hearing-ink**；原图：mystery-review-ink
+**review-hearing-ink**；维护时以同名现用原图为编辑目标
 
 > Fix costume identity ONLY in addition to brush simplification: the man standing to the RIGHT of the magistrate in a brown fur-trimmed cape and gold-topped military hat is GU TINGZHANG, a CIVIL prefect, not a general. Replace the fur cape and gold military hat with a plain charcoal-gray civil official robe and ordinary BLACK WINGED Ming civil official cap, keep his same mature broad face, trimmed dark beard, stance and hands. Rust-red merchant beside him remains a merchant with simple dark soft cap, not an official winged hat. Keep protagonist, elderly gray-bearded seated review official and left witness/recorder unchanged. No other people, architecture or light changes. Winter courtroom remains cold, daytime. No robe patterns. Same3:2.
 
@@ -93,3 +93,11 @@
 
 北渡横竖清理另加约束：收据约前臂宽，不画作铺满整桌的舆图；保持主角俯身与经手人侧向翻册。所有候选均先看原尺寸，最终版本再核三档字号、桌面、手机与短横屏中的实际裁切。未选的候选不加入项目。
 
+
+## v1.2 廊下听审
+
+新增review-corridor-ink.png／WebP，使用内置图像生成工具，以review-hearing-ink与lin-hearing-ink为风格、建筑和人物参考。林阿蘅灰绿便衣束髻，双手抱封好的待赔名单，站冬日木廊向堂内听；白墙灰瓦、石铺院、木双门、枯树薄雪，人物居中保留手机裁切。
+
+生成提示核心：restrained Chinese ink lines and pale washes; same Lin Aheng identity; winter review courtyard and wooden corridor; closed petition bundle; central figure with space; broad controlled ink shapes, quiet paper, negative space; no pepper speckles, spray ink, grunge, dense textures, detailed skin/hair/fabric, text or digits; preserve cool winter values, no global brightening.
+
+参考图可见船工参与庭审，旧亏问继续用review-hearing；交付与责任问使用同一堂审空间承接发言，人物署名提供证言身份，不将旧图里的围观者当作某位证人的肖像。新图在trial-intro最后两段切换至廊下，后续问答回庭内。

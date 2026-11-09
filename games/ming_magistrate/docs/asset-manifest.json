@@ -132,24 +132,6 @@
       "runtime_sha256": "7e01d14a2e6356bb1b05118c986a7810e68ae86c49776cf10c8689237c6aa8b3"
     },
     {
-      "file": "farmland-autumn-consistent",
-      "width": 1536,
-      "height": 1024,
-      "original_bytes": 2856869,
-      "original_sha256": "9461c782a53e276b3a10a417a47d1e4178ed43cb65f8808ee3d83d2d77ccc8a3",
-      "runtime_bytes": 312962,
-      "runtime_sha256": "e94c41dd9161c27d2292131e862d84783e71d261dc1301c3ca7ec7676c3ca572"
-    },
-    {
-      "file": "farmland-scene-consistent",
-      "width": 1536,
-      "height": 1024,
-      "original_bytes": 2805569,
-      "original_sha256": "c8df56b758893b42c1907d37b9aa0dfacf71fc49830b55d93c7f7b2374b9990d",
-      "runtime_bytes": 275202,
-      "runtime_sha256": "c7fd7a45152d59feced791cc966e6ee2f0a7fa1136704461c19ea8a5572e2e8a"
-    },
-    {
       "file": "granary-audit-ink",
       "width": 1536,
       "height": 1024,
@@ -220,15 +202,6 @@
       "original_sha256": "1ca0bc805aa8ac5c9c7ff2d3386f90f9e7b494b8c1fd54993045f543eb1a96fd",
       "runtime_bytes": 312134,
       "runtime_sha256": "064a721f42508e61fb21c0a43c374a61ad0c8cf3a4ff53e7b761ca03902606cf"
-    },
-    {
-      "file": "mystery-review-ink",
-      "width": 1536,
-      "height": 1024,
-      "original_bytes": 3044498,
-      "original_sha256": "bfd8255eab7c3d5e1b5a145c0180320abcc4c429707bb3c55ee539919d781efd",
-      "runtime_bytes": 310374,
-      "runtime_sha256": "6f2cf6cbe1fa279d7efa4ecf0c3302e36d1df85e2f196224524b807dc84a4d64"
     },
     {
       "file": "mystery-writer-ink",
@@ -330,6 +303,15 @@
       "runtime_sha256": "c12b039d0e3c22cafd50d6264761c4ab0756eb69dc9d5c03ce06efe0cd3eef85"
     },
     {
+      "file": "review-corridor-ink",
+      "width": 1536,
+      "height": 1024,
+      "original_bytes": 2558471,
+      "original_sha256": "a53e0879c948eda510936c4bf20c1fa35f0d5587e953deed9ebb7908837ea2cd",
+      "runtime_bytes": 183794,
+      "runtime_sha256": "7453f99d3432fb182e5129fc87439e68b9dd37c4f7abe331e52428ad953ff70c"
+    },
+    {
       "file": "review-hearing-ink",
       "width": 1536,
       "height": 1024,
@@ -375,15 +357,6 @@
       "runtime_sha256": "3b04e7f517492e1b829c1d7bba5d97471d284fe18b89143afd7096b8b6d37bc8"
     },
     {
-      "file": "village-relief-ink",
-      "width": 1536,
-      "height": 1024,
-      "original_bytes": 2981268,
-      "original_sha256": "863907e0bfa39a458b80f310d510c1ac090afa5dfd28594f39cebecf3fc21d65",
-      "runtime_bytes": 322968,
-      "runtime_sha256": "1290d3404ccf003be9bed46eb789ea3f5fb1ff4383af8110c0b72665fd8ce0b8"
-    },
-    {
       "file": "winter-relief-ink",
       "width": 1536,
       "height": 1024,
@@ -402,6 +375,6 @@
       "runtime_sha256": "cc34a9b172501763b52eee83e63b2ef6016afc5e847cb5cce1ca029023afb9a8"
     }
   ],
-  "original_bytes": 126772063,
-  "runtime_bytes": 12498924
+  "original_bytes": 117642330,
+  "runtime_bytes": 11461212
 }

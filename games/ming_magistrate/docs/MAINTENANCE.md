@@ -6,7 +6,7 @@
 
 | 文件 | 职责 |
 | --- | --- |
-| js/data/scenes.js | 79个场景节点、21个谜题、词语解释、县境地点、后期调查与人物回应 |
+| js/data/scenes.js | 77个场景节点、21个谜题、词语解释、县境地点、后期调查与人物回应 |
 | js/data/evidence.js | 原始材料全文，区分事件时间与文书制作时间 |
 | js/data/people.js | 人物身份与只读动态小传 `personBiography(id, game, reading)` |
 | js/data/sources.js | 24篇史料说明、六主题和八种书目 |
@@ -42,7 +42,7 @@
 
 ## 当前存档
 
-键：`jingshui.magistrate.v1`。格式：`version:3, contentRevision:"mystery-expanded", ruleset:"scene-mystery"`。只有一种可玩状态，不迁移、备份、归档、导出或展示旧进度。旧内容版本明确提示剧情更新，确认重新开始前保留原进度；已有有效进度的新开同样必须确认替换。
+键：`jingshui.magistrate.v1`。格式：`version:3, contentRevision:"mystery-expanded.2", ruleset:"scene-mystery"`。只有一种可玩状态，不迁移、备份、归档、导出或展示旧进度。旧内容版本明确提示剧情更新，确认重新开始前保留原进度；已有有效进度的新开同样必须确认替换。
 
 保存场景节点、已读段落、材料、事实、谜题草稿和完成状态、人物选择、五处倾向、三轮裁定、查访状态、地图视口及可选笔记。旧进度中的三个 `learn-*` 标记继续接受，新进度不生成、不要求这些标记，首题也不要求提示记录。校验检查节点前缀、材料发放、实际证据来源、题目答案与裁定一致性，不能只检查几个字段便接受结束状态。
 
@@ -76,7 +76,7 @@
 
 查阅窗口使用内容高度与窗口最大高度；宽度按 `library-页面类型` 设置行宽上限。正文为可收缩的内部滚动区，页头与确认操作保留在外层；不要恢复整页固定高度。人物头像使用实际参与排版的网格，窄屏放到文字上方。字体预览保留实际 18／20／22px，三档横排文字，手机改为三行按钮。地图正文有自身比例与高度上限，短横屏分栏，`ResizeObserver` 始终将地图世界拟合为3:2；小地图显示地点标记、当前选中名称与完整地点列表。字号、展开与自然缩放复用字符锚点及焦点键；未提交随手记属于临时UI状态，弹窗往返不会清空。
 
-前轮26份PNG已逐张清稿，本轮另增10份对应人物与事件的分镜（含北渡横竖两版），共保留36份PNG及运行WebP。清稿见 `assets/INK-CLEANUP.md`，本轮对应关系与提示见 `assets/SCENE-IDENTITY.md`。不使用全局提亮、模糊或滤镜代替局部笔墨整理。
+当前保留41份PNG及对应运行WebP（含历轮横竖分镜与v1.2廊下图），实际清单见 `docs/asset-manifest.json`。前轮清稿见 `assets/INK-CLEANUP.md`，人物与动作对应见 `assets/SCENE-IDENTITY.md`。不使用全局提亮、模糊或滤镜代替局部笔墨整理。
 
 图像精确日期、数量、封号及路线均由HTML/SVG呈现，不把绘画当证据。主角统一规则和生成提示见 `assets/MYSTERY.md`。人物与背景保持同一写意程度，不留局部写实脸、密绣纹或材质贴图；夜景、阴雨和室内分别安排明暗，不能统一抬亮。县衙各图对照围墙、门、树、廊柱与地面，横竖图独立构图且保留合理距离。已删除旧玩法专用素材和被替代的人物旧图，继续保留所有在用原图。
 
@@ -111,3 +111,15 @@ python3 tests/identity-browser.py
 scene.ambience 控制环境声，beat.cue 控制首次呈现动作声；渲染只作声音呈现，不判题。app 内存集合避免同段重播，不写存档。sound.setScene 的同场景调用幂等；关闭声音或切后台停止环境源。合成和生命周期在 audio.js。素材及提示集见 ../assets/SUSPENSE-REVISION.md。教学回放在 tutorial-order 结果结束，不将正式第一案称作教程。
 
 验收新增81种支线选择组合，均保留完整翻案；原有150条混合流程和六种查访顺序仍验证。规则现覆盖二十一题，涉及的新浏览器检查见 tests/expansion-browser.py。
+
+## v1.2 剧情与结果呈现
+
+77节点、21题、64材料；第一案18节点（两引子题与三正式题），第二案五题。三处早期地图过场并入查访，scene.visitPlaces在进入场景时记录实际到达；已知地点仍由places登记，舆图仍可查阅。
+
+谜题可选 resultSpeaker、resultReaction:{speaker,text}；正确提交由引擎复制反应到 feedback.reaction，读取存档不重算反应。有限裁定无成功反应，主审发言；第三轮保留前轮缺口的特殊文本。反应、结论共用阅读区、各有署名，一次继续；阅读锚点也包含反应正文。
+
+scene beat.art可指定同场景分镜，显式推进／回退时沿用现有叠化，同图复用不重播。
+
+scene beat.choiceEcho按已选choices读取只读sideConsequences，结案读取，结局另写之后的回声，避免逐字重复；不改变事实、发放或判题。boat_recheck仅boat-side的ledger取得，family_letter仅relief-side的neighbours取得。其余分支有完整独立原据，不强制收集摘录。
+
+内容版本为mystery-expanded.2，version仍3。旧内容提示重开，确认前不写入；不迁移。新增庭审节点后维护人物小传已读门槛，不能凭材料发放提前开放证言或结局。

@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#17191c"><title>小球擂台</title><link rel="stylesheet" href="web/style.css"><script src="./version.js"></script></head>
+<body><main id="app">
+<header class="masthead"><button id="home-back" hidden>‹ 主界面</button><h1>小球<span>擂台</span></h1><div class="header-actions"><span id="version" data-game-version="ball_arena"></span><button id="help" aria-label="玩法帮助与致谢">?</button><button id="sound" aria-pressed="true">声音开</button></div></header>
+<section id="home" class="home-screen" aria-label="主界面">
+ <div class="home-art"><div class="home-arena"><canvas id="home-arena" width="640" height="640" aria-label="随机角色对战演示"></canvas></div><p id="home-demo-label">随机对战 · 演示</p></div>
+ <div class="home-menu"><h2>小球<br><span>擂台</span></h2><p class="home-description">190 个角色 · 自动对战</p><div class="home-buttons"><button id="home-free" class="primary">自由对战 <span>↗</span></button><button id="home-tournament">锦标赛 <span>♜</span></button><button id="home-continue-free" hidden>继续当前对战</button><button id="home-continue-tournament" hidden>继续锦标赛</button></div></div>
+</section>
+<section id="selection" class="selection" hidden>
+ <div class="setup-toolbar"><label>玩法 <select id="mode"><option value="duel">单挑</option><option value="team">团战</option><option value="wheel">车轮战</option><option value="brawl">自由混战</option><option value="boss">Boss 挑战</option></select></label><label id="series-label">赛制 <select id="series"><option value="1">单局</option><option value="3">三局两胜</option><option value="5">五局三胜</option></select></label><button id="settings">场地设置 <span id="hazard-count"></span></button><button id="random-all">随机对阵</button></div>
+ <div id="lineup" class="lineup" aria-label="当前对阵"></div>
+ <div class="roster-tools"><div class="search-row"><p id="editing" role="status"></p><label class="search"><span aria-hidden="true">⌕</span><input id="search" placeholder="搜索角色或技能" aria-label="搜索角色或技能" type="search"></label></div><div class="filters"><div id="filters" role="group" aria-label="角色分类"></div><select id="tag" aria-label="机制标签"><option value="all">全部机制</option></select></div></div>
+ <div id="roster" class="roster" aria-label="角色目录"></div>
+ <footer class="selection-footer"><div><strong id="roster-count">正在加载角色…</strong><span id="selection-note">选好双方，交给它们自己打。</span></div><button id="start" class="primary" disabled>开始对战 <span aria-hidden="true">↗</span></button></footer>
+</section>
+<section id="battle" class="battle" hidden>
+ <div class="battle-top"><button id="back">‹ 调整阵容</button><span id="match-label"></span><span id="timer">0:00 / 3:00</span></div>
+ <div id="scoreboard" class="scoreboard"></div>
+ <div id="stage" class="stage"><div id="arena-wrap" class="arena-wrap"><canvas id="arena" aria-label="自动对战场地"></canvas><canvas id="hazards" aria-hidden="true"></canvas><div id="pause-indicator" hidden>已暂停</div></div></div>
+ <button id="battle-note" class="battle-note" disabled aria-label="查看对局结果"></button>
+ <footer class="battle-controls"><button id="pause">暂停</button><button id="step">单步</button><div id="speeds" class="speed-group" role="group" aria-label="播放速度"><button data-speed="0.5">½×</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button></div><button id="restart">重放本局</button></footer>
+</section>
+<section id="tournament" class="tournament-screen" hidden aria-label="锦标赛">
+ <div class="tournament-heading"><div><h2>锦标赛</h2><p id="tournament-status" role="status">选择队伍规格与比赛规模</p></div><div class="tournament-heading-actions"><button id="tournament-settings">场地设置</button><button id="tournament-reset" hidden>重新抽签</button></div></div>
+ <div id="tournament-setup" class="tournament-setup">
+  <div class="tournament-options"><fieldset><legend>队伍规格</legend><div id="tournament-teams" class="tournament-team-options" role="group" aria-label="队伍规格"><button data-team-size="1" aria-pressed="true">1V1</button><button data-team-size="2" aria-pressed="false">2V2</button><button data-team-size="3" aria-pressed="false">3V3</button></div><p class="tournament-rule">精英占 2 人名额，普通球占 1 人；组队成员同时出战。</p></fieldset><label class="check-row"><input id="tournament-filter-elite" type="checkbox"><span><strong>过滤精英球</strong><small>开启后只从普通球抽签</small></span></label><p id="tournament-capacity"></p></div>
+  <fieldset class="tournament-size-picker"><legend>锦标赛规模</legend><div id="tournament-sizes" role="group" aria-label="锦标赛规模"></div></fieldset>
+ </div>
+ <div id="tournament-bracket" class="tournament-bracket" hidden><div id="tournament-champion" class="tournament-champion" hidden></div><nav id="tournament-rounds" aria-label="查看轮次"></nav><div id="tournament-matches" class="tournament-matches"></div></div>
+ <footer class="tournament-footer"><div><strong id="tournament-next-title">准备抽签</strong><p id="tournament-next-summary">参赛角色不重复，胜者晋级。</p></div><button id="tournament-play" class="primary" disabled>确认并抽签 ↗</button></footer>
+</section>
+<div id="toast" role="status" hidden></div>
+</main>
+<dialog id="detail"><div class="dialog-head"><h2 id="detail-title"></h2><button data-close aria-label="关闭详情">×</button></div><div id="detail-content"></div><div class="dialog-actions"><button id="detail-favorite"></button><button id="detail-pick" class="primary">选入当前位置</button></div></dialog>
+<dialog id="settings-dialog"><div class="dialog-head"><h2>场地设置</h2><button data-close aria-label="关闭设置">×</button></div><div class="dialog-body"><label class="field">运动方式<select id="physics"><option value="none">直线运动</option><option value="bounce">重力弹跳</option><option value="gyro">陀螺引力</option></select></label><p id="physics-hint"></p><h3>场地机关</h3><label class="check-row"><input type="checkbox" id="hazard-pads"><span><strong>弹射垫</strong><small>四处对称弹射，无伤害，单角色冷却 1 秒。</small></span></label><label class="check-row"><input type="checkbox" id="hazard-supplies"><span><strong>急救补给</strong><small>每 10 秒出现，接触回复 12 点生命。</small></span></label><label class="check-row"><input type="checkbox" id="hazard-laser"><span><strong>横扫激光</strong><small>每 12 秒预警后扫射，造成 8 点普通伤害。</small></span></label><label class="field">对局种子<input id="seed" inputmode="numeric" placeholder="留空则随机" maxlength="10"></label><label class="check-row"><input type="checkbox" id="random-expanded"><span><strong>扩大随机范围</strong><small>同时抽取杂鱼、精英和规格外角色。Boss 只进入 Boss 槽位。</small></span></label></div><div class="dialog-actions"><button data-close class="primary">完成</button></div></dialog>
+<dialog id="help-dialog"><div class="dialog-head"><h2>怎么玩</h2><button data-close aria-label="关闭帮助">×</button></div><div class="dialog-body help-copy"><p>先点红方或蓝方的阵容位置，再点角色。阵容始终在上方，只有角色目录滚动。</p><p>角色自动移动、释放技能。开战后可以暂停、单步或调速，不能干预战局。空格暂停或继续，Esc 关闭弹窗或暂停。</p><p>团战同时入场；车轮战依次入场，胜者保留生命；自由混战各自为战；Boss 挑战由红方 Boss 对抗蓝方挑战者。</p><p>锦标赛支持 4、8、16、32、64、128 球／队，以及 1V1、2V2、3V3。精英球在组队中占两个名额，角色全程不重复；数量不足的规模不可选。单败淘汰，每场重新满血，平局须换种子重赛，赛程自动保存。</p><p>每局最多 180 秒，到时判平。系列赛每局重置生命、换新种子，平局不计胜场；连续三次平局则并列结束。</p><p>场地机关默认关闭。规格外与 Boss 强度较高，普通随机池不会抽到。原种子重放不重复计入系列赛比分。</p><p>窗口失焦会自动暂停；恢复窗口后按“继续”。收藏、设置和最近阵容保存在此浏览器中。</p><h3>致谢</h3><p>感谢原作者 <a class="credit-link" href="https://space.bilibili.com/3546819271330077" target="_blank" rel="noopener noreferrer">Kizu_Na ↗</a> 创作《小球对战》。本作沿用原作的战斗核心与 184 个角色，重新设计交互，并加入原创角色与场地机关。</p></div></dialog>
+<dialog id="lineup-detail"><div class="dialog-head"><h2 id="lineup-detail-title">当前阵容</h2><button data-close aria-label="关闭阵容">×</button></div><div id="lineup-detail-body" class="dialog-body"></div></dialog>
+<dialog id="tournament-reset-dialog"><div class="dialog-head"><h2>重新抽签？</h2><button data-close aria-label="取消重新抽签">×</button></div><div class="dialog-body"><p>本届赛程和比赛结果将被清除，返回开赛设置。自由对战的阵容和收藏会保留。</p></div><div class="dialog-actions"><button data-close>保留赛程</button><button id="tournament-reset-confirm" class="primary">重新设置</button></div></dialog>
+<dialog id="tournament-match-detail"><div class="dialog-head"><h2 id="tournament-detail-title">比赛详情</h2><button data-close aria-label="关闭比赛详情">×</button></div><div id="tournament-detail-body" class="dialog-body"></div><div class="dialog-actions"><button id="tournament-detail-watch" class="primary">观看比赛</button></div></dialog>
+<dialog id="result"><div class="result-emblem" aria-hidden="true">★</div><h2 id="result-title"></h2><p id="result-subtitle"></p><div id="result-score"></div><button id="next-round" class="primary">下一局</button><div class="result-actions"><button id="replay-result">原种子重放</button><button id="rematch">换种子再战</button><button id="edit-result">调整阵容</button></div></dialog>
+<script defer src="src/core/ball-registry.js"></script>
+<script defer src="src/core/effects.js"></script>
+<script defer src="src/core/knockback.js"></script>
+<script defer src="src/core/arena-geometry.js"></script>
+<script defer src="src/core/battle-config.js"></script>
+<script defer src="src/core/battle-result.js"></script>
+<script defer src="src/core/combat-source.js"></script>
+<script defer src="src/core/status-controller.js"></script>
+<script defer src="src/core/speed-modifiers.js"></script>
+<script defer src="src/core/damage-resolver.js"></script>
+<script defer src="src/core/damage-reduction.js"></script>
+<script defer src="src/core/contact-model.js"></script>
+<script defer src="src/core/entity-system.js"></script>
+<script defer src="src/core/visual-effect-system.js"></script>
+<script defer src="src/core/visual-composition.js"></script>
+<script defer src="src/core/arena-shake.js"></script>
+<script defer src="src/core/damage-flash.js"></script>
+<script defer src="src/core/visual-properties.js"></script>
+<script defer src="src/core/particle-burst.js"></script>
+<script defer src="src/core/afterimage-trail.js"></script>
+<script defer src="src/core/sprite-cache.js"></script>
+<script defer src="src/core/bounce-physics.js"></script>
+<script defer src="src/core/gyro-physics.js"></script>
+<script defer src="src/core/zombie-mode.js"></script>
+<script defer src="src/core/zombie-hell-mode.js"></script>
+<script defer src="src/core/competitive-mode.js"></script>
+<script defer src="src/core/battle-engine.js"></script>
+<script defer src="src/core/battle-entertainment.js"></script>
+<script defer src="src/core/deterministic-battle.js"></script>
+<script defer src="src/core/seed-farm.js"></script>
+<script defer src="src/core/seed-search-gpu.js"></script>
+<script defer src="src/core/seed-search.js"></script>
+<script defer src="src/core/daredevil-planner.js"></script>
+<script defer src="src/balls/da-yun.js"></script>
+<script defer src="src/balls/charge.js"></script>
+<script defer src="src/balls/leak.js"></script>
+<script defer src="src/balls/electric-grid.js"></script>
+<script defer src="src/balls/spore.js"></script>
+<script defer src="src/balls/electric.js"></script>
+<script defer src="src/balls/electric-v2.js"></script>
+<script defer src="src/balls/slash-tool.js"></script>
+<script defer src="src/balls/old-model.js"></script>
+<script defer src="src/balls/wdc.js"></script>
+<script defer src="src/balls/wdc-v2.js"></script>
+<script defer src="src/balls/disco.js"></script>
+<script defer src="src/balls/spiderweb.js"></script>
+<script defer src="src/balls/train-weapon.js"></script>
+<script defer src="src/balls/train-conductor.js"></script>
+<script defer src="src/balls/train-conductor-v2.js"></script>
+<script defer src="src/balls/vampire.js"></script>
+<script defer src="src/balls/toothless-vampire.js"></script>
+<script defer src="src/balls/meteor-hammer.js"></script>
+<script defer src="src/balls/manhole.js"></script>
+<script defer src="src/balls/cloud.js"></script>
+<script defer src="src/balls/green.js"></script>
+<script defer src="src/balls/spike.js"></script>
+<script defer src="src/balls/spike-v2.js"></script>
+<script defer src="src/balls/stop-ball.js"></script>
+<script defer src="src/balls/acid.js"></script>
+<script defer src="src/balls/chess.js"></script>
+<script defer src="src/balls/international-chess.js"></script>
+<script defer src="src/balls/fear-wave.js"></script>
+<script defer src="src/balls/qin.js"></script>
+<script defer src="src/balls/accordion.js"></script>
+<script defer src="src/balls/fractal.js"></script>
+<script defer src="src/balls/hive-v2-visuals.js"></script>
+<script defer src="src/balls/hive-v2.js"></script>
+<script defer src="src/balls/gum.js"></script>
+<script defer src="src/balls/order.js"></script>
+<script defer src="src/balls/billiards.js"></script>
+<script defer src="src/balls/snake.js"></script>
+<script defer src="src/balls/greedy-snake.js"></script>
+<script defer src="src/balls/anchor.js"></script>
+<script defer src="src/balls/videotape.js"></script>
+<script defer src="src/balls/rewind.js"></script>
+<script defer src="src/balls/parallel.js"></script>
+<script defer src="src/balls/frost-trail.js"></script>
+<script defer src="src/balls/glacier.js"></script>
+<script defer src="src/balls/six-zone.js"></script>
+<script defer src="src/balls/six-zone-ultra.js"></script>
+<script defer src="src/balls/vcd.js"></script>
+<script defer src="src/balls/hammer-v2.js"></script>
+<script defer src="src/balls/billiards-v2.js"></script>
+<script defer src="src/balls/ram-stick.js"></script>
+<script defer src="src/balls/medical-ball.js"></script>
+<script defer src="src/balls/creditor.js"></script>
+<script defer src="src/balls/stone-skipping.js"></script>
+<script defer src="src/balls/starfield.js"></script>
+<script defer src="src/balls/stars.js"></script>
+<script defer src="src/balls/trident.js"></script>
+<script defer src="src/balls/pond.js"></script>
+<script defer src="src/balls/armor.js"></script>
+<script defer src="src/balls/shield-tool.js"></script>
+<script defer src="src/balls/da-yun-v2.js"></script>
+<script defer src="src/balls/da-yun-v3.js"></script>
+<script defer src="src/balls/da-yun-boss.js"></script>
+<script defer src="src/balls/da-yun-v4.js"></script>
+<script defer src="src/balls/da-yun-v5.js"></script>
+<script defer src="src/balls/electric-v3.js"></script>
+<script defer src="src/balls/electric-v4.js"></script>
+<script defer src="src/balls/electric-v5.js"></script>
+<script defer src="src/balls/electric-v6.js"></script>
+<script defer src="src/balls/electric-prime.js"></script>
+<script defer src="src/balls/sparkler.js"></script>
+<script defer src="src/balls/cable.js"></script>
+<script defer src="src/balls/quicksand.js"></script>
+<script defer src="src/balls/snow-visuals.js"></script>
+<script defer src="src/balls/snowflake.js"></script>
+<script defer src="src/balls/snow-fight.js"></script>
+<script defer src="src/balls/tornado.js"></script>
+<script defer src="src/balls/split-ball.js"></script>
+<script defer src="src/balls/zeus-v2.js"></script>
+<script defer src="src/balls/twins.js"></script>
+<script defer src="src/balls/meteor-burn.js"></script>
+<script defer src="src/balls/trapper.js"></script>
+<script defer src="src/balls/trapper-v2.js"></script>
+<script defer src="src/balls/black-hole.js"></script>
+<script defer src="src/balls/cutting-ball.js"></script>
+<script defer src="src/balls/cutting-ball-v2.js"></script>
+<script defer src="src/balls/blaster.js"></script>
+<script defer src="src/balls/laser-v2.js"></script>
+<script defer src="src/balls/briar.js"></script>
+<script defer src="src/balls/virus.js"></script>
+<script defer src="src/balls/laser-v3.js"></script>
+<script defer src="src/balls/angel.js"></script>
+<script defer src="src/balls/apple.js"></script>
+<script defer src="src/balls/lemon.js"></script>
+<script defer src="src/balls/rubber-band.js"></script>
+<script defer src="src/balls/spider.js"></script>
+<script defer src="src/balls/assassin.js"></script>
+<script defer src="src/balls/bow-v2.js"></script>
+<script defer src="src/balls/fixed.js"></script>
+<script defer src="src/balls/ocean.js"></script>
+<script defer src="src/balls/liaogang.js"></script>
+<script defer src="src/balls/frog.js"></script>
+<script defer src="src/balls/six-king.js"></script>
+<script defer src="src/balls/grenade.js"></script>
+<script defer src="src/balls/military-grenade.js"></script>
+<script defer src="src/balls/spider-grenade.js"></script>
+<script defer src="src/balls/fragment.js"></script>
+<script defer src="src/balls/glass-v2.js"></script>
+<script defer src="src/balls/fiber-optic.js"></script>
+<script defer src="src/balls/gambler.js"></script>
+<script defer src="src/balls/drill.js"></script>
+<script defer src="src/balls/orbital.js"></script>
+<script defer src="src/balls/flame.js"></script>
+<script defer src="src/balls/cocktail-visuals.js"></script>
+<script defer src="src/balls/cocktail.js"></script>
+<script defer src="src/balls/spear.js"></script>
+<script defer src="src/balls/king-visuals.js"></script>
+<script defer src="src/balls/king.js"></script>
+<script defer src="src/balls/saw-v2.js"></script>
+<script defer src="src/balls/saw-v3.js"></script>
+<script defer src="src/balls/meat-grinder.js"></script>
+<script defer src="src/balls/snowball.js"></script>
+<script defer src="src/balls/lantern.js"></script>
+<script defer src="src/balls/copy.js"></script>
+<script defer src="src/balls/grey-deer.js"></script>
+<script defer src="src/balls/steel-coil.js"></script>
+<script defer src="src/balls/steelworks.js"></script>
+<script defer src="src/balls/old-wood-master.js"></script>
+<script defer src="src/balls/whack-a-mole.js"></script>
+<script defer src="src/balls/snowman.js"></script>
+<script defer src="src/balls/sound-wave.js"></script>
+<script defer src="src/balls/soccer.js"></script>
+<script defer src="src/balls/throwing-axe.js"></script>
+<script defer src="src/balls/scan.js"></script>
+<script defer src="src/balls/fish-hook.js"></script>
+<script defer src="src/balls/wireless-fish-hook.js"></script>
+<script defer src="src/balls/fish-pond.js"></script>
+<script defer src="src/balls/gunner.js"></script>
+<script defer src="src/balls/gunner-x.js"></script>
+<script defer src="src/balls/gunner-h.js"></script>
+<script defer src="src/balls/gunner-d.js"></script>
+<script defer src="src/balls/gunner-k.js"></script>
+<script defer src="src/balls/blitz.js"></script>
+<script defer src="src/balls/boxer.js"></script>
+<script defer src="src/balls/revolver.js"></script>
+<script defer src="src/balls/loom.js"></script>
+<script defer src="src/balls/liquid-nitrogen.js"></script>
+<script defer src="src/balls/split-ball-v2.js"></script>
+<script defer src="src/balls/windmill.js"></script>
+<script defer src="src/balls/clock.js"></script>
+<script defer src="src/balls/embroidery-needle.js"></script>
+<script defer src="src/balls/caterpillar.js"></script>
+<script defer src="src/balls/zao-pepper.js"></script>
+<script defer src="src/balls/pollen.js"></script>
+<script defer src="src/balls/jelly.js"></script>
+<script defer src="src/balls/lava-pack.js"></script>
+<script defer src="src/balls/volcano.js"></script>
+<script defer src="src/balls/module.js"></script>
+<script defer src="src/balls/urchin.js"></script>
+<script defer src="src/balls/briefcase.js"></script>
+<script defer src="src/balls/matryoshka.js"></script>
+<script defer src="src/balls/saw-ball.js"></script>
+<script defer src="src/balls/magnet-visuals.js"></script>
+<script defer src="src/balls/magnet.js"></script>
+<script defer src="src/balls/peeler-visuals.js"></script>
+<script defer src="src/balls/peeler.js"></script>
+<script defer src="src/balls/sound-spear.js"></script>
+<script defer src="src/balls/scarecrow.js"></script>
+<script defer src="src/balls/rolling-log.js"></script>
+<script defer src="src/balls/liu-fu-qi.js"></script>
+<script defer src="src/balls/yi-wan-ren.js"></script>
+<script defer src="src/balls/bai-wan-ren-field.js"></script>
+<script defer src="src/balls/bai-wan-ren.js"></script>
+<script defer src="src/balls/hydraulic-press.js"></script>
+<script defer src="src/balls/mooncake.js"></script>
+<script defer src="src/balls/sky-lantern.js"></script>
+<script defer src="src/balls/liangchen-i.js"></script>
+<script defer src="src/balls/liangchen-ii.js"></script>
+<script defer src="src/balls/liangchen-iii.js"></script>
+<script defer src="src/balls/liangchen-iv.js"></script>
+<script defer src="src/balls/liangchen-v.js"></script>
+<script defer src="src/balls/liangchen-lite.js"></script>
+<script defer src="src/balls/you-ren.js"></script>
+<script defer src="src/balls/cactus.js"></script>
+<script defer src="src/balls/cactus-v2.js"></script>
+<script defer src="src/balls/rock.js"></script>
+<script defer src="src/balls/blizzard.js"></script>
+<script defer src="src/balls/swap.js"></script>
+<script defer src="src/balls/badminton.js"></script>
+<script defer src="src/balls/thumbtack.js"></script>
+<script defer src="src/assets/emoji/face-with-tears-of-joy-texture.js"></script>
+<script defer src="src/balls/onion.js"></script>
+<script defer src="src/core/tournament-bracket.js"></script>
+<script defer src="src/ui/canvas-renderer.js"></script>
+<script defer src="src/ui/audio.js"></script>
+<script defer src="web/characters.js"></script>
+<script defer src="web/tags.js"></script>
+<script defer src="web/model.js"></script>
+<script defer src="web/mechanisms.js"></script>
+<script defer src="web/tournament-core.js"></script>
+<script defer src="web/tournament.js"></script>
+<script defer src="web/app.js"></script>
+<script defer src="web/tournament-ui.js"></script>
+</body></html>

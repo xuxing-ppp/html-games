@@ -17,8 +17,9 @@ GAME_PATH = 'games/'
 OUT = Path(os.environ.get('GAMES_TEST_OUTPUT', str(Path(tempfile.gettempdir()) / 'games-hall-checks')))
 OUT.mkdir(parents=True, exist_ok=True)
 SIZES = [(1920,1080),(1440,900),(1280,720),(960,540),(844,390),(390,844)]
-GAMES = ['car_racing','function_missel','game_of_life','ming_magistrate','neon_survivor_mobile','war_simulator','xiangqi_beyond_the_river']
+GAMES = ['car_racing','function_missel','game_of_life','ming_magistrate','neon_survivor_mobile','war_simulator','xiangqi_beyond_the_river','ball_arena']
 VERSIONS = {game: re.search(r"GAME_VERSION\s*=\s*(['\"])([^'\"]+)\1", (SITE/'games'/game/'version.js').read_text()).group(2) for game in GAMES}
+ORDER = re.findall(r"^\s*'([a-z_]+)'", (SITE/'hall/order.js').read_text(), re.M)
 legacy = set()
 
 class Server(ThreadingHTTPServer):
@@ -79,7 +80,7 @@ try:
       page.on('response',lambda response:missing.append(response.url) if response.status>=400 else None)
       page.on('requestfailed',lambda request:missing.append((request.url,request.failure)) if request.failure!='net::ERR_ABORTED' else None)
       page.goto(BASE+prefix,wait_until='networkidle')
-      assert page.locator('#game-version').inner_text()=='v'+VERSIONS['car_racing']
+      assert page.locator('#game-version').inner_text()=='v'+VERSIONS[ORDER[0]]
       for width,height in SIZES+[(390,600),(500,400),(740,560)]:
         page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(80);fit(page,'.hall')
         seen=set()
@@ -96,7 +97,7 @@ try:
         assert page.locator('#game-title').inner_text()=='楚河行'
       page.set_viewport_size({'width':1440,'height':900});page.wait_for_timeout(80)
       page.locator('[data-game="car_racing"]').focus();page.keyboard.press('End')
-      assert page.locator('#game-title').inner_text()=='楚河行'
+      assert page.locator('#game-title').inner_text()==page.locator('[data-game="'+ORDER[-1]+'"] .choice-title').inner_text()
       for game in GAMES:
         print('Checking',prefix,game,flush=True)
         select(page,game)
@@ -115,7 +116,7 @@ try:
           # Neon supports touch play in landscape; portrait presents a rotate hint.
           if game=='neon_survivor_mobile' and width<height:continue
           page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(60)
-          title_scope={'car_racing':'#menu','function_missel':'#home','game_of_life':'#home','ming_magistrate':'.title-screen','neon_survivor_mobile':'#titleScreen','war_simulator':'#homeScreen','xiangqi_beyond_the_river':'.title-page'}[game]
+          title_scope={'car_racing':'#menu','function_missel':'#home','game_of_life':'#home','ming_magistrate':'.title-screen','neon_survivor_mobile':'#titleScreen','war_simulator':'#homeScreen','xiangqi_beyond_the_river':'.title-page','ball_arena':'#home'}[game]
           fit(page,title_scope)
           box=badge.bounding_box()
           assert box and box['x']>=0 and box['y']>=0 and box['x']+box['width']<=width+1 and box['y']+box['height']<=height+1,(game,width,height,box)
@@ -186,7 +187,7 @@ try:
     # Standalone copies continue to open through file:// without Games root dependencies.
     context=browser.new_context();page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
     page.goto((SITE/'index.html').as_uri(),wait_until='networkidle')
-    assert page.locator('#game-version').inner_text()=='v'+VERSIONS['car_racing']
+    assert page.locator('#game-version').inner_text()=='v'+VERSIONS[ORDER[0]]
     for game in GAMES[1:]:
       page.goto((SITE/GAME_PATH/game/'index.html').as_uri(),wait_until='networkidle')
       page.locator('[data-game-version="'+game+'"]').wait_for(state='visible')

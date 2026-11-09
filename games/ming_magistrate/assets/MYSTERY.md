@@ -6,7 +6,7 @@
 
 多年后巡抚和著述图表现55–60岁的同一人：面部结构延续，鬓角自然发灰，仍是短须。海瑞、仓吏、主审和农户保留自己的年龄，不误改为主角。
 
-最初核仓身份参考另存 `reference/granary-identity.png`，不进入运行包；当前画风和统一后的身份以 `originals/granary-audit-ink.png` 为主要参考。
+人物身份与画风直接以现用 `originals/granary-audit-ink.png` 为主要参考，不保留被替代的旧核仓参考图。
 
 ## 画法
 
@@ -32,6 +32,6 @@
 
 人物与结局终稿使用 `*-ink.png`，运行版为同名 `*.webp`；开场对应 `opening-scene-ink` / `opening-portrait-ink`，海瑞对应 `hai-meeting-ink` / `hai-portrait-ink`。最终映射以 `js/ui/art-data.js` 为准，尺寸和校验见 `docs/asset-manifest.json`。
 
-本轮采用内置 image_gen 编辑模式，前轮提示见 [INK-PROMPTS.md](INK-PROMPTS.md)，前轮26幅清稿及人物连续性补齐见 [INK-CLEANUP.md](INK-CLEANUP.md)，后续分镜与身份检查见 [SCENE-IDENTITY.md](SCENE-IDENTITY.md)，北渡修船、暮色城镇与结局人物定向修整见 [THREE-ART-REVISION.md](THREE-ART-REVISION.md)。原图在项目内保存，工具默认输出也保留在生成目录。旧构图与旧运行副本在引用确认后清理，不随月份混入。
+本轮采用内置 image_gen 编辑模式，前轮提示见 [INK-PROMPTS.md](INK-PROMPTS.md)，现用图片的清稿与人物连续性约束见 [INK-CLEANUP.md](INK-CLEANUP.md)，后续分镜与身份检查见 [SCENE-IDENTITY.md](SCENE-IDENTITY.md)，北渡修船、暮色城镇与结局人物定向修整见 [THREE-ART-REVISION.md](THREE-ART-REVISION.md)。原图在项目内保存，工具默认输出也保留在生成目录。旧构图与旧运行副本在引用确认后清理，不随月份混入。
 
 压缩质量84，保持原始尺寸。更新素材后执行 `python3 tools/prepare_assets.py`。

@@ -149,3 +149,9 @@ button[aria-pressed=true]:not(.inline-term){border-color:var(--red);background:#
 .sound-control{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 16px}
 .sound-control input{grid-column:1/-1;width:100%;height:32px;margin:0;accent-color:var(--red)}
 .sound-value{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* Result voices share one reading surface and one continue action. */
+.result-heading{font-size:var(--ui);color:var(--muted)}
+.result-reaction{padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #bbad9170}
+.result-reaction>.speaker-label,.result-conclusion-label>.speaker-label{margin-bottom:8px}
+.result-reaction p:last-child{margin-bottom:0}

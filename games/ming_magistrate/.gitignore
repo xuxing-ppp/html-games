@@ -3,7 +3,6 @@ node_modules/
 test-results/
 playwright-report/
 
-# 本地维护原图和参考图；运行 WebP 必须入库。
+# 本地维护原图；运行 WebP 必须入库。
 /assets/originals/
-/assets/reference/
 /coverage/

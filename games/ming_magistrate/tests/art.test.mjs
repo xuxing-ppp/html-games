@@ -1,5 +1,5 @@
 import test from'node:test';import assert from'node:assert/strict';import{readFileSync,readdirSync}from'node:fs';import{createHash}from'node:crypto';import{M,campaign}from'./support/game.mjs';import'../js/ui/art-data.js';
-test('all actual scene and ending paintings exist, with portrait opening and Hai variants',()=>{for(const n of M.sceneNodes)assert(M.artCatalog[n.art],n.id);for(const v of Object.values(M.explorationVisits))assert(M.artCatalog[v.art]);for(const options of [{},{route:'letters'},{trade:true},{fail:['trial-old','trial-delivery','trial-duty']}])for(const a of M.endingStory(campaign(options).game).acts)assert(M.artCatalog[a.art]);for(const key of ['opening','hai'])assert(M.artCatalog[key].portrait);for(const art of Object.values(M.artCatalog))for(const file of [art.file,art.portrait].filter(Boolean)){assert(readFileSync(new URL('../assets/runtime/'+file+'.webp',import.meta.url)).length);}});
+test('all actual scene and ending paintings exist, with portrait opening and Hai variants',()=>{for(const n of M.sceneNodes){assert(M.artCatalog[n.art],n.id);for(const b of n.beats)if(b.art)assert(M.artCatalog[b.art],n.id+' beat');}for(const v of Object.values(M.explorationVisits))assert(M.artCatalog[v.art]);for(const options of [{},{route:'letters'},{trade:true},{fail:['trial-old','trial-delivery','trial-duty']}])for(const a of M.endingStory(campaign(options).game).acts)assert(M.artCatalog[a.art]);for(const key of ['opening','hai'])assert(M.artCatalog[key].portrait);for(const art of Object.values(M.artCatalog))for(const file of [art.file,art.portrait].filter(Boolean)){assert(readFileSync(new URL('../assets/runtime/'+file+'.webp',import.meta.url)).length);}});
 test('manifest checksums match all retained runtime images',()=>{const manifest=JSON.parse(readFileSync(new URL('../docs/asset-manifest.json',import.meta.url),'utf8')),hash=d=>createHash('sha256').update(d).digest('hex');assert.deepEqual(readdirSync(new URL('../assets/runtime',import.meta.url)).filter(x=>x.endsWith('.webp')).sort(),manifest.images.map(x=>x.file+'.webp').sort());for(const row of manifest.images){assert.equal(hash(readFileSync(new URL('../assets/runtime/'+row.file+'.webp',import.meta.url))),row.runtime_sha256);}assert(manifest.runtime_bytes<manifest.original_bytes*.2);});
 
 test('each known person has an explicit distinctive portrait with matching identity cues',async()=>{
@@ -30,4 +30,23 @@ test('optional source artwork audit', {skip:process.env.CHECK_SOURCE_ASSETS!=='1
   assert.equal(createHash('sha256').update(data).digest('hex'),row.original_sha256);
   assert(data.readUInt32BE(16)>=900);assert(data.readUInt32BE(20)>=900);
  }
+});
+
+test('corridor art follows Lin only and remains separate from the hearing',()=>{const a=M.artCatalog['review-corridor'];assert.deepEqual(a.cast,['lin']);assert.equal(a.setting,'复审堂外廊');const corridor=M.sceneById['trial-intro'].beats.filter(b=>b.art==='review-corridor');assert.deepEqual(corridor.map(b=>b.speaker),['narrator','lin']);assert.equal(M.sceneById['trial-intro'].beats[0].art,'review-corridor');});
+
+test('every retained painting is reachable in the current story, endings, atlas or paper surfaces',()=>{
+ const keys=new Set(['county','desk']);
+ for(const n of M.sceneNodes){keys.add(n.art);for(const b of n.beats)if(b.art)keys.add(b.art);}
+ for(const v of Object.values(M.explorationVisits))keys.add(v.art);
+ const rounds=['trial-old','trial-delivery','trial-duty'];
+ for(const route of ['office','letters'])for(let mask=0;mask<8;mask++){
+  const g=campaign({route,fail:rounds.filter((id,i)=>mask>>i&1)}).game;
+  for(const act of M.endingStory(g).acts)keys.add(act.art);
+ }
+ for(const act of M.endingStory(campaign({trade:true}).game).acts)keys.add(act.art);
+ assert.deepEqual([...keys].sort(),Object.keys(M.artCatalog).sort(),'remove unused art aliases instead of retaining obsolete scenes');
+ const images=new Set(['county-atlas','xuan-paper']);
+ for(const key of keys){const art=M.artCatalog[key];images.add(art.file);if(art.portrait)images.add(art.portrait);}
+ const manifest=JSON.parse(readFileSync(new URL('../docs/asset-manifest.json',import.meta.url),'utf8'));
+ assert.deepEqual([...images].sort(),manifest.images.map(r=>r.file).sort(),'retained runtime and source image pairs must serve the current game');
 });

@@ -1,0 +1,2214 @@
+{
+  "method": "Isolated script initialization; no battles executed",
+  "errors": [],
+  "roles": [
+    {
+      "id": "daYun",
+      "name": "大运",
+      "englishName": "Da Yun",
+      "description": "普攻型 / 撞击 -6HP",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "charge",
+      "name": "电荷",
+      "englishName": "Charge",
+      "description": "正负电荷切换 / 碰边留电 / 负电范围伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "leak",
+      "name": "漏电",
+      "englishName": "Leak",
+      "description": "穿墙循环 / 穿墙时四边带电",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricGrid",
+      "name": "电网",
+      "englishName": "Electric Grid",
+      "description": "每3秒震彯电锚点 / 两点每3.5秒通电电流",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spore",
+      "name": "孢子",
+      "englishName": "Spore",
+      "description": "弹跳泡泡 / 停下变蘑菇 / 碰摸碎裂",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electric",
+      "name": "电球",
+      "englishName": "Electric Ball",
+      "description": "充能型 / 2.8秒僵直",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricV2",
+      "name": "电球V2",
+      "englishName": "Electric Ball V2",
+      "description": "3.3秒放电 / 碰撞指数伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "oldModel",
+      "name": "旧型",
+      "englishName": "Old Model",
+      "description": "铁皮拼装 / 15护盾 / 400弹速，2伤害×3连发，间隔0.1秒，末发后冷却1.8秒 / 碰撞5伤害 / 破盾停机5秒，重组恢复15盾，不回血",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "wdc",
+      "name": "WDC",
+      "englishName": "WDC",
+      "description": "2.5秒普通 / 3.5秒九宫格领域",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "wdcV2",
+      "name": "WDCV2",
+      "englishName": "WDC V2",
+      "description": "全场常开单格数字领域 / 触墙刷新0-20碰撞伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "disco",
+      "name": "迪斯科",
+      "englishName": "Disco",
+      "description": "3秒彩色环射 / 舞动音符 / 4秒九宫格领域",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spiderweb",
+      "name": "蛛网",
+      "englishName": "Spiderweb",
+      "description": "撞边织网 / 触碰蛛丝 -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "trainConductor",
+      "name": "列车长",
+      "englishName": "Train Conductor",
+      "description": "四次撞边铺轨 / 慢速蒸汽列车 / 木车厢金边铁轨 / 撞人 -5 击退",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "trainConductorV2",
+      "name": "列车长v2",
+      "englishName": "Train Conductor V2",
+      "description": "每3.8s射出一节车厢 / 20×30 反弹不灭 / 撞人-3+列车同款击退 / 头碰尾挂成一列",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "vampire",
+      "name": "吸血鬼",
+      "englishName": "Vampire",
+      "description": "锁定型 / 单次吸血+3，冷却2秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "toothless-vampire",
+      "name": "无牙吸血鬼",
+      "englishName": "Toothless Vampire",
+      "description": "杂鱼 / 首撞破皮留伤，复撞同一处 +3",
+      "rosterType": "zako",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "meteor-hammer",
+      "name": "流星锤",
+      "englishName": "Meteor Hammer",
+      "description": "铁链流星锤 / 旋转3伤 / 投掷10伤 / 木柄末端拾取",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "manhole",
+      "name": "井盖",
+      "englishName": "Manhole",
+      "description": "钻入井盖蓄力，爆炸跃出并洒落减速泥浆。",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cloud",
+      "name": "云朵",
+      "englishName": "Cloud",
+      "description": "云层从两侧漂入，每块云对其中的敌人每秒造成1点伤害。身处云层时隐身，与敌方重叠每0.05秒造成1点伤害。",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "green",
+      "name": "毒刺",
+      "englishName": "Green",
+      "description": "撞边布置 / 中毒减速",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spike",
+      "name": "尖刺",
+      "englishName": "Spike",
+      "description": "碰边布置血红尖刺 / 碰刺 -3",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spikeV2",
+      "name": "尖刺V2",
+      "englishName": "Spike V2",
+      "description": "碰边布置尖刺 / 碰刺 -3 / 本体触发射出",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "stopBall",
+      "name": "禁止通行",
+      "englishName": "Stop Ball",
+      "description": "最近角落形成动态禁行区域 / 两条活动边界阻挡反弹、接触5伤 / 本体碰撞5伤",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "acid",
+      "name": "酸液",
+      "englishName": "Acid",
+      "description": "每0.8秒半径50吐酸 / 0.1秒落地 / 接触-3+中毒-3×2 / 0.2倍渐复",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "chess",
+      "name": "象棋",
+      "englishName": "Chess",
+      "description": "三秒普通 / 五子领域",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "internationalChess",
+      "name": "国际象棋",
+      "englishName": "International Chess",
+      "description": "车象马路径 / 黑白棋盘 / 方形碰撞",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "guzheng",
+      "name": "古筝",
+      "englishName": "Guzheng",
+      "description": "布置朱红琴弦 / 本体拨弦释放声波",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "qin",
+      "name": "琴",
+      "englishName": "Qin",
+      "description": "激光V2式布线 / 震动时跨线 -3 / 本体过弦全弦震动",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "accordion",
+      "name": "风琴",
+      "englishName": "Accordion",
+      "description": "撞边布置黑白琴键 / 黑键伤敌、白键回血 / 水波连携",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fractal",
+      "name": "分形",
+      "englishName": "Fractal",
+      "description": "每2秒变换一次的米字红线 / 过线 -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "hiveV2",
+      "name": "蜂巢V2",
+      "englishName": "Hive V2",
+      "description": "每4秒抛巢 / 巢穴8血永久存在 / 光环停留0.2秒出追踪蜂 / 蜂伤1+中毒1×3（不叠加）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gum",
+      "name": "口香糖",
+      "englishName": "Chewing Gum",
+      "description": "粘连甩投 / 叠加减速",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "order",
+      "name": "法官",
+      "englishName": "Judge",
+      "description": "领域规则 / 六种标志",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "billiards",
+      "name": "台球桌",
+      "englishName": "Billiards Table",
+      "description": "子弹反制 / 低速爆炸 / 高速旋转击飞",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "snake",
+      "name": "鞭子",
+      "englishName": "Whip",
+      "description": "碰撞成长尾段 / 龙尾摆动 / 伤害递增",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "greedySnake",
+      "name": "贪吃蛇",
+      "englishName": "Greedy Snake",
+      "description": "初始两节尾巴 / 蛇行摆动 / 青苹果成长（0.7s一枚，敌吃-1HP） / 碰撞 -4HP",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "softSnake",
+      "name": "蛇",
+      "englishName": "Snake",
+      "description": "柔性越界蛇尾 / 1倍速波动传导 / 碰撞 -5HP",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚",
+      "englishName": "Anchor",
+      "description": "十四节松链铁爪 / 捕获绕行 / 撞墙 -3",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "videotape",
+      "name": "录像带",
+      "englishName": "Videotape",
+      "description": "每6秒回放三秒战斗 / VHS残像",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "rewind",
+      "name": "倒流",
+      "englishName": "Rewind",
+      "description": "正向3秒 / 倒流3秒 / 子弹回溯双倍贯穿 / 返还历史伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "parallel",
+      "name": "平行",
+      "englishName": "Parallel",
+      "description": "越界循环 / 十字晶格 / 碰撞 -2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "glacier",
+      "name": "冰川",
+      "englishName": "Glacier",
+      "description": "每1.5s射出雪球 / 雪球无伤害 只留冰霜轨迹 / 轨迹宽10 出伤3s / 踩入造成冰霜伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sixZone",
+      "name": "六区球",
+      "englishName": "Six Zone",
+      "description": "冰璃锯分体循环 / 碰边音波 / 弓箭与电击",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sixZoneUltra",
+      "name": "六区球Ultra",
+      "englishName": "Six Zone Ultra",
+      "description": "未削减融合体 / 双锯冰霜 / 电弧音波箭",
+      "rosterType": "outOfSpec",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "vcd",
+      "name": "VCD",
+      "englishName": "VCD",
+      "description": "延迟播放 / 坏道切割 / 读取回滚",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "hammerV2",
+      "name": "锤子V2",
+      "englishName": "Hammer V2",
+      "description": "感应蓄力 / 7.6倍旋锤 / 击退眩晕",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "billiardsV2",
+      "name": "台球桌V2",
+      "englishName": "Billiards Table V2",
+      "description": "50%变身 / 锁血球桌 / 连续5秒召唤台球",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "poolBall",
+      "name": "台球",
+      "englishName": "Eight Ball",
+      "description": "八号球 / 碰撞推动 / 速度变化伤害",
+      "rosterType": "zako",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "ramStick",
+      "name": "内存条",
+      "englishName": "RAM Stick",
+      "description": "2G-32G加权射击 / 1G=1伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "medicalBall",
+      "name": "医疗球",
+      "englishName": "Medical Ball",
+      "description": "四向医疗弹 / 低血八向常驻",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "creditor",
+      "name": "债主",
+      "englishName": "Creditor",
+      "description": "复利贷款 / 讨债人木棍收款",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "stoneSkipping",
+      "name": "打水漂",
+      "englishName": "Stone Skipping",
+      "description": "递减跳波 / 水纹扩散 / 石子穿透",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "starfield",
+      "name": "繁星",
+      "englishName": "Starfield",
+      "description": "碰边发射流星 / 边缘反弹 / 命中 -3",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "stars",
+      "name": "群星",
+      "englishName": "Stars",
+      "description": "每1秒点亮星链 / 每0.2秒延伸，前1秒追敌0～45距离，随后半径45内随机 / 实体星点接触1伤，随后随机消散或转为半透明",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "trident",
+      "name": "三叉戟",
+      "englishName": "Trident",
+      "description": "3秒蓄势投戟 / 速度412.5 / 命中20伤并留戟，未命中插墙 / 靠近拔回触发3×3流血，再冷却3秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "pond",
+      "name": "池塘",
+      "englishName": "Pond",
+      "description": "每秒生成鲤鱼 / 红白概率1:4 / 领域收回后冷却6.7秒 / 中心领域2秒 / 投饵与急流 / 红鲤回复1血",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "armor",
+      "name": "甲胄",
+      "englishName": "Armor",
+      "description": "三盾环身 / 爆甲弹射 / 反弹碎击 -7",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "daYunV2",
+      "name": "大运V2",
+      "englishName": "Da Yun V2",
+      "description": "30秒大货车 / 2.5倍速 / 碰撞-100",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "daYunV3",
+      "name": "大运V3",
+      "englishName": "Da Yun V3",
+      "description": "恒功率加速 / 30秒拉到500 / 94%减伤 / 撞击 -2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 20
+      }
+    },
+    {
+      "id": "daYunBoss",
+      "name": "大运Boss",
+      "englishName": "Da Yun Boss",
+      "description": "总力战专用 / 货车、冲击波、尸群 / 95%减伤",
+      "rosterType": "boss",
+      "stats": {
+        "radius": 22.5,
+        "speed": 100,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "daYunV4",
+      "name": "大运V4",
+      "englishName": "Da Yun V4",
+      "description": "7.2秒蓝色货车 300×100 / 速度250 / 碰撞-5+击退 / 从敌方近侧驶入",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "daYunV5",
+      "name": "大运V5",
+      "englishName": "Da Yun V5",
+      "description": "撞伤与血量十位互补为10 / 每扣 1 血受伤率×97/100 / 受击淬火硬化，掉血越多越像一块钢",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricV3",
+      "name": "电球V3",
+      "englishName": "Electric Ball V3",
+      "description": "球状闪电 / 两触爆破 / 范围加速放电",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricV4",
+      "name": "电球V4",
+      "englishName": "Electric Ball V4",
+      "description": "20发/秒逆时针雷电 / 38度步进 / 穿透 -3",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricV5",
+      "name": "电球V5",
+      "englishName": "Electric Ball V5",
+      "description": "90范围电解 / 2.62秒边缘雷暴 / 静电点",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricV6",
+      "name": "电球V6",
+      "englishName": "Electric Ball V6",
+      "description": "0.8秒微电流 / 电荷磁吸 / n²碰撞震荡",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "electricPrime",
+      "name": "雷电",
+      "englishName": "Electric Ball Prime",
+      "description": "场外丝状雷电 / 四击阶乘放电 / 接地反击",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sparkler",
+      "name": "仙女棒",
+      "englishName": "Sparkler",
+      "description": "0.03秒3点微型火光 / 半径150随机爆闪",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cable",
+      "name": "电缆",
+      "englishName": "Cable",
+      "description": "两次碰壁拉出下垂电缆 / 漏电段电击眩晕 / 6.4秒后爆散消失",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "quicksand",
+      "name": "流沙",
+      "englishName": "Quicksand",
+      "description": "预判1秒后落点投掷沙球 / 流沙陷阱困住敌人持续伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "snowflake",
+      "name": "雪花",
+      "englishName": "Snowflake",
+      "description": "每1.2秒掷出直径8雪球 / 命中-1并在原地落直径60大雪花0.6秒（圈内行动降至25%） / 打在圈内敌人身上-8且不再落雪",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "snowFight",
+      "name": "雪仗",
+      "englishName": "Snow Fight",
+      "description": "每1.2秒掷出直径3雪球 / 命中后敌方行动速度降至50%并每秒回10% / 每命中一次下一发+1伤（初始1）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "tornado",
+      "name": "龙卷风",
+      "englishName": "Tornado",
+      "description": "每2秒释放索敌龙卷风 / 卷入敌人旋转磨血每圈2点",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "splitBall",
+      "name": "分裂球",
+      "englishName": "Split Ball",
+      "description": "碰敌 -5 并平分血量 / 同源分身碰撞融合",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 20,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "zeusV2",
+      "name": "宙斯V2",
+      "englishName": "Zeus V2",
+      "description": "2秒宙斯之矛 / 5秒长矛联网放电",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "twins",
+      "name": "双子",
+      "englishName": "Twins",
+      "description": "无血量碰撞分身 / 受伤换位",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "trapper",
+      "name": "陷阱师",
+      "englishName": "Trapper",
+      "description": "6秒3个红色圆陷阱 / 边缘碰撞 -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "trapperV2",
+      "name": "陷阱师V2",
+      "englishName": "Trapper V2",
+      "description": "撞墙布横竖两条橙线 / 四分场地 / 敌人落入其一则变红色区域陷阱 5 秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "blackHole",
+      "name": "黑洞",
+      "englishName": "Black Hole",
+      "description": "每2秒召唤一个旋转黑洞（2r/s）/ 吸入后每0.8秒扣5点 / 存在3秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cuttingBall",
+      "name": "切割球",
+      "englishName": "Cutting Ball",
+      "description": "两次碰壁切割战场 / 小区域持续伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cuttingBallV2",
+      "name": "切割球V2",
+      "englishName": "Cutting Ball V2",
+      "description": "开局放出四颗永久隐身坐标球（蓝横/橙竖各2） / 四个交点每0.2秒-2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "blaster",
+      "name": "爆破者",
+      "englishName": "Blaster",
+      "description": "双钻并列挂架自动督准 / 打完抾弹匣换弹",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "laserV2",
+      "name": "激光V2",
+      "englishName": "Laser V2",
+      "description": "两次碰壁生成永久激光 / 跨线 -2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "briar",
+      "name": "荆棘",
+      "englishName": "Briar",
+      "description": "碰壁布荆棘 / 碰到 -3反弹 / 最多5条",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "virus",
+      "name": "病毒",
+      "englishName": "Virus",
+      "description": "触碰传染 / 中毒 -1×10 / 减速",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "laserV3",
+      "name": "激光V3",
+      "englishName": "Laser V3",
+      "description": "碰壁留下永久发射器 / 每1秒发射0.2秒激光 / -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "angel",
+      "name": "天使",
+      "englishName": "Angel",
+      "description": "碰壁留下小十字架 / 同边双十字降下圣光 -9",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "apple",
+      "name": "苹果",
+      "englishName": "Apple",
+      "description": "每0.8秒随机空投苹果 / 3.5秒后渐隐消失 / 敌方吃-5减速25%1秒 / 己方吃+3加速1.5倍1秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "lemon",
+      "name": "柠檬",
+      "englishName": "Lemon",
+      "description": "每1秒脚下生成柠檬最多7个 / 敌方吃-3并酸蚀减速2秒每秒-3 / 自身吃+3加速2倍1秒（苹果同款）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "rubberBand",
+      "name": "橡胶带",
+      "englishName": "Rubber Band",
+      "description": "两次碰壁布置永久橡胶带 / 10秒后可再次布线 / 撞墙 -4",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spider",
+      "name": "蜘蛛",
+      "englishName": "Spider",
+      "description": "1.5秒投掷相对往返蛛网 / 网内0.05倍速无法攻击 / 爬线撕咬",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "assassin",
+      "name": "刺客",
+      "englishName": "Assassin",
+      "description": "旋转短剑 / 低血转速与移速加快 / 剑刃-5",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "bowV2",
+      "name": "弓箭V2",
+      "englishName": "Bow V2",
+      "description": "低血加速 / 3倍速箭矢 / 命中-1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fixed",
+      "name": "固定",
+      "englishName": "Fixed",
+      "description": "碰撞留下固定实体 / 6.7秒 / 碰撞-5",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "ocean",
+      "name": "海洋",
+      "englishName": "Ocean",
+      "description": "气泡+1 / 2.7秒沙丁鱼群 / 单鱼-2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "liaogang",
+      "name": "寮缸",
+      "englishName": "Liaogang",
+      "description": "泥浆场地 / 中毒减速90% / 索敌蛆虫",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "frog",
+      "name": "青蛙",
+      "englishName": "Frog",
+      "description": "荷叶远跳 / 舌头捕捉 / 收回时持续伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sixKing",
+      "name": "六王球",
+      "englishName": "Six King",
+      "description": "六王融合 / 双领域 / 毒刺蛛网 / 锤击列车",
+      "rosterType": "outOfSpec",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sixKingE",
+      "name": "六王球E",
+      "englishName": "Six King E",
+      "description": "六王强度适配版 / 接触锤击与常驻烟雾 / 三次撞边铺丝后毒刺驶出 / 单步象棋",
+      "rosterType": "zako",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "grenade",
+      "name": "手榴弹",
+      "englishName": "Grenade",
+      "description": "2.5秒周期 / 抛物线手雷轰炸",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "militaryGrenade",
+      "name": "战术手雷",
+      "englishName": "Military Grenade",
+      "description": "2.5秒周期 / 预测落点 / 灰白粒子爆炸",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spiderGrenade",
+      "name": "蛛丝手雷",
+      "englishName": "Spider Grenade",
+      "description": "3.7秒冷却 / 递增投掷 / 白色蛛丝手雷",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fragment",
+      "name": "碎片",
+      "englishName": "Fragment",
+      "description": "九片穿透反弹 / 420速度 / 全数回收后再发射",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "glassV2",
+      "name": "玻璃V2",
+      "englishName": "Glass V2",
+      "description": "碰撞散落玻璃渣 / 扎入目标后可被索敌击碎",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fiberOptic",
+      "name": "玻纤",
+      "englishName": "Fiberglass",
+      "description": "碰撞散落玻璃渣 / 光线与碎屑触敌 -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gambler",
+      "name": "赌徒",
+      "englishName": "Gambler",
+      "description": "手牌填充 / 扑克牌扇形射击",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "drill",
+      "name": "钻头",
+      "englishName": "Drill",
+      "description": "锁定冲锋 / 钻尖吸附 / 连续钻击",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "orbital",
+      "name": "轨道球",
+      "englishName": "Orbital Ball",
+      "description": "同心轨道卫星 / 每0.6秒增加一颗 / 卫星碰撞-3",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "flame",
+      "name": "烈焰",
+      "englishName": "Flame",
+      "description": "五焰环绕（1r/s） / 每1.2秒发射速度150的烈焰弹 / 命中-3并灼烧1.2秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cocktail",
+      "name": "扎啤",
+      "englishName": "Cocktail",
+      "description": "军绿燃烧瓶 / 攻击频率0.25起步、0.05/s加速至1（首击4秒） / 弹墙：25%起每次碰撞+15%碎裂 / 碎成4-5片1伤子弹与半径30火海（接触每0.3秒-1，离开后每0.5秒-1，共2次）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "spear",
+      "name": "长矛",
+      "englishName": "Spear",
+      "description": "鲜绿色长矛 / 碰壁加速 / 只有矛尖造成速度相关伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "king",
+      "name": "国王",
+      "englishName": "King",
+      "description": "每3.8秒在正交四向召唤4个3血小兵（各持长矛与指向敌人的60°木盾）/ 血量低于40后每轮多召1个",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sawV2",
+      "name": "锯球V2",
+      "englishName": "Saw Ball V2",
+      "description": "碰边与主动蓄速 / 撞击伤害随额外速度提高 / 命中后复原",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sawV3",
+      "name": "锯球V3",
+      "englishName": "Saw Ball V3",
+      "description": "手持电锯 / 每颗锯齿 1 点触碰伤害 / 链条线速度 350 / 转速随血量 0.25→2 r/s / 见血",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "meatGrinder",
+      "name": "绞肉机",
+      "englishName": "Meat Grinder",
+      "description": "双头刀片半径35 / 刀刃1点接触伤害 / 转速随失血0.2→15r/s、移速150→50 / 削肉弹20%概率2伤",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "snowball",
+      "name": "雪球",
+      "englishName": "Snowball",
+      "description": "滚动成长 / 越大越慢 / 体积减伤 / 碰撞伤害随体积提升",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 10,
+        "speed": 300,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "lantern",
+      "name": "灯笼",
+      "englishName": "Lantern",
+      "description": "旋转光束 / 触碰出伤 / 命中越多光束越多",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "copy",
+      "name": "复制",
+      "englishName": "Copy",
+      "description": "每 8 秒散落 20 个持剑复制体",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "greyDeer",
+      "name": "灰鹿",
+      "englishName": "Grey Deer",
+      "description": "每 2 秒打出 7 点血量 / 血球撞击伤害等于自身血量 / 回体回血",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "steelCoil",
+      "name": "钢卷",
+      "englishName": "Steel Coil",
+      "description": "90% 减伤 / 免疫眩晕 / 撞击击退 / 连环撞击压扁",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "steelworks",
+      "name": "炼钢厂",
+      "englishName": "Steelworks",
+      "description": "每 2 秒向随机方向产出 2 血小钢卷 / 直径 20 / 连环撞击压扁 15 伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "oldWoodMaster",
+      "name": "老木师",
+      "englishName": "Old Wood Master",
+      "description": "撞墙或木板表面钉板 / 板厚 5-80、板长 5-80 / 贴面搭建，层数取决于场地空间 / 受击三次碎裂，钢卷先改向再撞碎 / 碰撞伤害 2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "whackAMole",
+      "name": "打地鼠",
+      "englishName": "Whack-a-Mole",
+      "description": "场地系 / 9 个虚线圆 / 敌方完全进入或被完全覆盖即触发 / 木槌：7 伤害 + 1 秒颤抖眩晕（期间减速 50%）/ 洞口被碾塌后 2 秒，地鼠爪子刨土把它挖回来",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "snowman",
+      "name": "雪人",
+      "englishName": "Snowman",
+      "description": "碰撞/碰边布置小雪人 / 小雪人发射雪球并自损",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "soundWave",
+      "name": "音波",
+      "englishName": "Sound Wave",
+      "description": "碰撞散发扩散音波 / 固定 1 伤且不衰减不消失 / 边缘回弹",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "soccerBall",
+      "name": "足球",
+      "englishName": "Soccer Ball",
+      "description": "射边门+3伤害 / 加速1.5倍可叠加",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "throwingAxe",
+      "name": "飞斧",
+      "englishName": "Throwing Axe",
+      "description": "扔回旋斧 / 只有斧刃能砍人 / 回旋轨迹随场地空间调整 / 收回冷却2s",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "scan",
+      "name": "扫描",
+      "englishName": "Scan",
+      "description": "周期扫描 / 开局中心1道竖线 每轮+1道 1s内从左到右铺开 / 接触-1 维持1.5s后渐隐",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fishHook",
+      "name": "鱼钩",
+      "englishName": "Fish Hook",
+      "description": "每3秒投出反弹鱼钩 / 最长800 / 收线每30距离-2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "wirelessFishHook",
+      "name": "无线鱼钩",
+      "englishName": "Wireless Fish Hook",
+      "description": "贴身后置无线鱼钩 / 收线速度150，每30距离-2 / 碰撞急转85°脱钩",
+      "rosterType": "zako",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "fishPond",
+      "name": "鱼塘",
+      "englishName": "Fish Pond",
+      "description": "任意边垂直放钩 放线20 / 钩到即收线250 / 空钩到对边停住 / 每30距离-2",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gunnerX",
+      "name": "枪手",
+      "englishName": "Gunner",
+      "description": "2026-09-26 A 策略 / 预测走位与射击决策",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gunnerH",
+      "name": "枪手H",
+      "englishName": "Gunner H",
+      "description": "紫色自由策略枪手 / 解析提前量、风险采样与后坐力走位",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gunnerD",
+      "name": "枪手D",
+      "englishName": "Gunner D",
+      "description": "白色自由策略枪手 / 多目标预测、弹道采样与威胁规避",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "gunnerK",
+      "name": "枪手K",
+      "englishName": "Gunner K",
+      "description": "深蓝色自由策略枪手 / 粘滞索敌、时序威胁评估与后坐力风筝",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "blitz",
+      "name": "布利茨",
+      "englishName": "Blitz",
+      "description": "蓄力锁定 / 超高速折返冲刺 / 路径连击与撞墙爆破",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "boxer",
+      "name": "拳击手",
+      "englishName": "Boxer",
+      "description": "3/4 圆环 30（直径 90）内有敌人时自身速度 ×0.1 / 左右直拳 1 / 上勾拳 3 / 击退 70% / 正下方死角",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "revolver",
+      "name": "左轮",
+      "englishName": "Revolver",
+      "description": "固定左右双枪 / 6秒统一冷却 / 连射 6 发×6",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "loom",
+      "name": "织布机",
+      "englishName": "Loom",
+      "description": "碰壁就从本体拉出一段线，一段接一段永不停手 / 端点开局起沿边缘逆时针滑行，20秒加速到400 / 贴线 -1，同一次接触只扣一滴",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "liquidNitrogen",
+      "name": "液氮",
+      "englishName": "Liquid Nitrogen",
+      "description": "喷口 45 度冷冻扇形 / 每秒 2 点持续伤害 / 减速可叠加 / 叠满 4 秒冻结 3 秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "splitBallV2",
+      "name": "分裂v2",
+      "englishName": "Split V2",
+      "description": "无实体推挤，接触敌人 -5，仍承受碰撞伤害 / 受伤即分裂 / 分裂后 1.8 秒不能复合 / 分身连线，穿线 -1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "windmill",
+      "name": "风车",
+      "englishName": "Windmill",
+      "description": "每2秒原地放一架荷兰风车 / 帆叶扫过3点 自转1圈每秒 / 整机直径70 存活5.3秒渐隐",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "clock",
+      "name": "时钟",
+      "englishName": "Clock",
+      "description": "每1.5秒抛出时钟 / 1-12随机伤害 / 流逝点满24发射铭文弹 / 12伤害并3秒颤抖眩晕",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "embroideryNeedle",
+      "name": "绣花针",
+      "englishName": "Embroidery Needle",
+      "description": "钢针穿刺1伤害 / 6次1点流血 / 细线牵拉拔针 / 靠墙钉住并眩晕 / 收回后立即再投",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "caterpillar",
+      "name": "毛毛虫",
+      "englishName": "Caterpillar",
+      "description": "每失去5血脱落4团绒毛 / 半速飘动10秒 / 1秒沉默 / 瘙痒每0.4秒-1，共5次可重置",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "zaoPepper",
+      "name": "糟辣椒",
+      "englishName": "Zao Pepper",
+      "description": "开场5瓶 / 每5秒补充 / 触瓶无敌拧盖0.6秒 / 辣椒地每0.4秒-1，存留4.5秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "pollen",
+      "name": "花粉",
+      "englishName": "Pollen",
+      "description": "触敌散开2秒 / 无敌无碰撞 / 半径55花粉区域 / 50%速度 / 每0.25秒-2 / 聚回后0.8秒再散开",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "jelly",
+      "name": "果冻",
+      "englishName": "Jelly Ball",
+      "description": "碰撞3 / 每3秒摔倒2秒并无敌 / 摔倒自扣2血 / 触碰摊开的果冻受5伤害并控制2秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "lavaBall",
+      "name": "岩浆球",
+      "englishName": "Lava Ball",
+      "description": "跑动一路丢下岩浆滩（每滩3秒 / 接触每0.8秒-2） / 本体碰撞附带灼烧 / 敌人1.1倍速",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "magma",
+      "name": "岩浆",
+      "englishName": "Magma",
+      "description": "每3.8秒抛投岩浆 / 直径35 / 接触每0.3秒-1 / 3.3秒后凝为碰撞伤害2的岩石 / 本体碰撞附带灼烧",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "projection",
+      "name": "投影",
+      "englishName": "Projection",
+      "description": "碰撞留下直径30检修信号 / 存在4.6秒 / 每0.06秒-1",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "tomato",
+      "name": "番茄",
+      "englishName": "Tomato",
+      "description": "投掷番茄 / 落点战场内随机 / 直径60溅射-2 / 冷却2.3秒每次减少0.3秒最低0.05秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "volcano",
+      "name": "火山",
+      "englishName": "Volcano",
+      "description": "开场2秒后停0.4秒裂开岩浆缝，持续4秒、冷却4秒 / 裂缝上-3每0.45秒并减速到20% / 离开后灼烧每秒-2共2秒，再踩回裂缝即清火 / 岩浆球直径<4越远越小",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "module",
+      "name": "模块",
+      "englishName": "Module",
+      "description": "四象限机械 / 榔头、护盾、手枪、机械腿 / 首次拆分零件各25血，重组不恢复零件血量 / 分离后0.3秒才能重组",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 20
+      }
+    },
+    {
+      "id": "urchin",
+      "name": "海胆",
+      "englishName": "Sea Urchin",
+      "description": "每秒整批弹出50根刺 / 每根刺 -1 / 伸出50 收起露尖",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "briefcase",
+      "name": "公文包",
+      "englishName": "Briefcase",
+      "description": "牛皮公文包 / 每2秒朝四个互相垂直的方向撑开伸缩铁棒直到墙边，本体卡住2秒后收回 / 本体与每根铁棒各3点碰撞伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "matryoshka",
+      "name": "套娃",
+      "englishName": "Matryoshka",
+      "description": "青色套娃 / 2点碰撞伤害 / 外壳100→50→25→12，直径30→25→20→15 / 每碎一层壳射出4颗青碎片：300速、3伤害、命中即消耗、碰墙反弹",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "sawBall",
+      "name": "锯球",
+      "englishName": "Saw Ball",
+      "description": "两片圆锯公转（固定0.6圈/秒，公转半径40） / 圆锯碰撞5伤害 / 本体碰撞1伤害",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "magnet",
+      "name": "磁力球",
+      "englishName": "Magnet",
+      "description": "开场1Hz投磁铁，频率每秒+0.02Hz（上限3Hz）/ 84范围吸引，每秒+3，相吸速度36 / 对接爆炸：30内12-15，69内7-9，81内5，4.5倍速击退0.15秒",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "peeler",
+      "name": "削皮刀",
+      "englishName": "Peeler",
+      "description": "接触削皮 / 剥出5血空心敌方复制体，复刻技能并倒戈作战",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "soundSpear",
+      "name": "音矛",
+      "englishName": "Sound Spear",
+      "description": "银色长矛 / 近战戳击3点·冷却0.8秒，命中即在矛尖释放音波 / 射程外250速投矛2点，扎在敌人或板边上不消失、被攻击2次才碎 / 每碰一次板边所有投出的矛各放一次音波",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "scarecrow",
+      "name": "稻草人",
+      "englishName": "Scarecrow",
+      "description": "金黄稻草纯色本体 / 手持干草叉（长65宽6）近战10点、冷却1.6秒 / 带一个血量-1的无敌分身",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "rollingLog",
+      "name": "滚木",
+      "englishName": "Rolling Log",
+      "description": "不可见本体，碰撞伤害5；每7秒从随机边缘在3秒内陆续释放10至15个不可见滚木，碰撞伤害3，只从对边离场。",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "liuFuQi",
+      "name": "刘夫妻",
+      "englishName": "Six Seven",
+      "description": "67血 / 左6右7像素盾，上下交错摆动 / 数字撞击6或7伤害，击退0.67秒、6.7倍速 / 数字触墙召唤对应6或7血小球",
+      "rosterType": "elite",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 67
+      }
+    },
+    {
+      "id": "yiWanRen",
+      "name": "亿万人",
+      "englishName": "Myriads",
+      "description": "普通球 / 每 0.02 秒从场外钻进一团血肉 / 触手·蛆·血肉弹·分裂·短触手·弹跳·碎裂尖牙 七种小球 / 本体不断蠕动",
+      "rosterType": "outOfSpec",
+      "stats": {
+        "radius": 15,
+        "speed": 30,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "baiWanRen",
+      "name": "百万人",
+      "englishName": "Millions",
+      "description": "场地系 / 整块战场就是这团血肉 / 每 0.35 秒从边线内侧钻出一团血肉（场地节拍：本体眩晕照放）/ 七种小兵 / 本体只是一颗心脏",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 30,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "hydraulicPress",
+      "name": "液压机",
+      "englishName": "Hydraulic Press",
+      "description": "场地黑黄液压柱 / 下压速度2 / 柱体碰撞-3 / 空间不足即秒杀",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "mooncake",
+      "name": "月饼",
+      "englishName": "Mooncake",
+      "description": "每3秒速度+0.5倍 / 撞人-6血并沉默1秒且速度重置 / 血量≤10一次性回30血",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "skyLantern",
+      "name": "孔明灯",
+      "englishName": "Sky Lantern",
+      "description": "碰下边缘弹出小孔明灯（HP3/自扣1/每0.5s随机吐火苗/死亡补发3颗），火苗命中灼烧2秒每秒3伤",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "liangchenI",
+      "name": "良辰I",
+      "englishName": "Liangchen I",
+      "description": "血量≤40每秒回1血 / 撞击2伤 / 0.5s一发685速1伤血弹",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 80,
+        "maxHp": 40
+      }
+    },
+    {
+      "id": "liangchenII",
+      "name": "良辰II",
+      "englishName": "Liangchen II",
+      "description": "CD期回血速率=(缺失血量)/4s，血越少回越快 / 冲刺4s：16撞伤×3速+拖尾",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 35
+      }
+    },
+    {
+      "id": "liangchenIII",
+      "name": "良辰III",
+      "englishName": "Liangchen III",
+      "description": "4撞伤 / 每0.2s血滴(无数量上限/反弹弧线红尾/命中再弹射) / 收回75%回1血 / 每4s冲刺750速16撞伤",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 30
+      }
+    },
+    {
+      "id": "liangchenIV",
+      "name": "良辰IV",
+      "englishName": "Liangchen IV",
+      "description": "撞人 4 点 / 锤子转得慢 / 6 秒才冲一次 / 挨打会掉血滴，不捡就没了",
+      "rosterType": "elite",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 25
+      }
+    },
+    {
+      "id": "liangchenVE",
+      "name": "良辰V·E",
+      "englishName": "Liangchen V E",
+      "description": "血只有 20 / 撞人只有 2 点 / 没有冲刺 / 掉的血滴穿身而过，它也不捡",
+      "rosterType": "outOfSpec",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 20
+      }
+    },
+    {
+      "id": "liangchenLite",
+      "name": "良辰Lite",
+      "englishName": "Liangchen Lite",
+      "description": "15血 / 1撞伤 / 初始90%减伤 / 全场每0.2秒流失1%最大血量真伤并溅血(无数量上限) / 常驻眩晕，碰撞释放1秒但攻击节奏仅10% / 血滴穿身恢复与减伤成长",
+      "rosterType": "outOfSpec",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 15
+      }
+    },
+    {
+      "id": "youRen",
+      "name": "游刃",
+      "englishName": "You Ren",
+      "description": "五剑加速突刺、减速留场 / 侧步避险调整剑路 / 交叉回收 / 碰撞与每次剑击均为2伤害",
+      "rosterType": "elite",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cactus",
+      "name": "仙人掌",
+      "englishName": "Cactus",
+      "description": "开场3秒吐出6颗种子，0.6秒落地长出仙人掌：直径20-30、碰到-3；5秒后枯萎并进入3秒冷却，之后每轮7株",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "cactusV2",
+      "name": "仙人掌V2",
+      "englishName": "Cactus V2",
+      "description": "抛种速度从0.25个/s线性加速到3个/s；种出2伤/2血的第三方仙人掌；每4.8秒起跳落地，腾空无敌，落地后全场仙人掌扭动并各自射出5根穿透尖刺",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "rock",
+      "name": "岩石",
+      "englishName": "Rock",
+      "description": "撞墙长出岩柱 / 只挤不伤 / 无路可逃时碾压13",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 160,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "blizzard",
+      "name": "暴风雪",
+      "englishName": "Blizzard",
+      "description": "环绕雪花 / 每0.2秒生成一片 / 命中-1且冰寒0.4s（移动速度与攻击节奏×0.75，多片并存叠乘）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "swap",
+      "name": "交换",
+      "englishName": "Swap",
+      "description": "每 6 秒与最近攻击过自己的敌方交换归属 3 秒 / 换位演出期间对战时间静止 / 交换后本体用敌方的攻击节奏反打，敌方只能被动承受（优先于眩晕）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "badminton",
+      "name": "羽毛球",
+      "englishName": "Badminton",
+      "description": "手持球拍(长30) / 碰到场上羽毛球即挥拍0.2秒并击出 / 击出1000初速·100减速·命中5点·命中后减速450 / 0s·10s·16s各生成一只羽毛球",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "thumbtack",
+      "name": "图钉",
+      "englishName": "Thumbtack",
+      "description": "2秒一颗起步，每秒+0.02颗，封顶2颗/秒 / 直径3、初速150、减速200、碰墙反弹 / 飞停后留在场上 / 碰到扣1点，分开再碰再扣（无冷却）",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    },
+    {
+      "id": "onion",
+      "name": "洋葱",
+      "englishName": "Onion",
+      "description": "碰撞5点伤害 / 每4.8秒射出洋葱丝 / 紫雾宽20持续1.6秒 / 触雾者受控无法攻击2.4秒 / 每失10血十字四向发射洋葱丝",
+      "rosterType": "normal",
+      "stats": {
+        "radius": 15,
+        "speed": 150,
+        "maxHp": 100
+      }
+    }
+  ]
+}

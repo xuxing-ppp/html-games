@@ -33,7 +33,7 @@
   const surfaceChanged=!['hint','note','editNote','removeNote'].includes(action.type)||previousError!==state.error;
   gameDirty=gameDirty||surfaceChanged;
   if(redraw){
-   render({game:!state.ui.pages.length&&surfaceChanged,motion:moved});
+   render({game:!state.ui.pages.length&&surfaceChanged,motion:moved||['advance','previousBeat'].includes(action.type)});
    if(action.type==='submitPuzzle'&&next.feedback?.kind==='wrong')requestAnimationFrame(()=>{const feedback=gameRoot?.querySelector('.puzzle-feedback');feedback?.focus({preventScroll:true});feedback?.scrollIntoView({block:'nearest'});});
   }
  }

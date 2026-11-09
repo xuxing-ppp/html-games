@@ -53,7 +53,42 @@ test('expanded campaign has four optional disputes, sufficient sources before ea
   if(p.kind==='order'&&!p.id.startsWith('tutorial'))for(const i of p.items)assert(!/初[一二三四五六七八九十]|十一月/.test(i.text),p.id);
  }
  const dialogue=M.sceneNodes.flatMap(n=>[...n.beats.map(b=>b.text??''),...(n.options??[]).flatMap(o=>o.reply.map(b=>b[1]))]).join('');assert(dialogue.length>=15500);
- assert(M.sceneById['names-intro'].beats[0].text.includes('提示仍由你主动请求'));
+ assert(!M.sceneById['names-intro'].beats[0].text.includes('方才两次整理'));
  assert(M.mysteryDocuments.cargo_marks.text.join('').includes('车牌可复用'));
  assert(M.mysteryDocuments.escort_record.text.join('').includes('不能认定许家指使'));
+});
+
+test('v1.2 compresses the first case and preserves all tasks, visits and issued originals',()=>{
+ assert.equal(M.sceneNodes.length,77);assert.equal(M.sceneNodes.filter(n=>n.chapter===0).length,18);assert.equal(Object.keys(M.puzzles).length,21);
+ assert.equal(M.sceneNodes.filter(n=>n.chapter===0&&n.type==='puzzle'&&!n.id.startsWith('tutorial')).length,3);
+ assert.equal(M.sceneById['debt-boundary'].chapter,1);assert.equal(M.sceneById['debt-boundary'].index,M.sceneById['boats-intro'].index+1);
+ const g=campaign({until:'boats-intro'}).game;for(const id of ['county','north','south'])assert(g.knownPlaces.includes(id)&&g.visitedPlaces.includes(id),id);
+ assert.match(M.sceneById.arrival.beats.map(b=>b.text).join(''),/旧出粮条.*回执/);
+ const issued=new Set(M.sceneNodes.flatMap(n=>[...(n.grant??[]),...(n.options??[]).flatMap(o=>o.grant??[])]).concat(Object.values(M.explorationVisits).flatMap(v=>v.grant??[])));
+ assert.equal(Object.keys(M.mysteryDocuments).length,64);assert.deepEqual([...issued].sort(),Object.keys(M.mysteryDocuments).sort());
+});
+test('review preparation presents unresolved records and each hearing gives its own objection',()=>{
+ const text=M.mysteryDocuments.review_collation.text.join('');assert(!/均指.*同一次交付|实物交付只记一次/.test(text));
+ for(const word of ['甲三','甲五','乙二','乙四','春丙十七','初十','东栈乙联','赈运丙回'])assert(text.includes(word));
+ for(const [task,hearing,speaker]of [['trial-old','hearing-old','gu'],['trial-delivery','hearing-delivery','xu'],['trial-duty','hearing-duty','lu']]){
+  assert.equal(M.sceneById[task].index,M.sceneById[hearing].index+1);assert.equal(M.puzzles[task].resultSpeaker,'censor');assert.equal(M.puzzles[task].resultReaction.speaker,speaker);
+ }
+ assert.match(M.puzzles['trial-delivery'].success,/同一次交付/);assert.match(M.puzzles['trial-delivery'].success,/初十只有归档/);
+ for(const p of Object.values(M.puzzles)){assert(p.resultSpeaker==='narrator'||M.people[p.resultSpeaker]);assert(M.people[p.resultReaction.speaker]);assert(p.resultReaction.text.trim());}
+ for(const id of ['coroner','zhou','lin'])assert(Object.values(M.puzzles).some(p=>p.resultReaction.speaker===id));
+ assert.match(M.sceneById['hearing-old'].beats.map(b=>b.text).join(''),/旧供与补述并存/);
+ assert.match(M.sceneById['hearing-duty'].beats.find(b=>b.speaker==='scribe').text,/字是我写的/);
+});
+test('private extracts and all side consequences stay independent of required proof',()=>{
+ for(const [node,value,id]of [['boat-side','ledger','boat_recheck'],['relief-side','neighbours','family_letter']]){
+  assert(M.sceneById[node].options.find(o=>o.value===value).grant.includes(id));
+  assert(!Object.values(M.puzzles).some(p=>p.sources.includes(id)));
+ }
+ assert(!M.mysteryDocuments.family_letter.text.join('').includes('你上封信说水暖便回'));
+ assert.match(M.mysteryDocuments.family_letter.text.join(''),/其余信文仍由本人收存/);
+ for(const [id,key]of [['names-close','namesApproach'],['boats-close','boatApproach'],['relief-close','reliefApproach'],['autumn-close','autumnApproach']]){
+  assert(M.sceneById[id].beats.some(b=>b.choiceEcho===key));
+  for(const option of M.sceneNodes.find(n=>n.key===key).options)assert(M.sideConsequences[key][option.value],key+' '+option.value);
+ }
+ const raw=readFileSync(new URL('../js/data/endings.js',import.meta.url),'utf8');assert(!/has\('(?:relief_correction|winter_delivery|dyke_record)'\)|outcomes\[0\]/.test(raw));
 });

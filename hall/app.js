@@ -7,6 +7,7 @@
     (positions.get(a.id) ?? order.length) - (positions.get(b.id) ?? order.length));
   const $ = id => document.getElementById(id);
   const list = $('game-list');
+  $('game-count').textContent = `${games.length} 款游戏`;
   let selected = 0, page = 0, capacity = games.length;
   const remembered = history.state?.game;
   if (games.some(game => game.id === remembered)) selected = games.findIndex(game => game.id === remembered);

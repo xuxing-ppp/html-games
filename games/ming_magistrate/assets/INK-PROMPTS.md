@@ -14,11 +14,7 @@ Lighting must remain appropriate to each scene below. WATER INK DOES NOT MEAN BR
 
 Enclosed modest Ming county yamen: dark timber columns and eaves, grey stone-paved courtyard, continuous white-plastered perimeter wall capped with dark grey tiles, one plain dark double gate slightly right of centre and a leafy tree to its left. Any outside town is visible ONLY through a limited gate opening, never across an entirely absent wall. Consistent materials and gate/column proportions in all views; time and weather change lighting, not architecture. Chun'an's yamen also has a clearly enclosed white-wall courtyard, matching within its own two views.
 
-## 复审、退粮和两幅夜图
-
-### mystery-review-ink.png
-
-Interior winter hearing in a walled official courtyard. Keep clear moderate-to-deep ink midtones inside the timber hall, dark grey/indigo robes and shaded columns; overcast courtyard is lighter grey, not blown-out white. Preserve evidence presentation, separate witness, accused and older presiding official. Principal32–35, other ages distinct. Simplify every official's face, all elaborate robe designs, woodwork, skin and fur. The marked principal at41%x40% must be visibly hand-brushed freehand, as are all other figures, NOT a pasted detailed face. Natural gesture and readable responsibility confrontation.
+## 验粮与夜景
 
 ### mystery-restitution-ink.png
 
@@ -32,9 +28,9 @@ UNAMBIGUOUS LATE NIGHT. Deep blue-grey and charcoal ink sky across the FULL sky,
 
 UNAMBIGUOUS LATE NIGHT in SAME enclosed yamen study. Outside window courtyard, white perimeter wall, tree and gate now lie in DEEP dark blue-grey ink and silhouette under a small moon. Inside room mostly medium-dark umber/charcoal ink wash. ONE oil lamp lights ONLY a small oval of paper, a side of32–35 magistrate's face and hands; shelves, walls, far desk and robe fall into readable darker ink shade. No whole-room daylight fill, no giant bright ivory wall, no broad white exterior. Preserve paper legibility as small local light, not whole-image brightness. Economical freehand face and robe strokes, no detailed material realism.
 
-## 其余十二幅
+## 在用人物与结局
 
-第一张为已整理构图，第二张只参考复审终稿的笔墨概括程度。不能复制其人物或场景。
+第一张为已整理构图，第二张只参考现用 review-hearing-ink 的笔墨概括程度。不能复制其人物或场景。
 
 ### opening-scene-ink.png
 
@@ -59,10 +55,6 @@ Inside enclosed granary.32–35 magistrate reads a paper beside older worker han
 ### winter-relief-ink.png
 
 Cold overcast WINTER DAY, pale cool grey sky/snow with midtone clothed figures and shaded warehouse doorway. Light is muted, not sunlit golden or blown-out white.32–35 blue-robed official handing grain to woman, all faces/cloth/baskets abbreviated. Sacks indicated by broad wash and a few curved lines. Preserve sensible supporting hands and arm's-length exchange.
-
-### village-relief-ink.png
-
-Overcast rural visit, QUIET MIDTONE grey-green/umber foliage and foreground, soft hazy distant river. Not an all-bright postcard. Young32–35 magistrate and older residents with empty baskets, read face angle and listening through a few calligraphic marks only. No finely rendered face, basket weave or leaf-vein detail. Keep respectful conversational distance.
 
 ### ending-town-ink.png
 

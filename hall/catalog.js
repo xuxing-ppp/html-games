@@ -1,5 +1,6 @@
 /* The hall describes games; each game's version.js owns its release version. */
 globalThis.GamesCatalog = [
+  { id: 'ball_arena', title: '小球擂台', genre: '自动对战', input: '鼠标／触屏 · 观战沙盒', accent: '#b78135', description: '为双方挑选角色，看技能与机关碰出意外。190 个角色，支持团战、车轮战、混战、系列赛与 4–128 强锦标赛。', runtime: { 'src': ['.js', '.svg', '.ttf', '.woff2'], 'web': ['.js', '.css'] } },
   { id: 'car_racing', title: '街机赛车', genre: '竞速', input: '键盘 · 本地双人', accent: '#a04424', description: '十二条立体赛道，漂移、飞跃与空中特技。支持单人竞速和双人分屏。', note: '早期开发版本', runtime: { 'src': ['.js'], 'styles': ['.css'], 'lib': ['.js', '.txt'] } },
   { id: 'function_missel', title: '函数导弹', genre: '策略对战', input: '键盘与鼠标 · 本地多人', accent: '#b7462b', description: '把函数变成弹道。在坐标战场上绕过掩体，击中对手，也可以交给 AI 对战。', runtime: { 'web': ['.js', '.css'], 'sound': ['.mp3'] } },
   { id: 'game_of_life', title: '生命游戏', genre: '模拟实验', input: '鼠标与键盘', accent: '#375c45', description: '放下一枚滑翔机，或设计自己的细胞世界。探索经典生命与 Logistic 连续生命。', runtime: { 'web': ['.js', '.css'] } },

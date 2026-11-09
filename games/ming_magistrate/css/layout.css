@@ -13,3 +13,6 @@
 
 .title-copy .game-version{display:block;font-size:16px;line-height:1.4;color:var(--muted);letter-spacing:0;margin:0 0 10px}
 @media(max-height:519px){.title-copy .game-version{margin-bottom:4px}}
+
+/* Two result voices need room together; short landscape keeps its side-by-side layout. */
+@media(min-height:520px){.story-result{grid-template-rows:minmax(0,1fr) clamp(300px,46vh,470px)}}

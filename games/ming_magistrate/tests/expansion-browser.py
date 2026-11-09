@@ -33,6 +33,27 @@ with sync_playwright() as p:
     if name in scenes and font==20:page.screenshot(path=str(OUT/f'{name}-{width}.png'))
     if width==390 and name in scenes:
      assert '-portrait-ink.webp' in page.locator('.scene-art img').evaluate('(img)=>img.currentSrc')
+ # Result reactions and conclusions share one reading area and preserve state on profile return.
+ for width,height in [(1440,900),(844,390),(390,844),(360,640)]:
+  page.set_viewport_size({'width':width,'height':height})
+  for font in [18,20,22]:
+   for name in ['result','delivery-result','partial-final-result','limited-result','corridor','hearing-duty']:
+    load(name,font);bounds()
+    if name=='delivery-result':
+     assert page.locator('[data-result-reaction="xu"]').count()==1
+     assert page.locator('.result-conclusion-label [data-person="censor"]').count()==1
+     assert '初十只有归档' in page.locator('.dialogue-reading').inner_text()
+     assert page.locator('[data-advance]').count()==1
+     before=page.evaluate('(k)=>localStorage.getItem(k)',KEY)
+     page.locator('[data-result-reaction] [data-person="xu"]').click()
+     assert page.locator('#library-title').inner_text()=='许慎行'
+     page.get_by_role('button',name='关闭查阅，回到游戏',exact=True).click()
+     assert page.evaluate('(k)=>localStorage.getItem(k)',KEY)==before
+    if name=='limited-result':
+     assert page.locator('[data-result-reaction]').count()==0
+     assert page.locator('.dialogue-panel>header [data-person="censor"]').count()==1
+    if name=='corridor':assert 'review-corridor-ink.webp' in page.locator('.scene-art img').evaluate('(img)=>img.currentSrc')
+    if font==20:page.screenshot(path=str(OUT/f'{name}-{width}.png'))
  # Actual UI history changes produce one action cue, reader and font changes do not repeat it.
  page.set_viewport_size({'width':1440,'height':900});load('escort-blocked')
  page.wait_for_function('window.auditContext?.state==="running"')

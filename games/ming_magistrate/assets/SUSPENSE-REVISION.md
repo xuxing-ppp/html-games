@@ -1,6 +1,6 @@
 # v1.1 分镜与声音
 
-使用内置图像生成工具，以已查看的运行图作参考。四个场景各有独立横版和3:4竖版；未替换旧图。原图为 `assets/originals/{以下文件名}.png`，运行版为 `assets/runtime/{以下文件名}.webp`。执行 prepare_assets.py 更新全部44图的尺寸与校验。
+使用内置图像生成工具，以已查看的运行图作参考。四个场景各有独立横版和3:4竖版；未替换旧图。原图为 `assets/originals/{以下文件名}.png`，运行版为 `assets/runtime/{以下文件名}.webp`。执行 prepare_assets.py 更新现用图片的尺寸与校验，实际数量见素材清单。
 
 | 文件名前缀（均另有 -portrait-ink） | 参考 | 新分镜 |
 | --- | --- | --- |

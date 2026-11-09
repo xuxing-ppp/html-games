@@ -10,14 +10,18 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 BASE = os.environ.get('GAMES_TEST_URL', 'http://127.0.0.1:8000/').rstrip('/') + '/'
 GAMES = ['car_racing', 'function_missel', 'game_of_life', 'ming_magistrate',
-         'neon_survivor_mobile', 'war_simulator', 'xiangqi_beyond_the_river']
+         'neon_survivor_mobile', 'war_simulator', 'xiangqi_beyond_the_river', 'ball_arena']
 with sync_playwright() as p, tempfile.TemporaryDirectory() as temporary:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page(viewport={'width':1120,'height':700}, reduced_motion='reduce', device_scale_factor=1)
     for game in GAMES:
         page.goto(BASE + 'games/' + game + '/index.html', wait_until='networkidle')
         page.wait_for_timeout(400)
-        if game == 'car_racing':
+        if game == 'ball_arena':
+            # The main menu contains a live demonstration of the actual battle engine.
+            page.wait_for_function('!!globalThis.ArenaApp')
+            page.wait_for_timeout(500)
+        elif game == 'car_racing':
             page.locator('#startBtn').click()
             page.wait_for_timeout(4000)
         elif game == 'function_missel':
