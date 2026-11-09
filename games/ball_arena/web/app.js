@@ -43,7 +43,7 @@ function drawHomeDemo(dt){
   $('home-demo-label').innerHTML=esc(left.name)+' <span>VS</span> '+esc(right.name)+' · 演示';
   $('home-arena').setAttribute('aria-label',left.name+'与'+right.name+'对战演示');$('home-arena').dataset.leftId=left.id;$('home-arena').dataset.rightId=right.id;
   const demo=B.createDeterministicSession({registry,seed,setup:e=>{e.createGame(left.id,right.id);e.beginFight();}});
-  homeDemo={session:demo,visibleSeconds:0,renderer:new B.CanvasRenderer($('home-arena'),demo.engine,{enableGpu:false,targetPixelSize:640})};
+  homeDemo={session:demo,visibleSeconds:0,renderer:new B.CanvasRenderer($('home-arena'),demo.engine,{enableGpu:false,targetPixelSize:640,teamColors:{left:'#ed796b',right:'#78b5e7'}})};
   homeDemo.renderer.readArenaShakeOffset=()=>({x:0,y:0});for(let i=0;i<180&&demo.engine.game.state==='running';i++)demo.advance(1/60);
  }
  homeDemo.visibleSeconds+=Math.min(.1,dt);
@@ -116,7 +116,7 @@ function teardown(){
  if(engine?.game){for(const ball of engine.game.balls)engine.invokeHook(ball,'onBattleDispose');engine.entitySystem.reset();engine.visualEffectSystem.reset();engine.activeModeController()?.dispose();}
  session=null;mechanisms=null;engine=null;renderer=null;accumulator=0;
 }
-function unlockAudio(){try{const ctx=audio.ensureContext();ctx?.resume().catch(()=>{});if(audio.master)audio.master.gain.value=.3;return true;}catch{return false;}}
+function unlockAudio(){try{const ctx=audio.ensureContext();ctx?.resume().catch(()=>{});if(audio.master)audio.master.gain.value=.8;return true;}catch{return false;}}
 function startMatch(){
  if(soundOn)unlockAudio();
  const error=M.validate(state,registry);if(error){toast(error);return;}
@@ -131,7 +131,7 @@ function startRound(seed,replay=false){
   session=B.createDeterministicSession({engine,seed:roundSeed,setup:e=>{e.createBattle(M.configFor(settings,B));mechanisms=new ArenaMechanisms(e,settings.hazards);e.beginFight();}});
   const update=engine.update.bind(engine);
   engine.update=dt=>{if(engine.game.state!=='running')return;const t=engine.game.time;update(dt);if(engine.game.state==='running')mechanisms.update(Math.max(0,engine.game.time-t));};
-  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800});
+  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,teamColors:{left:'#ed796b',right:'#78b5e7'}});
   if(reduced.matches)renderer.readArenaShakeOffset=()=>({x:0,y:0});
   showScreen('battle');$('pause-indicator').hidden=true;$('pause').textContent='暂停';$('pause').disabled=false;$('step').disabled=true;
   resizeArena();renderHud();drawBattle();
@@ -147,6 +147,7 @@ function drawBattle(){if(!renderer||!engine?.game)return;renderer.draw();const c
 function renderHud(){
  if(!engine)return;
  const g=engine.game,s=matchState;
+ $('scoreboard').classList.toggle('is-brawl',s.mode==='brawl');
  $('timer').textContent=`${Math.floor((session?.steps||0)/3600)}:${String(Math.floor((session?.steps||0)/60)%60).padStart(2,'0')} / 3:00`;
  $('match-label').textContent=battleContext?(battleContext.title+(replaying?' · 重放':'')):M.MODES[s.mode]+(s.mode!=='brawl'&&series.length>1?` · 第 ${series.round} 局${replaying?' · 重放':''}`:replaying?' · 重放':'');
  const teamHtml=(balls,right=false)=>{const hp=balls.reduce((n,b)=>n+Math.max(0,b.hp),0),max=balls.reduce((n,b)=>n+b.maxHp,0),names=balls.map(b=>b.name+(b.hp<=0?' ×':b.isModeBench?' ·候场':'')).join(' / ');return `<div class="team-score ${right?'right':''}"><button class="names" data-team-roster="${right?1:0}" aria-label="查看${right?'蓝方':'红方'}阵容" title="${esc(names)}">${esc(names)} <small aria-hidden="true">⌄</small></button><span class="hp-data">${Math.ceil(hp)} / ${Math.ceil(max)} HP${balls.length>1?' · '+balls.filter(b=>b.hp>0).length+' 人存活':''}</span><div class="hp-track"><div class="hp-fill" style="width:${max?Math.min(100,hp/max*100):0}%"></div></div></div>`;};

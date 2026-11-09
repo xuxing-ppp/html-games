@@ -420,11 +420,13 @@
         renderScale = 4,
         targetPixelSize = null,
         preserveDrawingBuffer = true,
-        enableGpu = true
+        enableGpu = true,
+        teamColors = null
       } = {}
     ) {
       this.canvas = canvas;
       this.engine = engine;
+      this.teamColors = teamColors;
       this.defaultRenderScale = renderScale;
       this.targetPixelSize = Number.isFinite(targetPixelSize) && targetPixelSize > 0
         ? Math.round(targetPixelSize)
@@ -966,6 +968,7 @@
       }
       this.drawBallDamageFlash(ball);
       if (deform) context.restore();
+      this.drawTeamOutline(ball);
       this.drawBallStatusVisuals(ball);
       const hpDisplay = this.engine.invokeHook(ball, "getHpDisplay") || null;
       if (hpDisplay && hpDisplay.hidden === true) {
@@ -1039,6 +1042,24 @@
         (matrix.d * dx - matrix.c * dy) / determinant,
         (matrix.a * dy - matrix.b * dx) / determinant
       );
+    }
+
+    // 阵营环独立于角色本色；召唤物沿用实际归属，混战不虚构红蓝队伍。
+    drawTeamOutline(ball) {
+      if (!this.teamColors || this.engine.game?.config.mode === "brawl") return;
+      const color = this.teamColors[ball.teamId];
+      if (!color) return;
+      const context = this.context;
+      context.save();
+      context.beginPath();
+      context.arc(ball.x, ball.y, ball.radius + 2.4, 0, Math.PI * 2);
+      context.strokeStyle = "rgba(10, 12, 16, 0.9)";
+      context.lineWidth = 3.1;
+      context.stroke();
+      context.strokeStyle = color;
+      context.lineWidth = 1.7;
+      context.stroke();
+      context.restore();
     }
 
     drawBallStatusVisuals(ball) {

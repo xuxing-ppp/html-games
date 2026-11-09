@@ -12,3 +12,5 @@ src/core、src/balls、src/assets 以及 src/ui 中的绘制与音效代码来�
 锦标赛通用模型来自同次采集的 `mobile/tournament-bracket.js`，复制为 `web/tournament-core.js`。将导出命名空间独立为 ArenaTournamentCore，并将界面规模扩为 4、8、16、32、64、128；保留原作不重复抽签、精英占位、组队容量与晋级规则。新锦标赛界面、保存验证和对局衔接由 web/tournament.js 与 web/tournament-ui.js 实现。
 
 本作对 src/ui/canvas-renderer.js 的眩晕图标进行了表现调整：用带深色描边的连续闪电轮廓代替原像素块，其余原有状态规则不变。
+
+1.0.1 在绘制器增加可选 teamColors 阵营轮廓，独立于角色本色和技能，目录预览默认不启用。
