@@ -11,7 +11,7 @@ const included = new Set(files);
 for (const game of games) {
   assert.match(game.id, /^[a-z][a-z0-9_]+$/);
   const version = await readVersion(game.id);
-  assert.match(version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+  assert.match(version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\([1-9]\d*\))?$/);
   assert((await readFile(join(root, 'games', game.id, 'index.html'), 'utf8')).includes('./version.js'));
   try { await access(join(root, 'games', game.id, '.git')); assert.fail(`Nested Git repository: ${game.id}`); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }

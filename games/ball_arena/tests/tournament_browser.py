@@ -26,7 +26,7 @@ try:
   for prefix in ['/', '/Games/']:
    context=browser.new_context(viewport={'width':1440,'height':900},reduced_motion='reduce');page=context.new_page();errors=[];missing=[]
    page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:missing.append(r.url) if r.status>=400 else None)
-   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.4';assert page.locator('.hall-link').count()==0
+   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.4(1)';assert page.locator('.hall-link').count()==0
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90);fit(page,['#home-free','#home-tournament','#version','#help','#sound']);assert page.evaluate("(()=>{const e=document.querySelector('.home-arena');return Math.abs(e.clientWidth-e.clientHeight)<2})()");snap(page,f'home-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#home-tournament');assert page.locator('[data-tournament-size]').count()==6

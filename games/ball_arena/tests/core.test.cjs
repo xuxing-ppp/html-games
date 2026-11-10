@@ -145,3 +145,18 @@ test('time limits differ by mode and timeout resolution uses remaining health',(
  assert.equal(M.timeLimit({mode:'duel'}),240);assert.equal(M.timeLimit({mode:'team'}),360);assert.equal(M.timeLimit({mode:'wheel'}),600);assert.equal(M.timeLimit({mode:'brawl'}),480);assert.equal(M.timeLimit({mode:'boss'}),480);assert.equal(M.timeLimit({mode:'unknown'}),240);
  const e=battle('oldWoodMaster','steelCoil');e.game.teams[0].balls[0].hp=40;e.game.teams[1].balls[0].hp=60;const result=e.resolveByHp();assert.equal(result.winnerTeamId,'right');assert.equal(e.game.winnerTeam.id,'right');assert.equal(e.game.state,'ended');dispose(e);
 });
+
+test('wheel replacements draw fresh seeded headings after automatic death notification',()=>{
+ dummy('wheelHeadingProbe');
+ function capture(seed,batches){
+  const session=B.createDeterministicSession({registry,seed,setup:e=>{e.createBattle(B.createModeBattleConfig('wheel',['wheelHeadingProbe','wheelHeadingProbe','wheelHeadingProbe'],['wheelHeadingProbe','wheelHeadingProbe','wheelHeadingProbe']));e.beginFight();}}),e=session.engine,headings=[];
+  const original=e.randomDirection;let calls=0;e.randomDirection=()=>{calls++;return original();};
+  for(let round=0;round<2;round++){
+   for(const team of e.game.teams)team.balls[round].hp=0;
+   for(const dt of batches)session.advance(dt);
+   for(const team of e.game.teams){const ball=team.balls[round+1];assert(e.isBallActive(ball));assert(Math.abs(ball.vx)>1e-6);assert(Math.abs(ball.vy)>1e-6);assert(Math.abs(Math.hypot(ball.vx,ball.vy)-e.effectiveSpeed(ball))<1e-6);headings.push([ball.vx,ball.vy]);}
+  }
+  assert.equal(calls,4);session.dispose();dispose(e);return headings;
+ }
+ const first=capture(217,[1/60]);assert.deepEqual(first,capture(217,[1/120,1/120]));assert.notDeepEqual(first,capture(218,[1/60]));assert.notDeepEqual(first[0],first[2]);
+});

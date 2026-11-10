@@ -1730,12 +1730,16 @@
       const previous = event.previous;
       const isDefeatAdvance = event.reason === "defeat";
       const source = previous || current;
-      const directionX = Number.isFinite(source.vx) && Math.abs(source.vx) > UPDATE_EPSILON
-        ? source.vx
-        : source.storedVx;
-      const directionY = Number.isFinite(source.vy) && Math.abs(source.vy) > UPDATE_EPSILON
-        ? source.vy
-        : source.storedVy;
+      // Wheel entrants use the battle's seeded direction stream, never the
+      // defeated ball's heading (death notification has already cleared it).
+      const direction = event.mode === "wheel" ? this.randomDirection() : {
+        x: Number.isFinite(source.vx) && Math.abs(source.vx) > UPDATE_EPSILON
+          ? source.vx : source.storedVx,
+        y: Number.isFinite(source.vy) && Math.abs(source.vy) > UPDATE_EPSILON
+          ? source.vy : source.storedVy
+      };
+      const directionX = direction.x;
+      const directionY = direction.y;
       const directionMagnitude = Math.hypot(directionX || 0, directionY || 0) || 1;
 
       if (isDefeatAdvance) {
@@ -1755,7 +1759,7 @@
       }
 
       const speed = this.effectiveSpeed(current);
-      current.vx = (directionX || 1) / directionMagnitude * speed;
+      current.vx = (event.mode === "wheel" ? directionX : directionX || 1) / directionMagnitude * speed;
       current.vy = (directionY || 0) / directionMagnitude * speed;
       current.storedVx = current.vx;
       current.storedVy = current.vy;
