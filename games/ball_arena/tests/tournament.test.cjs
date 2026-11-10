@@ -37,3 +37,28 @@ test('saved brackets restore including champion and reject corrupt progression',
 test('tournament matches map to original team battle configuration and reset health',()=>{
  const run=draw(4,3),match=T.nextPendingMatch(run.bracket);const s=T.battleState(run,match);assert.equal(s.mode,'team');const e=new B.BattleEngine();e.createBattle(c.ArenaModel.configFor(s,B));e.beginFight();for(const b of e.game.balls)assert.equal(b.hp,b.maxHp);e.game.balls[0].hp=1;e.createBattle(c.ArenaModel.configFor(s,B));assert.equal(e.game.balls[0].hp,e.game.balls[0].maxHp);
 });
+test('wheel formats preserve weighted capacity, order, saves and engine rotation',()=>{
+ assert.deepEqual([4,5,6].map(n=>T.capacity(registry,n)),[45,36,30]);
+ assert.deepEqual([4,5,6].map(n=>T.capacity(registry,n,true)),[43,35,29]);
+ for(const teamSize of [2,3,4,5,6])for(const filterElite of [false,true]){
+  const options={size:4,teamSize,filterElite,battleMode:'wheel'},run=T.draw(registry,options,217);
+  assert.equal(JSON.stringify(run),JSON.stringify(T.draw(registry,options,217)));
+  assert.deepEqual(plain(T.restore(JSON.stringify(run),registry)),plain(run));
+  const used=[];for(const entrant of run.bracket.entrants){const ids=T.entrantIds(run,entrant);used.push(...ids);assert.equal(ids.reduce((n,id)=>n+(registry.get(id).rosterType==='elite'?2:1),0),teamSize);}
+  assert.equal(new Set(used).size,used.length);
+  const match=T.nextPendingMatch(run.bracket),s=T.battleState(run,match),e=new B.BattleEngine();assert.equal(s.mode,'wheel');e.createBattle(c.ArenaModel.configFor(s,B));e.beginFight();
+  const ctrl=e.game.competitiveMode,left=ctrl.activeFor('left'),right=ctrl.activeFor('right');right.hp=73;
+  if(s.left.length>1){left.hp=0;ctrl.advanceTeam('left');assert.equal(ctrl.activeFor('left').id,s.left[1]);assert.equal(right.hp,73);}
+  e.createBattle(c.ArenaModel.configFor(s,B));assert(e.game.balls.every(b=>b.hp===b.maxHp));
+ }
+ const old=plain(draw());delete old.settings.battleMode;assert.equal(T.restore(JSON.stringify(old),registry).settings.battleMode,'standard');
+ assert.throws(()=>T.draw(registry,{size:4,teamSize:6},1),/有效/);
+ const invalid=plain(T.draw(registry,{size:4,teamSize:6,battleMode:'wheel'},1));invalid.settings.battleMode='standard';assert.equal(T.restore(JSON.stringify(invalid),registry),null);
+});
+test('extended packing reaches advertised capacity for varied normal and elite pools',()=>{
+ for(let normals=0;normals<15;normals++)for(let elites=0;elites<10;elites++)for(const teamSize of [4,5,6]){
+  const defs=Array.from({length:normals+elites},(_,i)=>({id:'role'+i,rosterType:i<normals?'normal':'elite'})),cap=T.tournamentTeamCapacity(defs,teamSize);
+  if(cap<2)continue;const size=2**Math.floor(Math.log2(cap)),bracket=T.createTeamTournament(defs,{size,teamSize,random:B.createSeededRandom(8)});
+  for(const team of bracket.teams)assert.equal(team.ballIds.reduce((n,id)=>n+(defs.find(d=>d.id===id).rosterType==='elite'?2:1),0),teamSize);
+ }
+});

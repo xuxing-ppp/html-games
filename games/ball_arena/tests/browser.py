@@ -33,9 +33,15 @@ try:
    page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle')
    page.evaluate('localStorage.clear()');page.reload(wait_until='networkidle');page.click('#home-free')
    assert page.locator('.role-card').count()==190
+   assert page.locator('#settings-dialog').count()==0
+   page.check('#random-expanded');assert page.evaluate('ArenaApp.state.expanded');page.uncheck('#random-expanded')
+   page.fill('#seed','4294967296');page.locator('#seed').blur();assert page.evaluate('ArenaApp.state.seedText')==''
+   page.select_option('#physics','gyro');page.select_option('#mode','boss');assert page.locator('#physics').is_disabled();assert page.locator('#physics').input_value()=='none'
+   page.check('#hazard-pads');assert page.evaluate('ArenaApp.state.physics')=='gyro';page.uncheck('#hazard-pads');page.select_option('#mode','duel');assert page.locator('#physics').input_value()=='gyro';page.select_option('#physics','none')
+
    for width,height in SIZES:
     page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(100)
-    fit(page,['.masthead','#lineup','#roster','#start','.selection-footer','#search'])
+    fit(page,['.masthead','#lineup','#roster','#start','.selection-footer','#search','#physics','#hazard-pads','#hazard-supplies','#hazard-laser','#seed','#random-expanded'])
     before=page.locator('#lineup').bounding_box();page.locator('#roster').evaluate('(e)=>e.scrollTop=e.scrollHeight');page.wait_for_timeout(70)
     assert page.locator('#lineup').bounding_box()==before
     fit(page,['#lineup','#start','#editing']);snap(page,f'selection-{prefix.strip("/") or "root"}-{width}x{height}')
@@ -54,7 +60,7 @@ try:
    for width,height in [(844,390),(390,844)]:
     page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(80);fit(page,['#lineup','#roster','#start','#editing']);snap(page,f'team-{prefix.strip("/") or "root"}-{width}x{height}')
    page.set_viewport_size({'width':1440,'height':900});page.select_option('#mode','duel');page.select_option('#series','3')
-   page.click('#settings');page.select_option('#physics','bounce');page.check('#hazard-pads');page.check('#hazard-supplies');page.check('#hazard-laser');page.fill('#seed','217');page.click('#settings-dialog [data-close]')
+   page.select_option('#physics','bounce');page.check('#hazard-pads');page.check('#hazard-supplies');page.check('#hazard-laser');page.fill('#seed','217');page.locator('#seed').blur()
    page.evaluate("ArenaApp.state.left=['oldWoodMaster'];ArenaApp.state.right=['spiderweb'];ArenaApp.renderSelection()")
    page.locator('#roster').evaluate('(e)=>e.scrollTop=550');scroll=page.locator('#roster').evaluate('(e)=>e.scrollTop')
    page.click('#start');assert not page.evaluate('ArenaApp.paused');assert page.locator('#timer').inner_text().endswith('/ 4:00')

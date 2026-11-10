@@ -70,11 +70,12 @@
   }
 
   function tournamentTeamCapacity(definitions, teamSize) {
-    if (![1, 2, 3].includes(teamSize)) throw new Error("Invalid tournament team size");
+    if (![1, 2, 3, 4, 5, 6].includes(teamSize)) throw new Error("Invalid tournament team size");
     const elites = definitions.filter((definition) => definition.rosterType === "elite").length;
     const normals = definitions.length - elites;
     if (teamSize === 1) return definitions.length;
     if (teamSize === 2) return elites + Math.floor(normals / 2);
+    if (teamSize > 3) return Math.min(Math.floor((normals + elites * 2) / teamSize), teamSize % 2 ? normals : Infinity);
     const pairs = Math.min(elites, normals);
     return pairs + Math.floor((normals - pairs) / 3);
   }
@@ -90,13 +91,25 @@
     const normals = shuffleWithRandom(definitions.filter((definition) => definition.rosterType !== "elite"), random);
     const elites = shuffleWithRandom(definitions.filter((definition) => definition.rosterType === "elite"), random);
     const rosters = [];
+    // Preserve the original seeded packing for sizes 1–3.
+    if (teamSize > 3) {
+      const eliteCount = Math.min(elites.length, capacity * Math.floor(teamSize / 2));
+      let remaining = eliteCount;
+      for (let index = 0; index < capacity; index++) {
+        const count = Math.min(Math.floor(teamSize / 2), remaining);
+        remaining -= count;
+        const ballIds = elites.splice(0, count).map(d => d.id);
+        ballIds.push(...normals.splice(0, teamSize - count * 2).map(d => d.id));
+        rosters.push(ballIds);
+      }
+    }
     // Pack complete teams first, then draw teams. No ball can enter twice.
-    while (elites.length && (teamSize === 2 || normals.length)) {
+    while (teamSize <= 3 && elites.length && (teamSize === 2 || normals.length)) {
       const ballIds = [elites.pop().id];
       if (teamSize === 3) ballIds.push(normals.pop().id);
       rosters.push(ballIds);
     }
-    while (normals.length >= teamSize) rosters.push(normals.splice(0, teamSize).map((definition) => definition.id));
+    while (teamSize <= 3 && normals.length >= teamSize) rosters.push(normals.splice(0, teamSize).map((definition) => definition.id));
     const teams = rosters.map((ballIds, index) => ({ id: `team-${index}`, ballIds }));
     const bracket = createTournamentBracket(teams.map((team) => team.id), options);
     bracket.teamSize = teamSize;
@@ -271,7 +284,7 @@
     if (parsed.filterElite === undefined) parsed.filterElite = false;
     if (typeof parsed.filterElite !== "boolean") return null;
     if (parsed.teamSize === undefined) parsed.teamSize = 1;
-    if (![1, 2, 3].includes(parsed.teamSize)) return null;
+    if (![1, 2, 3, 4, 5, 6].includes(parsed.teamSize)) return null;
     if (parsed.teamSize > 1) {
       if (!Array.isArray(parsed.teams) || parsed.teams.length !== parsed.size) return null;
       const teamIds = new Set();

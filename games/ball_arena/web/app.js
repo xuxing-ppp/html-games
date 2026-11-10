@@ -13,7 +13,9 @@ const filters=[['all','全部'],['normal','普通'],['zako','杂鱼'],['elite','
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{}}
 function summaryOf(d){return clarified[d.id]?.summary||d.description;}
 function detailOf(d){return clarified[d.id]?.detail||d.description;}
-function statusOf(ball){return ball.hp<=0?'已退场':ball.isModeBench?'候场':'场上';}
+function activeWheelBall(index){const team=engine.game.teams[index];return engine.game.competitiveMode?.activeFor(team.id)||null;}
+function visibleTeam(balls,index){return matchState.mode==='wheel'?[activeWheelBall(index)].filter(b=>b&&b.hp>0):balls;}
+function statusOf(ball){return ball.hp<=0?'已退场':matchState?.mode==='wheel'?(engine.game.teams.some((t,i)=>activeWheelBall(i)===ball)?'当前上场':'候场'):ball.isModeBench?'候场':'场上';}
 function clockText(totalSeconds){const seconds=Math.max(0,Math.floor(totalSeconds));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3000);}
@@ -28,6 +30,7 @@ function showScreen(name){
  $('app').classList.toggle('on-home',name==='home');$('home-back').hidden=name==='home';
  $('home-continue-free').hidden=!session||!!battleContext||settled;
  window.dispatchEvent(new CustomEvent('arena:navigate',{detail:{screen:name}}));
+ if(name==='selection')renderSettings();
  if(name==='battle')resizeArena();
 }
 function goHome(){showScreen('home');$('home-free').focus({preventScroll:true});}
@@ -76,7 +79,7 @@ function renderSelection(){
  $('lineup').classList.toggle('brawl-lineup',state.mode==='brawl');
  $('lineup').innerHTML=state.mode==='brawl'?group('brawl'):group('left')+'<div class="versus"><strong>VS</strong><button id="swap" aria-label="交换双方" title="交换双方" '+(state.mode==='boss'?'disabled':'')+'>⇄</button></div>'+group('right',true);
  renderEditing();const error=M.validate(state,registry);$('start').disabled=!!error;$('selection-note').textContent=error||'选好双方，交给它们自己打。';
- $('hazard-count').textContent=Object.values(state.hazards).some(Boolean)?'· '+Object.values(state.hazards).filter(Boolean).length:'';
+ if(!$('selection').hidden)renderSettings();
 }
 function renderEditing(){const arr=listFor(editing.side);if(editing.index>=arr.length)editing.index=arr.length-1;const d=arr[editing.index]?registry.get(arr[editing.index]):null;$('editing').textContent=`正在选择 ${sideName(editing.side)} · 第 ${editing.index+1} 位${d?' / '+d.name:''}`;}
 function filteredRoles(){const needle=state.search.trim().toLowerCase();return roles.filter(d=>{
@@ -111,10 +114,19 @@ function pick(id){const d=registry.get(id);if(!M.eligible(d,state,editing.side))
 function favorite(id){state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):[...state.favorites,id];save();const top=$('roster').scrollTop;renderRoster(false);$('roster').scrollTop=top;if(detailId===id&&$('detail').open)$('detail-favorite').textContent=state.favorites.includes(id)?'★ 已收藏':'☆ 收藏';}
 function randomTeam(side){const pool=roles.filter(d=>M.eligible(d,state,side)&&(state.mode==='boss'&&side==='left'||state.expanded||d.rosterType==='normal'));if(!pool.length)return;state[side]=state[side].map(()=>pool[Math.floor(Math.random()*pool.length)].id);}
 function showDetail(id){detailId=id;const d=registry.get(id);$('detail-title').textContent=d.name;$('detail-content').innerHTML=`<div class="detail-hero"><canvas id="detail-preview" width="288" height="200" aria-hidden="true"></canvas><div><p>${M.TYPE_NAMES[d.rosterType]}${isOriginal(id)?' · 原创角色':''}</p><p class="detail-tags">${esc((ArenaTags[id]||[]).join(' · '))}</p></div></div><p class="detail-desc">${esc(detailOf(d))}</p><div class="detail-stats"><div><small>基础生命</small><strong>${d.stats.maxHp}</strong></div><div><small>速度</small><strong>${d.stats.speed}</strong></div><div><small>半径</small><strong>${d.stats.radius}</strong></div></div>`;drawPreview($('detail-preview'),id);$('detail-favorite').textContent=state.favorites.includes(id)?'★ 已收藏':'☆ 收藏';$('detail-pick').disabled=!M.eligible(d,state,editing.side);$('detail-pick').textContent=$('detail-pick').disabled?'不适用于当前位置':'选入'+sideName(editing.side)+'第'+(editing.index+1)+'位';openDialog('detail');}
-function openSettings(){
- const boss= !$('selection').hidden&&state.mode==='boss';$('physics').value=state.physics;$('physics').disabled=boss;$('physics-hint').textContent=boss?'Boss 挑战使用普通运动方式。':'只影响运动规则，不改变角色技能。';
- for(const k of ['pads','supplies','laser'])$('hazard-'+k).checked=state.hazards[k];
- $('seed').value=state.seedText;$('random-expanded').checked=state.expanded;openDialog('settings-dialog');
+function renderSettings(tournament=false,run=null){
+ const slot=$(tournament?'tournament-settings-slot':'free-settings-slot');slot.appendChild($('match-settings'));
+ const locked=!!run,settings=run?run.settings:state,boss=!tournament&&state.mode==='boss';
+ $('physics').value=boss?'none':settings.physics;$('physics').disabled=locked||boss;
+ $('physics-hint').textContent=boss?'Boss 挑战固定直线运动。':'';
+ for(const k of ['pads','supplies','laser']){$('hazard-'+k).checked=settings.hazards[k];$('hazard-'+k).disabled=locked;}
+ $('seed-label').textContent=tournament?'抽签种子':'对局种子';$('seed').value=run?String(run.drawSeed):state.seedText;$('seed').disabled=locked;
+ $('random-setting').hidden=tournament;$('random-expanded').checked=state.expanded;$('settings-lock').hidden=!locked;
+}
+function commitSettings(){
+ if(!$('physics').disabled)state.physics=$('physics').value;for(const k of ['pads','supplies','laser'])state.hazards[k]=$('hazard-'+k).checked;state.expanded=$('random-expanded').checked;
+ const value=$('seed').value.trim();if(value!==''&&(!/^\d{1,10}$/.test(value)||Number(value)>4294967295)){toast('种子须为 0–4294967295 的整数，已改为随机。');state.seedText='';$('seed').value='';}else state.seedText=value;
+ save();
 }
 function seedValue(){return state.seedText===''?newSeed():Number(state.seedText)>>>0;}
 function newSeed(){return crypto.getRandomValues(new Uint32Array(1))[0];}
@@ -158,9 +170,11 @@ function renderHud(){
  $('scoreboard').classList.toggle('is-brawl',s.mode==='brawl');
  $('timer').textContent=`${clockText((session?.steps||0)/60)} / ${clockText(matchTimeLimit)}`;
  $('match-label').textContent=battleContext?(battleContext.title+(replaying?' · 重放':'')):M.MODES[s.mode]+(s.mode!=='brawl'&&series.length>1?` · 第 ${series.round} 局${replaying?' · 重放':''}`:replaying?' · 重放':'');
- const teamHtml=(balls,right=false)=>{const hp=balls.reduce((n,b)=>n+Math.max(0,b.hp),0),max=balls.reduce((n,b)=>n+b.maxHp,0),names=balls.map(b=>b.name+(b.hp<=0?' ×':b.isModeBench?' ·候场':'')).join(' / ');return `<div class="team-score ${right?'right':''}"><button class="names" data-team-roster="${right?1:0}" aria-label="查看${right?'蓝方':'红方'}阵容" title="${esc(names)}">${esc(names)} <small aria-hidden="true">⌄</small></button><span class="hp-data">${Math.ceil(hp)} / ${Math.ceil(max)} HP${balls.length>1?' · '+balls.filter(b=>b.hp>0).length+' 人存活':''}</span><div class="hp-track"><div class="hp-fill" style="width:${max?Math.min(100,hp/max*100):0}%"></div></div></div>`;};
+ $('match-label').title=$('match-label').textContent;
+ const teamHtml=(balls,right=false)=>{balls=visibleTeam(balls,right?1:0);const hp=balls.reduce((n,b)=>n+Math.max(0,b.hp),0),max=balls.reduce((n,b)=>n+b.maxHp,0),names=balls.map(b=>b.name+(b.hp<=0?' ×':b.isModeBench?' ·候场':'')).join(' / ')||'无上场角色';return `<div class="team-score ${right?'right':''}"><button class="names" data-team-roster="${right?1:0}" aria-label="查看${right?'蓝方':'红方'}阵容" title="${esc(names)}">${esc(names)} <small aria-hidden="true">⌄</small></button><span class="hp-data">${Math.ceil(hp)} / ${Math.ceil(max)} HP${balls.length>1?' · '+balls.filter(b=>b.hp>0).length+' 人存活':''}</span><div class="hp-track"><div class="hp-fill" style="width:${max?Math.min(100,hp/max*100):0}%"></div></div></div>`;};
  const originals=g.teams.map(t=>t.balls),sides=s.mode==='brawl'?[originals[0].slice(0,Math.ceil(originals[0].length/2)),originals[0].slice(Math.ceil(originals[0].length/2))]:originals;
- $('scoreboard').innerHTML=teamHtml(sides[0])+(battleContext?'<div class="series-score">VS</div>':`<div class="series-score"><span>${series.scores[0]}</span><small>:</small><span>${series.scores[1]}</span></div>`)+teamHtml(sides[1],true);
+ $('score-left').innerHTML=teamHtml(sides[0]);$('score-right').innerHTML=teamHtml(sides[1],true);
+ $('series-score').innerHTML=battleContext?'VS':`<span>${series.scores[0]}</span><small>:</small><span>${series.scores[1]}</span>`;
  const enabled=[s.hazards.pads?'弹射垫':'',s.hazards.supplies?'急救补给':'',s.hazards.laser?'横扫激光':''].filter(Boolean);
  $('battle-note').textContent=`种子 ${roundSeed} · ${enabled.length?enabled.join(' / '):'无场地机关'}${settled?' · 查看结果':paused?' · 已暂停':''}`;
  $('battle-note').disabled=!settled;$('pause').disabled=settled;$('step').disabled=settled||!paused;$('skills').disabled=settled;
@@ -169,14 +183,15 @@ function skillGroups(){
  if(matchState.mode==='brawl')return [{label:'混战选手',balls:engine.game.balls,blue:false,brawl:true}];
  return engine.game.teams.map((team,index)=>({label:matchState.mode==='boss'&&index===0?'红方 · BOSS':index===0?'红方':'蓝方',balls:team.balls,blue:index===1}));
 }
+function skillRow(ball,index=0){
+ let d;try{d=registry.get(ball.id);}catch{}
+ const current=statusOf(ball)==='当前上场',tags=ArenaTags[ball.id]||[];
+ const meta=[d?M.TYPE_NAMES[d.rosterType]:'角色',...tags,statusOf(ball),`${Math.ceil(Math.max(0,ball.hp))} / ${Math.ceil(ball.maxHp)} HP`].join(' · ');
+ return `<article class="skills-row ${current?'current-active':''}"><span class="mini-dot" style="background:${ball.color}"></span><div class="skills-main"><div class="skills-name">${matchState.mode==='wheel'?index+1+'. ':''}${esc(ball.name)}<small>${esc(meta)}</small></div><p class="skills-desc">${esc(d?detailOf(d):'暂无技能说明')}</p></div></article>`;
+}
 function renderSkills(){
  $('skills-body').innerHTML=skillGroups().map(group=>{
-  const rows=group.balls.map(ball=>{
-   let d;try{d=registry.get(ball.id);}catch{}
-   const tags=d?ArenaTags[ball.id]||[]:[];
-   const meta=[d?M.TYPE_NAMES[d.rosterType]:'角色',...tags,statusOf(ball),`${Math.ceil(ball.hp)} / ${Math.ceil(ball.maxHp)} HP`].filter(Boolean).join(' · ');
-   return `<article class="skills-row"><span class="mini-dot" style="background:${ball.color}"></span><div class="skills-main"><div class="skills-name">${esc(ball.name)}<small>${esc(meta)}</small></div><p class="skills-desc">${esc(d?detailOf(d):'暂无技能说明')}</p></div></article>`;
-  }).join('');
+  const rows=group.balls.map(skillRow).join('');
   return `<section class="skills-team ${group.blue?'blue':''} ${group.brawl?'brawl':''}"><h3>${esc(group.label)}<small>${group.balls.filter(b=>b.hp>0).length} 人存活</small></h3><div class="skills-list">${rows}</div></section>`;
  }).join('');
 }
@@ -271,16 +286,12 @@ $('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter
 $('search').addEventListener('input',()=>{state.search=$('search').value;save();renderRoster();});$('tag').addEventListener('change',()=>{state.tag=$('tag').value;save();renderRoster();});
 $('random-all').onclick=()=>{for(const side of state.mode==='brawl'?['brawl']:['left','right'])randomTeam(side);save();renderSelection();markCards();};
 $('detail-favorite').onclick=()=>favorite(detailId);$('detail-pick').onclick=()=>{pick(detailId);$('detail').close();};
-$('settings').onclick=openSettings;$('help').onclick=()=>openDialog('help-dialog');
+$('help').onclick=()=>openDialog('help-dialog');
 for(const d of document.querySelectorAll('dialog')){d.addEventListener('click',e=>{if(e.target.closest('[data-close]'))d.close();if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});}
-$('settings-dialog').addEventListener('close',()=>{
- state.physics=$('physics').value;for(const k of ['pads','supplies','laser'])state.hazards[k]=$('hazard-'+k).checked;state.expanded=$('random-expanded').checked;
- const value=$('seed').value.trim();if(value!==''&&(!/^\d{1,10}$/.test(value)||Number(value)>4294967295)){toast('种子须为 0–4294967295 的整数，已改为随机。');state.seedText='';}else state.seedText=value;
- save();renderSelection();
-});
+$('match-settings').addEventListener('change',commitSettings);
 $('start').onclick=startMatch;$('pause').onclick=()=>pause();$('skills').onclick=openSkills;$('step').onclick=()=>{if(paused&&!settled){advanceSteps(1);drawBattle();renderHud();}};
 $('speeds').onclick=e=>{const b=e.target.closest('[data-speed]');if(!b)return;speed=Number(b.dataset.speed);state.speed=speed;save();for(const el of $('speeds').children){el.classList.toggle('active',el===b);el.setAttribute('aria-pressed',String(el===b));}};
-$('scoreboard').onclick=event=>{const button=event.target.closest('[data-team-roster]');if(!button||!engine)return;lineupAutoResume=!paused&&!settled;const i=Number(button.dataset.teamRoster),all=engine.game.teams.map(t=>t.balls),balls=matchState.mode==='brawl'?(i===0?all[0].slice(0,Math.ceil(all[0].length/2)):all[0].slice(Math.ceil(all[0].length/2))):all[i];$('lineup-detail-title').textContent=matchState.mode==='brawl'?'混战选手':(i===0?'红方':'蓝方')+'阵容';$('lineup-detail-body').innerHTML=balls.map(b=>`<div class="lineup-detail-row"><span class="mini-dot" style="background:${b.color}"></span><strong>${esc(b.name)}</strong><span>${Math.ceil(b.hp)} / ${Math.ceil(b.maxHp)} HP</span><small>${b.hp<=0?'已退场':b.isModeBench?'候场':'场上'}</small></div>`).join('');openDialog('lineup-detail');};
+$('scoreboard').onclick=event=>{const button=event.target.closest('[data-team-roster]');if(!button||!engine)return;lineupAutoResume=!paused&&!settled;const i=Number(button.dataset.teamRoster),all=engine.game.teams.map(t=>t.balls),balls=matchState.mode==='brawl'?(i===0?all[0].slice(0,Math.ceil(all[0].length/2)):all[0].slice(Math.ceil(all[0].length/2))):all[i];$('lineup-detail-title').textContent=matchState.mode==='brawl'?'混战选手':(i===0?'红方':'蓝方')+'阵容';$('lineup-detail-body').innerHTML=visibleTeam(balls,i).map(skillRow).join('')||'<p>无上场角色</p>';openDialog('lineup-detail');};
 $('lineup-detail').addEventListener('close',()=>{const resume=lineupAutoResume;lineupAutoResume=false;if(resume&&!settled&&!document.hidden&&!$('battle').hidden)pause(false);});
 $('skills-dialog').addEventListener('close',()=>{const resume=skillsAutoResume;skillsAutoResume=false;if(resume&&!settled&&!document.hidden&&!$('battle').hidden)pause(false);});
 $('back').onclick=returnToSelection;$('restart').onclick=()=>{if(session)startRound(roundSeed,replaying||(battleContext?settled:true));};
@@ -299,5 +310,5 @@ new ResizeObserver(resizeArena).observe($('stage'));window.addEventListener('res
 new ResizeObserver(()=>{const art=document.querySelector('.home-art');if($('home').hidden||!art.clientWidth)return;const size=Math.max(32,Math.min(art.clientWidth-12,art.clientHeight-48,600)),wrap=document.querySelector('.home-arena');wrap.style.width=size+'px';wrap.style.height=size+'px';wrap.style.maxHeight='none';}).observe(document.querySelector('.home-art'));
 $('home-back').onclick=goHome;$('home-free').onclick=enterFree;$('home-continue-free').onclick=()=>{showScreen('battle');pause(false);};
 normalizeForMode();renderSelection();renderRoster();showScreen('home');requestAnimationFrame(frame);
-globalThis.ArenaApp={showScreen,goHome,enterFree,startExternalMatch,resumeExternalMatch,discardExternalMatch,openSettings,openDialog,openSkills,toast,esc,get context(){return battleContext;},get state(){return state;},get session(){return session;},get engine(){return engine;},get mechanisms(){return mechanisms;},get series(){return series;},get paused(){return paused;},get seed(){return roundSeed;},get settled(){return settled;},get replaying(){return replaying;},get timeLimit(){return matchTimeLimit;},get timedOut(){return roundTimedOut;},startMatch,advanceSteps,pause,returnToSelection,startRound,renderSelection,renderRoster};
+globalThis.ArenaApp={showScreen,goHome,enterFree,startExternalMatch,resumeExternalMatch,discardExternalMatch,renderSettings,openDialog,openSkills,toast,esc,get context(){return battleContext;},get state(){return state;},get session(){return session;},get engine(){return engine;},get mechanisms(){return mechanisms;},get series(){return series;},get paused(){return paused;},get seed(){return roundSeed;},get settled(){return settled;},get replaying(){return replaying;},get timeLimit(){return matchTimeLimit;},get timedOut(){return roundTimedOut;},startMatch,advanceSteps,pause,returnToSelection,startRound,renderSelection,renderRoster};
 })();
