@@ -65,7 +65,7 @@ try:
    page.evaluate('ArenaApp.advanceSteps(360)');first=snapshot(page);assert page.evaluate('ArenaApp.engine.arenaSize')==240
    target=page.evaluate('ArenaApp.session.steps');page.click('#restart');page.click('#pause');page.evaluate('(n)=>ArenaApp.advanceSteps(n-ArenaApp.session.steps)',target);assert snapshot(page)==first
    page.click('#back');assert abs(page.locator('#roster').evaluate('(e)=>e.scrollTop')-scroll)<2
-   page.set_viewport_size({'width':1440,'height':900});page.click('#start');page.click('#restart');page.evaluate("ArenaApp.engine.endBattle(ArenaApp.engine.game.teams[0],ArenaApp.engine.game.teams[1]);ArenaApp.advanceSteps(0)")
+   page.set_viewport_size({'width':1440,'height':900});page.click('#start');page.click('#restart');assert page.evaluate('ArenaApp.replaying===false');page.evaluate("ArenaApp.engine.endBattle(ArenaApp.engine.game.teams[0],ArenaApp.engine.game.teams[1]);ArenaApp.advanceSteps(0)")
    assert page.locator('#result').is_visible();assert page.evaluate('ArenaApp.series.scores[0]')==1
    page.click('#replay-result');page.evaluate("ArenaApp.engine.endBattle(ArenaApp.engine.game.teams[0],ArenaApp.engine.game.teams[1]);ArenaApp.advanceSteps(0)");assert page.evaluate('ArenaApp.series.scores[0]')==1
    page.click('#next-round');assert page.evaluate('ArenaApp.series.round')==2

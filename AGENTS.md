@@ -39,6 +39,7 @@
 
 - html_games 是项目与仓库根目录，八款游戏源码统一放在 games/；根目录维护静态游戏大厅；游戏清单为 `hall/catalog.js`，仅描述入口、预览、输入方式和运行资源。保留各游戏独立目录及本地运行方式，不把游戏嵌入 iframe。本地和 Pages 均直接从 games/ 加载源码。
 - 每款游戏的 `version.js` 只声明一行 GAME_VERSION。直接编辑版本数字，大厅与标题页共用；显示版本与存档格式独立。
+- 任何游戏版本变更，都必须在同一次修改中同步更新根目录 `README.md` 游戏表的当前版本，并核对其与对应 `version.js` 一致。
 - 网站采用在线加载，不新增离线缓存。霓虹幸存者的旧 Worker 地址仅负责退役已有安装，不注册新 Worker，不清除 localStorage 或其他游戏的缓存。
 - `npm run check`、`npm test` 检查版本与运行资源。GitHub Pages 从主分支根目录直接发布源码，无需生成发布副本。
 - 大厅布局验收覆盖 1920×1080、1440×900、1280×720、960×540、844×390、390×844 和连续缩放；运行 `npm run test:browser`（需 Python Playwright 与 Chromium）。

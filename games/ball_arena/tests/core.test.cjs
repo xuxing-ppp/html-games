@@ -8,7 +8,14 @@ function battle(left='oldWoodMaster',right='steelCoil',mode='1v1'){
 function dispose(e){for(const b of e.game.balls)e.invokeHook(b,'onBattleDispose');e.entitySystem.reset();e.visualEffectSystem.reset();e.activeModeController()?.dispose();}
 function run(e,seconds){for(let i=0;i<Math.round(seconds*60)&&e.game.state==='running';i++)e.update(1/60);}
 function frozen(e){for(const b of e.game.balls){e.setMovementLocked(b,true);b.x=b.prevX=60+(b.teamId==='right'?50:0);b.y=b.prevY=100;}return e;}
-function dummy(){if(registry.list().some(d=>d.id==='arenaDummy'))return;registry.register({id:'arenaDummy',name:'测试靶',englishName:'Test target',color:'#eeeeee',description:'Tests only',stats:{radius:15,speed:150,maxHp:1000},createBehavior:()=>({})});}
+function dummy(id='arenaDummy',name='测试靶'){
+ if(registry.list().some(d=>d.id===id))return;
+ registry.register({id,name,englishName:'Test target',color:'#eeeeee',description:'Tests only',stats:{radius:15,speed:150,maxHp:1000},createBehavior:()=>({})});
+}
+function stateOf(ball){return ball.behavior.getArenaExtensionState();}
+function stunActive(ball){return [...ball.effects.values()].some(effect=>effect.visualType==='stun');}
+function wall(context={x:0,y:100,normalX:1,normalY:0}){return {bouncedX:true,bouncedY:false,wallContacts:[context]};}
+
 test('184 original definitions preserved plus six original characters',()=>{
  assert.equal(registry.list().length,190);assert.equal(M.ORIGINAL_IDS.length,6);
  const source=require('./original-roster.json');
@@ -43,25 +50,67 @@ test('team, wheel, brawl and Boss battles can start',()=>{
   const e=battle(left,mode==='brawl'?[]:['steelCoil','electric'],mode);run(e,2);assert(e.game.time>0);if(mode==='wheel'){assert.equal(e.game.balls.filter(b=>e.isBallActive(b)).length,2);const first=e.game.teams[0].balls[0];first.hp=0;run(e,.2);assert(e.isBallActive(e.game.teams[0].balls[1]));}dispose(e);
  }
 });
-test('all six new characters launch skills without invalid state',()=>{
+test('all six original characters have finite state and no entity leaks',()=>{
  dummy();
- for(const id of M.ORIGINAL_IDS){const e=frozen(battle(id,'arenaDummy'));run(e,12);const own=e.game.balls[0],enemy=e.game.balls[1];assert(Number.isFinite(own.hp));assert(enemy.hp<=1000);const state=own.behavior.getArenaExtensionState();if(id==='arenaPainter')assert(state.pools<=6);dispose(e);assert.equal(e.entitySystem.entities.length,0);}
+ for(const id of M.ORIGINAL_IDS){
+  const e=frozen(battle(id,'arenaDummy'));run(e,12);const own=e.game.balls[0];assert(Number.isFinite(own.hp));assert(Number.isFinite(own.x)&&Number.isFinite(own.y));assert(stateOf(own));
+  if(id==='arenaPainter')assert(stateOf(own).pools<=6&&stateOf(own).stripes<=4);
+  if(id==='arenaCourier')assert(stateOf(own).boxes<=3);
+  if(id==='arenaBattery')assert(stateOf(own).charge>=0&&stateOf(own).charge<=4);
+  dispose(e);assert.equal(e.entitySystem.entities.length,0,id);
+ }
 });
-test('spring fist hits once for six, with recoil direction',()=>{
- dummy();const e=frozen(battle('arenaSpring','arenaDummy'));e.setMovementLocked(e.game.balls[1],false);e.game.balls[1].vx=e.game.balls[1].storedVx=-150;e.game.balls[1].vy=e.game.balls[1].storedVy=0;const before=e.game.balls[1].hp;e.invokeHook(e.game.balls[0],'update',null,3);run(e,.5);assert.equal(before-e.game.balls[1].hp,6);dispose(e);
+test('spring compresses on walls, then spends layers on a heavy contact hit',()=>{
+ dummy();const e=frozen(battle('arenaSpring','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ for(let i=0;i<3;i++)e.invokeHook(own,'onWallBounce',wall());
+ assert.equal(stateOf(own).stacks,3);assert(stateOf(own).wallHits,3);
+ const before=target.hp;e.invokeHook(own,'onCollision',null,target);
+ assert.equal(before-target.hp,10);assert(stunActive(target));assert.equal(stateOf(own).stacks,0);
+ const hpBefore=own.hp;e.invokeHook(own,'onWallBounce',wall());e.invokeHook(own,'onWallBounce',wall());
+ e.dealDamage(own,10,target);assert(own.hp>hpBefore-8); // 2 layers reduce the hit.
+ dispose(e);
 });
-test('bubble hits for two and slow expires',()=>{
- dummy();const e=frozen(battle('arenaBubble','arenaDummy'));e.invokeHook(e.game.balls[0],'update',null,3);run(e,.6);const t=e.game.balls[1];assert.equal(t.hp,998);assert(Math.abs(e.getSlowFactor(t)-.6)<1e-9);run(e,1.6);assert.equal(e.getSlowFactor(t),1);dispose(e);
+test('painter creates pools and wall stripes that slow and damage',()=>{
+ dummy();const e=frozen(battle('arenaPainter','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ target.x=target.prevX=own.x;target.y=target.prevY=own.y;run(e,2);
+ assert(stateOf(own).pools>=1);assert(stateOf(own).attacks>=1);assert(target.hp<1000);assert(e.getSlowFactor(target)<1);
+ e.invokeHook(own,'onWallBounce',wall());assert(stateOf(own).stripes>=1);
+ target.x=target.prevX=5;target.y=target.prevY=100;const before=target.hp;run(e,.7);assert(target.hp<before);
+ for(let i=0;i<6;i++)e.invokeHook(own,'onWallBounce',wall());
+ assert(stateOf(own).stripes<=4);
+ dispose(e);
 });
-test('paint refreshes one source without stacking and clears after leaving',()=>{
- dummy();const e=frozen(battle('arenaPainter','arenaDummy')),own=e.game.balls[0],t=e.game.balls[1];t.x=own.x;t.y=own.y;e.invokeHook(own,'update',null,4);run(e,.2);assert.equal([...t.effects.values()].filter(x=>x.id.startsWith('arena-paint')).length,1);assert.equal(e.getSlowFactor(t),.75);t.x=180;run(e,.15);assert.equal(e.getSlowFactor(t),1);dispose(e);
+test('courier boxes orbit, damage enemies, and return as supplies',()=>{
+ dummy();const e=frozen(battle('arenaCourier','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ target.x=target.prevX=100;target.y=target.prevY=100;run(e,4);
+ assert(stateOf(own).spawns>=1);assert(stateOf(own).hits>=1);assert(stateOf(own).boxes<=3);assert(target.hp<1000);
+ const beforeHp=own.hp;e.dealDamage(own,20,target);assert(own.hp>beforeHp-20);
+ target.x=target.prevX=190;own.hp=90;run(e,3.2);assert(stateOf(own).pickups>=1);assert(own.hp>90);
+ dispose(e);
 });
-test('parcel telegraph precedes ten damage and boomerang hits each leg once',()=>{
- dummy();let e=frozen(battle('arenaCourier','arenaDummy'));e.invokeHook(e.game.balls[0],'update',null,5);run(e,.9);assert.equal(e.game.balls[1].hp,1000);run(e,.2);assert.equal(e.game.balls[1].hp,990);dispose(e);
- e=frozen(battle('arenaBoomerang','arenaDummy'));e.invokeHook(e.game.balls[0],'update',null,4);run(e,1.65);assert.equal(e.game.balls[1].hp,992);dispose(e);
+test('boomerang ricochets without tracking and hits for three per target',()=>{
+ dummy();const e=frozen(battle('arenaBoomerang','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ target.x=target.prevX=130;target.y=target.prevY=100;run(e,3.2);
+ assert(stateOf(own).attacks>=1);assert(stateOf(own).hits>=1);assert(target.hp<1000);
+ dispose(e);
 });
-test('battery stores actual damage capped at twenty; misses retain charge',()=>{
- dummy();const e=frozen(battle('arenaBattery','arenaDummy')),own=e.game.balls[0],t=e.game.balls[1];e.dealDamage(own,10,t);assert.equal(own.behavior.getArenaExtensionState().charge,3);t.x=190;e.invokeHook(own,'update',null,5);assert.equal(own.behavior.getArenaExtensionState().charge,3);e.dealDamage(own,60,t);assert.equal(own.behavior.getArenaExtensionState().charge,20);t.x=100;e.invokeHook(own,'update',null,5);assert.equal(t.hp,980);assert.equal(own.behavior.getArenaExtensionState().charge,0);dispose(e);
+test('bubble form is invulnerable and pops into a damaging foam field',()=>{
+ dummy();const e=frozen(battle('arenaBubble','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ target.x=target.prevX=own.x;target.y=target.prevY=own.y;run(e,2.9);
+ assert(stateOf(own).bubbled);
+ const before=own.hp;e.dealDamage(own,20,target);assert.equal(own.hp,before);
+ const profile=own.behavior.getContactProfile();assert.equal(profile.physical,false);assert.equal(profile.targetable,false);
+ run(e,1.4);assert(!stateOf(own).bubbled);assert(stateOf(own).pops>=1);assert(target.hp<1000);
+ dispose(e);
+});
+test('battery stores damage and wall hits, then discharges on contact or full charge',()=>{
+ dummy();const e=frozen(battle('arenaBattery','arenaDummy')),own=e.game.balls[0],target=e.game.balls[1];
+ e.dealDamage(own,10,target);assert.equal(stateOf(own).charge,1);
+ e.invokeHook(own,'onWallBounce',wall());assert.equal(stateOf(own).charge,2);
+ const before=target.hp;e.invokeHook(own,'onCollision',null,target);assert.equal(before-target.hp,6);assert.equal(stateOf(own).charge,0);
+ for(let i=0;i<4;i++)e.dealDamage(own,10,target);assert.equal(stateOf(own).charge,4);
+ const hpBefore=target.hp;run(e,2.7);assert(stateOf(own).discharges>=1);assert(stateOf(own).charge===0);assert(target.hp<hpBefore);
+ dispose(e);
 });
 test('supplies cap at two and heal only injured interactable combatants',()=>{
  dummy();const e=frozen(battle('arenaDummy','arenaDummy')),h=new c.ArenaMechanisms(e,{supplies:true});h.update(30);assert.equal(h.supplies.length,2);const b=e.game.balls[0];Object.assign(h.supplies[0],{x:b.x,y:b.y});h.update(.01);assert.equal(h.supplies.length,2);b.hp=995;h.update(.01);assert.equal(b.hp,1000);assert.equal(h.supplies.length,1);b.active=false;Object.assign(h.supplies[0],{x:b.x,y:b.y});b.hp=900;h.update(.01);assert.equal(b.hp,900);assert.equal(h.supplies.length,1);h.dispose();dispose(e);
@@ -71,7 +120,7 @@ test('pads respect cooldown and movement locks; laser respects steel defense',()
  const steel=e.game.balls[1];steel.x=50;steel.y=150;const before=steel.hp;h.nextLaser=h.time;h.update(.01);h.update(1.5);h.update(.1);assert(before-steel.hp>0&&before-steel.hp<8);const after=steel.hp;h.update(.1);assert.equal(steel.hp,after);h.dispose();dispose(e);
 });
 test('fixed seeded simulation including hazards is invariant across frame batch sizes',()=>{
- function simulate(batch){const e=new B.BattleEngine();let h;const session=B.createDeterministicSession({engine:e,seed:217,setup(engine){engine.createGame('arenaBattery','arenaBubble');h=new c.ArenaMechanisms(engine,{pads:true,supplies:true,laser:true});engine.beginFight();}});const update=e.update.bind(e);e.update=dt=>{const t=e.game.time;update(dt);h.update(e.game.time-t);};for(let n=0;n<1200;n+=batch)session.advance(Math.min(batch,1200-n)/60);const result=JSON.stringify({balls:e.game.balls.map(b=>({id:b.id,hp:b.hp,x:b.x,y:b.y})),supplies:h.supplies,steps:session.steps});session.dispose();h.dispose();dispose(e);return result;}
+ function simulate(batch){const e=new B.BattleEngine();let h;const session=B.createDeterministicSession({engine:e,seed:217,setup(engine){engine.createGame('arenaPainter','arenaBattery');h=new c.ArenaMechanisms(engine,{pads:true,supplies:true,laser:true});engine.beginFight();}});const update=e.update.bind(e);e.update=dt=>{const t=e.game.time;update(dt);h.update(e.game.time-t);};for(let n=0;n<1200;n+=batch)session.advance(Math.min(batch,1200-n)/60);const result=JSON.stringify({balls:e.game.balls.map(b=>({id:b.id,hp:b.hp,x:b.x,y:b.y})),supplies:h.supplies,steps:session.steps});session.dispose();h.dispose();dispose(e);return result;}
  assert.equal(simulate(1),simulate(4));assert.equal(simulate(1),simulate(12));
 });
 

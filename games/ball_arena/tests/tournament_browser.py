@@ -26,7 +26,7 @@ try:
   for prefix in ['/', '/Games/']:
    context=browser.new_context(viewport={'width':1440,'height':900},reduced_motion='reduce');page=context.new_page();errors=[];missing=[]
    page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:missing.append(r.url) if r.status>=400 else None)
-   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.1';assert page.locator('.hall-link').count()==0
+   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.2';assert page.locator('.hall-link').count()==0
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90);fit(page,['#home-free','#home-tournament','#version','#help','#sound']);assert page.evaluate("(()=>{const e=document.querySelector('.home-arena');return Math.abs(e.clientWidth-e.clientHeight)<2})()");snap(page,f'home-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#home-tournament');assert page.locator('[data-tournament-size]').count()==6
@@ -44,13 +44,21 @@ try:
    page.click('#home-back');assert page.locator('#home-continue-tournament').is_visible();page.click('#home-continue-tournament');page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.seed')==firstseed
    page.reload(wait_until='networkidle');page.click('#home-continue-tournament');page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.seed')==firstseed;assert page.evaluate('ArenaApp.session.steps')<30
    settle(page);assert played(page)==1;page.click('#edit-result');page.click('[data-tournament-match="r0-m0"]');page.click('#tournament-detail-watch');page.click('#pause');settle(page);assert played(page)==1;page.click('#edit-result')
+   # A replay is a transient session: leaving it must not block the next official match.
+   assert page.evaluate('ArenaApp.session===null');assert page.evaluate('ArenaApp.context===null');assert page.evaluate('ArenaApp.replaying===false');assert page.locator('#tournament-play').inner_text()=='开始下一场 ↗'
+   page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.replaying===false');page.click('#back');assert page.locator('#tournament-play').inner_text()=='继续当前比赛 ↗'
    # Reset is explicitly confirmed and cancel preserves results.
    page.click('#tournament-reset');page.click('#tournament-reset-dialog [data-close]');assert played(page)==1;page.click('#tournament-reset');page.click('#tournament-reset-confirm');assert page.locator('#tournament-setup').is_visible()
    page.click('[data-team-size="3"]');page.click('[data-tournament-size="4"]');page.click('#tournament-play');assert page.evaluate('ArenaTournamentUI.run.bracket.teamSize')==3
    page.click('#tournament-play');page.click('#pause');firstseed=page.evaluate('ArenaApp.seed');settle(page,None);assert played(page)==0;assert page.locator('#next-round').inner_text()=='平局重赛'
-   page.click('#replay-result');page.click('#pause');settle(page,None);assert played(page)==0;page.click('#next-round');page.click('#pause');assert page.evaluate('ArenaApp.seed')!=firstseed;settle(page,0);assert played(page)==1
-   for n in [2,3]:
-    page.click('#next-round');page.click('#pause');assert page.evaluate('ArenaApp.engine.game.balls.every(b=>b.hp===b.maxHp)');settle(page,0);assert played(page)==n
+   page.click('#replay-result');page.click('#pause');settle(page,None);assert played(page)==0;page.click('#edit-result');assert page.evaluate('ArenaApp.session===null');assert page.locator('#tournament-play').inner_text()=='开始下一场 ↗';page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.seed')!=firstseed;settle(page,0);assert played(page)==1
+   # Replay from the result dialog also ends on exit and leaves the next match available.
+   page.click('#replay-result');page.click('#pause');settle(page,0);assert played(page)==1;assert page.evaluate('ArenaApp.replaying===true');page.click('#edit-result')
+   assert page.evaluate('ArenaApp.session===null');assert page.evaluate('ArenaApp.replaying===false');assert page.locator('#tournament-play').inner_text()=='开始下一场 ↗'
+   page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.replaying===false');settle(page,0);assert played(page)==2
+   for n in [3]:
+    # Pause in the same turn as starting so combat cannot damage entrants before the reset assertion.
+    page.evaluate("document.querySelector('#next-round').click();ArenaApp.pause(true)");assert page.evaluate('ArenaApp.engine.game.balls.every(b=>b.hp===b.maxHp)');settle(page,0);assert played(page)==n
    assert '夺冠' in page.locator('#result-title').inner_text();page.click('#next-round');assert page.locator('#tournament-champion').is_visible()
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(70);fit(page,['#tournament-champion','#tournament-rounds','#tournament-matches','#tournament-play']);snap(page,f'champion-{prefix.strip("/") or "root"}-{w}x{h}')

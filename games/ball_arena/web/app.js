@@ -16,6 +16,7 @@ function closeDialogs(){document.querySelectorAll('dialog[open]').forEach(d=>d.c
 function showScreen(name){
  if(name==='home'&&$('home').hidden)disposeHomeDemo();
  closeDialogs();
+ if(name!=='battle')dropReplaySession();
  if(name!=='battle'&&session&&!settled)pause(true);
  for(const id of ['home','selection','battle','tournament'])$(id).hidden=id!==name;
  $('app').classList.toggle('on-home',name==='home');$('home-back').hidden=name==='home';
@@ -26,9 +27,9 @@ function showScreen(name){
 function goHome(){showScreen('home');$('home-free').focus({preventScroll:true});}
 function enterFree(){if(battleContext){teardown();battleContext=null;}showScreen('selection');renderSelection();$('roster').scrollTop=rosterScroll;}
 function startExternalMatch(options){
- battleContext=options;matchState=M.clone(options.state);series=new M.Series(1);return startRound(options.seed,options.replay===true);
+ options.replay=options.replay===true;battleContext=options;matchState=M.clone(options.state);series=new M.Series(1);return startRound(options.seed,options.replay);
 }
-function resumeExternalMatch(){if(!battleContext||!session||settled)return false;showScreen('battle');pause(false);return true;}
+function resumeExternalMatch(){if(!battleContext||battleContext.replay===true||replaying||!session||settled)return false;showScreen('battle');pause(false);return true;}
 function discardExternalMatch(){if(battleContext){teardown();battleContext=null;}}
 function disposeHomeDemo(){
  if(!homeDemo)return;
@@ -114,8 +115,9 @@ function newSeed(){return crypto.getRandomValues(new Uint32Array(1))[0];}
 function teardown(){
  session?.dispose();mechanisms?.dispose();
  if(engine?.game){for(const ball of engine.game.balls)engine.invokeHook(ball,'onBattleDispose');engine.entitySystem.reset();engine.visualEffectSystem.reset();engine.activeModeController()?.dispose();}
- session=null;mechanisms=null;engine=null;renderer=null;accumulator=0;
+ session=null;mechanisms=null;engine=null;renderer=null;accumulator=0;replaying=false;
 }
+function dropReplaySession(){if(!session||!replaying)return false;teardown();battleContext=null;settled=false;paused=false;lastFrame=0;return true;}
 function unlockAudio(){try{const ctx=audio.ensureContext();ctx?.resume().catch(()=>{});if(audio.master)audio.master.gain.value=.8;return true;}catch{return false;}}
 function startMatch(){
  if(soundOn)unlockAudio();
@@ -124,7 +126,7 @@ function startMatch(){
 }
 function startRound(seed,replay=false){
  if(soundOn)unlockAudio();
- closeDialogs();teardown();roundSeed=seed>>>0;replaying=battleContext?(replay||battleContext.replay===true):replay&&series.history.some(r=>r.round===series.round);settled=false;paused=false;lastFrame=0;accumulator=0;
+ closeDialogs();teardown();roundSeed=seed>>>0;replaying=battleContext?Boolean(replay||battleContext.replay===true):Boolean(replay&&series.history.some(r=>r.round===series.round));if(battleContext)battleContext.replay=replaying;settled=false;paused=false;lastFrame=0;accumulator=0;
  const settings=matchState;
  try{
   engine=new B.BattleEngine({onBounce:(ball,intensity)=>{if(soundOn&&!paused)audio.impact(ball,intensity);},onSound:event=>{if(soundOn&&!paused)audio.playEvent(event);}});
@@ -136,7 +138,7 @@ function startRound(seed,replay=false){
   showScreen('battle');$('pause-indicator').hidden=true;$('pause').textContent='暂停';$('pause').disabled=false;$('step').disabled=true;
   resizeArena();renderHud();drawBattle();
   $('back').textContent=battleContext?'‹ 返回赛程':'‹ 调整阵容';$('back').focus({preventScroll:true});return true;
- }catch(error){console.error(error);teardown();showScreen(battleContext?'tournament':'selection');toast('对局未能建立：'+error.message);return false;}
+ }catch(error){console.error(error);const replayContext=battleContext?.replay===true,tournamentContext=!!battleContext;teardown();if(replayContext)battleContext=null;showScreen(tournamentContext?'tournament':'selection');toast('对局未能建立：'+error.message);return false;}
 }
 function resizeArena(){
  if($('battle').hidden)return;const stage=$('stage'),size=Math.max(40,Math.min(stage.clientHeight,stage.clientWidth,700));$('arena-wrap').style.width=size+'px';$('arena-wrap').style.height=size+'px';
@@ -172,13 +174,13 @@ function finishRound(){
  $('result-title').textContent=winName?winName+'获胜':'本局平局';
  $('result-subtitle').textContent=replaying?'原种子重放 · 不重复计入比分':series.complete&&series.length>1?(series.draws>=3?'连续三局平局，系列赛并列结束。':(series.scores[0]>series.scores[1]?'红方':'蓝方')+'赢得系列赛。'):'本局已结束，可重放或调整阵容。';
  $('result-score').textContent=matchState.mode==='brawl'?'':series.scores.join(' : ');
- $('next-round').hidden=series.complete||matchState.mode==='brawl';
+ $('next-round').hidden=(!!battleContext&&replaying)||series.complete||matchState.mode==='brawl';
  $('rematch').hidden=!!battleContext;$('edit-result').textContent=battleContext?'返回赛程':'调整阵容';$('next-round').textContent='下一局';
- if(battleContext){const result=battleContext.onFinish({winner,seed:roundSeed,replay:replaying})||{};$('result-title').textContent=result.title||$('result-title').textContent;$('result-subtitle').textContent=result.subtitle||'';$('result-score').textContent=result.score||'';$('next-round').hidden=false;$('next-round').textContent=result.nextLabel||'下一场';}
+ if(battleContext){const result=battleContext.onFinish({winner,seed:roundSeed,replay:replaying})||{};$('result-title').textContent=result.title||$('result-title').textContent;$('result-subtitle').textContent=result.subtitle||'';$('result-score').textContent=result.score||'';if(!replaying)$('next-round').hidden=false;$('next-round').textContent=result.nextLabel||'下一场';}
  $('pause-indicator').hidden=true;renderHud();openDialog('result');
 }
 function pause(value=!paused){if(!session||settled)return;paused=value;accumulator=0;$('pause').textContent=paused?'继续':'暂停';$('pause-indicator').hidden=!paused;renderHud();}
-function returnToSelection(){if(battleContext){battleContext.onBack();return;}closeDialogs();teardown();showScreen('selection');paused=false;renderSelection();$('roster').scrollTop=rosterScroll;$('start').focus({preventScroll:true});}
+function returnToSelection(){if(battleContext){const context=battleContext;dropReplaySession();context.onBack();return;}closeDialogs();teardown();showScreen('selection');paused=false;renderSelection();$('roster').scrollTop=rosterScroll;$('start').focus({preventScroll:true});}
 function frame(time){
  try{
   if(!$('home').hidden)drawHomeDemo(lastFrame?Math.min(.1,(time-lastFrame)/1000):0);
@@ -216,9 +218,9 @@ $('settings-dialog').addEventListener('close',()=>{
 $('start').onclick=startMatch;$('pause').onclick=()=>pause();$('step').onclick=()=>{if(paused&&!settled){advanceSteps(1);drawBattle();renderHud();}};
 $('speeds').onclick=e=>{const b=e.target.closest('[data-speed]');if(!b)return;speed=Number(b.dataset.speed);state.speed=speed;save();for(const el of $('speeds').children){el.classList.toggle('active',el===b);el.setAttribute('aria-pressed',String(el===b));}};
 $('scoreboard').onclick=event=>{const button=event.target.closest('[data-team-roster]');if(!button||!engine)return;const i=Number(button.dataset.teamRoster),all=engine.game.teams.map(t=>t.balls),balls=matchState.mode==='brawl'?(i===0?all[0].slice(0,Math.ceil(all[0].length/2)):all[0].slice(Math.ceil(all[0].length/2))):all[i];$('lineup-detail-title').textContent=matchState.mode==='brawl'?'混战选手':(i===0?'红方':'蓝方')+'阵容';$('lineup-detail-body').innerHTML=balls.map(b=>`<div class="lineup-detail-row"><span class="mini-dot" style="background:${b.color}"></span><strong>${esc(b.name)}</strong><span>${Math.ceil(b.hp)} / ${Math.ceil(b.maxHp)} HP</span><small>${b.hp<=0?'已退场':b.isModeBench?'候场':'场上'}</small></div>`).join('');openDialog('lineup-detail');};
-$('back').onclick=returnToSelection;$('restart').onclick=()=>{if(session)startRound(roundSeed,battleContext?settled:true);};
+$('back').onclick=returnToSelection;$('restart').onclick=()=>{if(session)startRound(roundSeed,replaying||(battleContext?settled:true));};
 $('replay-result').onclick=()=>startRound(roundSeed,true);$('rematch').onclick=()=>{series=new M.Series(matchState.mode==='brawl'?1:matchState.series);startRound(newSeed(),false);};$('edit-result').onclick=returnToSelection;
-$('next-round').onclick=()=>{if(battleContext){battleContext.onNext();return;}if(series.next())startRound(newSeed(),false);};
+$('next-round').onclick=()=>{if(battleContext){if(replaying)return;battleContext.onNext();return;}if(series.next())startRound(newSeed(),false);};
 $('battle-note').onclick=()=>{if(settled)openDialog('result');};
 function renderSound(){ $('sound').textContent=soundOn?'声音开':'声音关';$('sound').setAttribute('aria-pressed',String(soundOn));}
 $('sound').onclick=()=>{soundOn=!soundOn;if(soundOn&&!unlockAudio()){soundOn=false;toast('此浏览器暂不支持声音。');}if(!soundOn&&audio.master)audio.master.gain.value=0;state.soundOn=soundOn;renderSound();save();};
@@ -232,5 +234,5 @@ new ResizeObserver(resizeArena).observe($('stage'));window.addEventListener('res
 new ResizeObserver(()=>{const art=document.querySelector('.home-art');if($('home').hidden||!art.clientWidth)return;const size=Math.max(32,Math.min(art.clientWidth-12,art.clientHeight-48,600)),wrap=document.querySelector('.home-arena');wrap.style.width=size+'px';wrap.style.height=size+'px';wrap.style.maxHeight='none';}).observe(document.querySelector('.home-art'));
 $('home-back').onclick=goHome;$('home-free').onclick=enterFree;$('home-continue-free').onclick=()=>{showScreen('battle');pause(false);};
 normalizeForMode();renderSelection();renderRoster();showScreen('home');requestAnimationFrame(frame);
-globalThis.ArenaApp={showScreen,goHome,enterFree,startExternalMatch,resumeExternalMatch,discardExternalMatch,openSettings,openDialog,toast,esc,get context(){return battleContext;},get state(){return state;},get session(){return session;},get engine(){return engine;},get mechanisms(){return mechanisms;},get series(){return series;},get paused(){return paused;},get seed(){return roundSeed;},get settled(){return settled;},startMatch,advanceSteps,pause,returnToSelection,startRound,renderSelection,renderRoster};
+globalThis.ArenaApp={showScreen,goHome,enterFree,startExternalMatch,resumeExternalMatch,discardExternalMatch,openSettings,openDialog,toast,esc,get context(){return battleContext;},get state(){return state;},get session(){return session;},get engine(){return engine;},get mechanisms(){return mechanisms;},get series(){return series;},get paused(){return paused;},get seed(){return roundSeed;},get settled(){return settled;},get replaying(){return replaying;},startMatch,advanceSteps,pause,returnToSelection,startRound,renderSelection,renderRoster};
 })();

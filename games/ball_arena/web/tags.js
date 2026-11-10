@@ -407,22 +407,24 @@ globalThis.ArenaTags = {
   ],
   "arenaSpring": [
     "弹射",
-    "远程"
+    "控制"
   ],
   "arenaPainter": [
     "控制"
   ],
   "arenaCourier": [
-    "远程"
+    "恢复",
+    "控制"
   ],
   "arenaBoomerang": [
+    "弹射",
     "远程"
   ],
   "arenaBubble": [
-    "控制",
-    "远程"
+    "控制"
   ],
   "arenaBattery": [
-    "成长"
+    "成长",
+    "控制"
   ]
 };

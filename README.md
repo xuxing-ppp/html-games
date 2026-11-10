@@ -2,13 +2,13 @@
 
 八款独立浏览器游戏，一个在线大厅。选择游戏后在同一窗口进入，用浏览器返回回到大厅。保留每款游戏原有界面、玩法和本地运行方式。
 
-| 游戏 | 目录 | 初始版本 | 输入 |
+| 游戏 | 目录 | 当前版本 | 输入 |
 | --- | --- | --- | --- |
-| 小球擂台 | `games/ball_arena` | 1.0.1 | 鼠标／触屏；自动对战 |
+| 小球擂台 | `games/ball_arena` | 1.0.2 | 鼠标／触屏；自动对战 |
 | 街机赛车 | `games/car_racing` | 0.1.0（早期开发） | 键盘；本地双人 |
 | 函数导弹 | `games/function_missel` | 1.0.0 | 鼠标与键盘；本地多人 |
 | 生命游戏 | `games/game_of_life` | 1.0.0 | 鼠标与键盘 |
-| 大明县令 | `games/ming_magistrate` | 1.0.0 | 鼠标／触屏 |
+| 大明县令 | `games/ming_magistrate` | 1.2.1 | 鼠标／触屏 |
 | 霓虹幸存者 | `games/neon_survivor_mobile` | 2.10.6 | 键盘／触屏 |
 | 战争沙盘 | `games/war_simulator` | 1.0.0 | 鼠标与键盘 |
 | 楚河行 | `games/xiangqi_beyond_the_river` | 1.0.0 | 鼠标与键盘 |
@@ -72,7 +72,7 @@ git add --dry-run .
 var GAME_VERSION = "0.1.0";
 ```
 
-大厅和游戏标题页共用这一个版本值。修复增加修订号，新增功能增加次版本，重大不兼容变化增加主版本。改动后可用 `npm run check` 检查格式。版本号独立于存档格式；需要追踪一次发布的完整代码时，在 GitHub 查看对应提交。
+大厅和游戏标题页共用这一个版本值。修复增加修订号，新增功能增加次版本，重大不兼容变化增加主版本。修改版本时，同步更新本 README 顶部游戏表中的当前版本。改动后可用 `npm run check` 检查格式。版本号独立于存档格式；需要追踪一次发布的完整代码时，在 GitHub 查看对应提交。
 
 ## GitHub Pages
 
@@ -105,7 +105,3 @@ npm run test:browser
 更新大厅预览图：先启动本地服务，再运行 `python3 tools/capture-previews.py`，需要开发工具 Playwright、Chromium 和 cwebp。生成的是实际游戏画面的压缩 WebP，不将截图原图入库。
 
 大明县令新克隆不包含原图，常规测试校验运行图。保有本地原图时可在其目录运行 `CHECK_SOURCE_ASSETS=1 node --test tests/art.test.mjs`。GitHub Pages 直接加载仓库中的运行资源。
-
-## 小球擂台
-
-190 个角色、固定对阵栏选人、4–128 强锦标赛、系列赛与可选机关。致谢原作者 [Kizu_Na](https://space.bilibili.com/3546819271330077)。独立运行、玩法与验证见 `games/ball_arena/README.md`。
