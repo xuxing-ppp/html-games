@@ -3,6 +3,8 @@
 const MODES={duel:'单挑',team:'团战',wheel:'车轮战',brawl:'自由混战',boss:'Boss 挑战'};
 const TYPE_NAMES={normal:'普通',zako:'杂鱼',elite:'精英',outOfSpec:'规格外',boss:'Boss'};
 const ORIGINAL_IDS=['arenaSpring','arenaPainter','arenaCourier','arenaBoomerang','arenaBubble','arenaBattery'];
+const TIME_LIMITS=Object.freeze({duel:240,team:360,wheel:600,brawl:480,boss:480});
+function timeLimit(state){return TIME_LIMITS[state?.mode]||TIME_LIMITS.duel;}
 const clone=value=>JSON.parse(JSON.stringify(value));
 function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,physics:'none',hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
 function sanitize(value,registry){
@@ -50,5 +52,5 @@ class Series{
  }
  next(){if(this.complete||!this.history.some(r=>r.round===this.round))return false;this.round++;return true;}
 }
-return {MODES,TYPE_NAMES,ORIGINAL_IDS,defaults,sanitize,eligible,validate,configFor,Series,clone};
+return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,timeLimit,defaults,sanitize,eligible,validate,configFor,Series,clone};
 });

@@ -127,3 +127,21 @@ test('fixed seeded simulation including hazards is invariant across frame batch 
 test('supplies do not spawn inside solid constructed obstacles',()=>{
  dummy();const e=frozen(battle('arenaDummy','arenaDummy'));e.game.combatEntities.push({solid:true,entityActive:true,x:100,y:100,length:200,width:200,angle:0});const h=new c.ArenaMechanisms(e,{supplies:true});h.update(10);assert.equal(h.supplies.length,0);h.dispose();dispose(e);
 });
+
+test('clarified descriptions only target registered roles and stay complete',()=>{
+ const entries=c.ArenaDescriptions;assert.ok(entries&&typeof entries==='object');
+ for(const [id,entry] of Object.entries(entries)){
+  const d=registry.get(id);assert.ok(d,id);
+  assert.equal(typeof entry.summary,'string');assert.equal(typeof entry.detail,'string');
+  assert(entry.summary.trim().length>0,id);assert(entry.detail.trim().length>0,id);
+  assert(entry.summary.length<=120,id);assert(entry.detail.length<=400,id);
+  assert(!/[<>]/.test(entry.summary+entry.detail),id);
+  assert(!entry.summary.includes('  ')&&!entry.detail.includes('  '),id);
+ }
+});
+
+test('time limits differ by mode and timeout resolution uses remaining health',()=>{
+ assert.deepEqual({...M.TIME_LIMITS},{duel:240,team:360,wheel:600,brawl:480,boss:480});
+ assert.equal(M.timeLimit({mode:'duel'}),240);assert.equal(M.timeLimit({mode:'team'}),360);assert.equal(M.timeLimit({mode:'wheel'}),600);assert.equal(M.timeLimit({mode:'brawl'}),480);assert.equal(M.timeLimit({mode:'boss'}),480);assert.equal(M.timeLimit({mode:'unknown'}),240);
+ const e=battle('oldWoodMaster','steelCoil');e.game.teams[0].balls[0].hp=40;e.game.teams[1].balls[0].hp=60;const result=e.resolveByHp();assert.equal(result.winnerTeamId,'right');assert.equal(e.game.winnerTeam.id,'right');assert.equal(e.game.state,'ended');dispose(e);
+});

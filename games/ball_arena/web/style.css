@@ -10,7 +10,7 @@
 @media(max-width:600px){#filters button{padding:5px 4px}.filters>select{width:76px}}
 @media(max-height:440px) and (min-width:650px){.masthead{height:36px}.masthead h1{font-size:20px}.header-actions button{padding:3px 8px}.setup-toolbar{padding:4px 0;gap:9px}.setup-toolbar select,.setup-toolbar button{padding:3px 8px}.team-panel,.team-panel:has(.multi){padding:4px 8px}.team-head,.team-panel:has(.multi) .team-head{margin-bottom:3px;font-size:11px;line-height:16px}.team-head button{font-size:10px;line-height:16px;padding:0 5px}.slot{height:31px;padding:3px 7px}.slot small{display:none}.slot.multi{height:25px}.slot .slot-dot{width:18px;height:18px;flex-basis:18px}.slot-label{font-size:13px}.roster-tools{padding:5px 0}.search-row{margin-bottom:3px}.search{height:27px}.filters{height:26px}#filters button{padding:2px 8px}.filters>select{padding:3px 7px}.roster{grid-auto-rows:112px;gap:6px;padding-bottom:5px}.pick-role{padding:3px 7px 23px}.pick-role canvas{height:43px;width:66px}.role-name{font-size:13px;margin:0}.role-desc{-webkit-line-clamp:1;font-size:10px}.role-info,.role-favorite{bottom:3px}.selection-footer{padding:5px 0}#start{font-size:15px;padding:7px 14px}.selection-footer #selection-note{font-size:11px}.selection-footer strong{font-size:12px}}
 .team-score button.names{width:100%;text-align:inherit;background:none;border:0;padding:0;color:var(--ink);border-radius:0}.team-score button.names:hover{color:var(--amber)}.team-score .names small{color:var(--muted);font-size:11px}.lineup-detail-row{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.lineup-detail-row .mini-dot{width:18px;height:18px;border-radius:50%;flex-shrink:0}.lineup-detail-row>span:not(.mini-dot){margin-left:auto;font-size:12px;color:var(--muted)}.lineup-detail-row small{color:var(--amber)}
-@media(max-height:440px) and (min-width:650px){.battle{position:relative}.battle-top{position:absolute;top:8px;left:0;right:0;z-index:2;padding:0;pointer-events:none}.battle-top button{pointer-events:auto}.battle-top #match-label{position:absolute;top:32px;left:0}.scoreboard{position:absolute;top:80px;left:0;right:0;z-index:2;display:flex;justify-content:space-between;pointer-events:none}.team-score{width:calc((100% - 324px)/2)}.team-score button.names{pointer-events:auto}.series-score{position:absolute;top:65px;left:0;font-size:25px}.stage{padding-top:6px}.battle-note{height:20px}.battle-controls{padding:5px 0 7px}.battle-controls button{padding:4px 10px}}
+@media(max-height:440px) and (min-width:650px){.battle{position:relative}.battle-top{position:absolute;top:8px;left:0;right:0;z-index:2;padding:0;pointer-events:none}.battle-top button{pointer-events:auto}.battle-top #match-label{position:absolute;top:32px;left:50%;transform:translateX(-50%)}.scoreboard{position:absolute;top:80px;left:0;right:0;z-index:2;display:flex;justify-content:space-between;pointer-events:none}.team-score{width:calc((100% - 324px)/2)}.team-score button.names{pointer-events:auto}.series-score{position:absolute;top:65px;left:0;font-size:25px}.stage{padding-top:6px}.battle-note{height:20px}.battle-controls{padding:5px 0 7px}.battle-controls button{padding:4px 10px}}
 
 button.battle-note{padding:6px 0 0;background:none;border:0;border-radius:0;font:12px/1.5 var(--font);color:var(--muted)}button.battle-note:disabled{opacity:1;cursor:default}button.battle-note:not(:disabled):hover{color:var(--amber)}
 @media(max-width:600px){button.battle-note{font-size:10px}}
@@ -23,3 +23,28 @@ button.battle-note{padding:6px 0 0;background:none;border:0;border-radius:0;font
 @media(max-height:440px) and (min-width:650px){.home-menu h2{font-size:43px}.home-screen{padding:10px 8%;gap:8%}.home-description{margin-top:8px}.home-buttons{margin-top:12px;gap:6px}.home-buttons>button{font-size:14px;padding:8px 12px;min-height:34px}.home-buttons>button[id^=home-continue]{min-height:24px;font-size:10px}.tournament-heading{padding:7px 0}.tournament-heading h2{font-size:19px}.tournament-heading p{margin-top:0;font-size:10px}.tournament-heading-actions button{padding:4px 8px;font-size:11px}.tournament-setup{padding:3px 0 8px;gap:22px}.tournament-team-options button{padding:7px;font-size:20px}.tournament-rule{font-size:10px;margin:6px 0}.tournament-options .check-row{padding:6px 0;margin:6px 0}.tournament-options .check-row small{font-size:10px}.tournament-options #tournament-capacity{font-size:10px}.tournament-screen legend{font-size:12px;margin-bottom:6px}#tournament-sizes button{min-height:66px;padding:9px}#tournament-sizes small{font-size:10px;margin-top:4px}.tournament-footer{padding:6px 0}.tournament-footer strong{font-size:12px}.tournament-footer p{font-size:10px}.tournament-footer .primary{font-size:13px;padding:7px 12px;min-width:150px}.tournament-match{padding:8px;gap:5px}}
 
 .scoreboard.is-brawl .hp-fill{background:#b4aea0}.scoreboard.is-brawl .series-score span{color:var(--ink)}
+/* In-battle skill reference. */
+.battle-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto) minmax(0,1fr);align-items:center}
+.battle-top-left{grid-column:1;display:flex;align-items:center;gap:12px;min-width:0}
+.battle-top-left #back{flex-shrink:0}
+.battle-top #match-label{grid-column:2;justify-self:center;text-align:center;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.battle-top #timer{grid-column:3;justify-self:end;white-space:nowrap}
+.battle-top #skills{background:#24272c;border:1px solid var(--line);border-radius:5px;padding:3px 10px;color:var(--muted);font-size:12px;flex-shrink:0}
+.battle-top #skills:hover{border-color:var(--amber);color:var(--amber)}
+.battle-top #skills:disabled{opacity:.4;cursor:not-allowed}
+#skills-dialog{max-width:min(640px,calc(100vw - 28px))}
+.skills-body{padding-top:16px}
+.skills-team+.skills-team{margin-top:22px}
+.skills-team h3{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:13px;color:var(--red);margin-bottom:4px}
+.skills-team.blue h3{color:var(--blue)}
+.skills-team.brawl h3{color:var(--amber)}
+.skills-team h3 small{font-size:11px;font-weight:400;color:var(--muted)}
+.skills-row{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #ffffff10}
+.skills-row:last-child{border-bottom:0;padding-bottom:2px}
+.skills-row .mini-dot{margin-top:6px}
+.skills-main{min-width:0;flex:1}
+.skills-name{font-size:15px;font-weight:700}
+.skills-name small{display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:2px}
+.skills-desc{font-size:13px;line-height:1.75;color:#d1cfc5;margin-top:5px}
+@media(max-width:600px){.battle-top-left{gap:6px}.battle-top #skills{font-size:11px;padding:3px 6px}.skills-body{padding-top:12px}.skills-name{font-size:14px}.skills-desc{font-size:12px;line-height:1.7}}
+@media(max-height:440px) and (min-width:650px){.battle-top #match-label{grid-column:1/-1;justify-self:stretch;left:50%;transform:translateX(-50%)}}
