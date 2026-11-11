@@ -6,10 +6,11 @@ const ORIGINAL_IDS=['arenaSpring','arenaPainter','arenaCourier','arenaBoomerang'
 const TIME_LIMITS=Object.freeze({duel:240,team:360,wheel:600,brawl:480,boss:480});
 function timeLimit(state){return TIME_LIMITS[state?.mode]||TIME_LIMITS.duel;}
 const clone=value=>JSON.parse(JSON.stringify(value));
-function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,physics:'none',hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
+function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,retainDeadSkills:true,physics:'none',hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
 function sanitize(value,registry){
  const s=Object.assign(defaults(),value&&typeof value==='object'?value:{}), ids=new Set(registry.list().map(d=>d.id));
  s.mode=Object.hasOwn(MODES,s.mode)?s.mode:'duel'; s.series=[1,3,5].includes(Number(s.series))?Number(s.series):1;
+ s.retainDeadSkills=s.retainDeadSkills!==false;
  s.physics=['none','bounce','gyro'].includes(s.physics)?s.physics:'none';
  for(const key of ['left','right','brawl']){
   const fallback=defaults()[key]; s[key]=Array.isArray(s[key])?s[key].slice(0,key==='brawl'?12:6).map(id=>id===null?null:ids.has(id)?id:null):fallback;
@@ -41,6 +42,30 @@ function configFor(state,api){
  const cfg=api.createModeBattleConfig(mode,state.mode==='brawl'?state.brawl:state.left,state.mode==='brawl'?[]:state.right,options);
  return cfg;
 }
+// Install per engine so series rounds and seeded replays start with fresh cleanup state.
+function installWheelSkillCleanup(engine,state){
+ if(state.mode!=='wheel'||state.retainDeadSkills!==false)return;
+ const notify=engine.notifyNewDeaths.bind(engine);
+ engine.notifyNewDeaths=function(){
+  notify();
+  const removed=new Set(this.game.balls.filter(b=>b.hp<=0&&b.deathNotified).map(b=>b.instanceId));
+  // Follow summon ancestry, including summons of summons, without touching the next entrant.
+  let changed=true;
+  while(changed){changed=false;for(const b of this.game.balls)if(b.isSummon&&removed.has(b.summonerInstanceId)&&!removed.has(b.instanceId)){
+   removed.add(b.instanceId);changed=true;b.hp=0;b.fade=0;b.deathNotified=true;b.diedAt=this.game.time;
+   b.vx=b.vy=b.storedVx=b.storedVy=0;this.invokeHook(b,'onBattleDispose');
+  }}
+  for(const entity of this.entitySystem.entities.concat(this.entitySystem.pendingEntities)){
+   if(removed.has(entity.ownerInstanceId)||removed.has(entity.creditInstanceId))this.entitySystem.removeEntity(entity);
+  }
+  for(const effect of this.visualEffectSystem.effects.concat(this.visualEffectSystem.pendingEffects)){
+   if(removed.has(effect.ownerInstanceId))effect.visualActive=false;
+  }
+  for(const b of this.game.balls)for(const [id,effect] of b.effects){
+   if(removed.has(effect.source?.instanceId))this.removeEffect(b,id);
+  }
+ };
+}
 class Series{
  constructor(length=1){this.length=[1,3,5].includes(length)?length:1;this.scores=[0,0];this.draws=0;this.round=1;this.history=[];this.complete=false;}
  record(winner){
@@ -52,5 +77,5 @@ class Series{
  }
  next(){if(this.complete||!this.history.some(r=>r.round===this.round))return false;this.round++;return true;}
 }
-return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,timeLimit,defaults,sanitize,eligible,validate,configFor,Series,clone};
+return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,timeLimit,defaults,sanitize,eligible,validate,configFor,installWheelSkillCleanup,Series,clone};
 });

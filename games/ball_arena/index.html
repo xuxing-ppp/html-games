@@ -37,6 +37,7 @@
 <section id="match-settings" class="match-settings" aria-label="对战设置">
  <label class="setting-motion">运动 <select id="physics" aria-describedby="physics-hint"><option value="none">直线运动</option><option value="bounce">重力弹跳</option><option value="gyro">陀螺引力</option></select></label>
  <fieldset class="setting-hazards"><legend>场地机关</legend><label title="四处对称弹射，无伤害，单角色冷却 1 秒。"><input type="checkbox" id="hazard-pads">弹射垫</label><label title="每 10 秒出现，接触回复 12 点生命。"><input type="checkbox" id="hazard-supplies">急救补给</label><label title="每 12 秒预警后扫射，造成 8 点普通伤害。"><input type="checkbox" id="hazard-laser">横扫激光</label></fieldset>
+ <label id="wheel-setting" hidden title="关闭后，阵亡小球留下的尖刺、图钉、投射物和召唤物等会消失。"><input type="checkbox" id="retain-dead-skills" checked>保留阵亡小球技能</label>
  <label class="setting-seed"><span id="seed-label">对局种子</span><input id="seed" aria-labelledby="seed-label" inputmode="numeric" placeholder="留空随机" maxlength="10"></label>
  <label id="random-setting" class="setting-random"><input type="checkbox" id="random-expanded"><span>随机选人包含特殊角色<small>仅影响“随机对阵”和双方“随机”：增加杂鱼、精英、规格外；Boss 只进 Boss 槽位。</small></span></label>
  <p id="physics-hint" class="settings-hint"></p><p id="settings-lock" hidden>本届设置已锁定，重新抽签后可修改。</p>

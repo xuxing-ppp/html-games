@@ -62,3 +62,12 @@ test('extended packing reaches advertised capacity for varied normal and elite p
   for(const team of bracket.teams)assert.equal(team.ballIds.reduce((n,id)=>n+(defs.find(d=>d.id===id).rosterType==='elite'?2:1),0),teamSize);
  }
 });
+
+test('wheel retention setting survives save and battle mapping, old saves default on',()=>{
+ const run=T.draw(registry,{size:4,teamSize:2,battleMode:'wheel',physics:'none',hazards:{},retainDeadSkills:false},57);
+ const restored=T.restore(JSON.stringify(run),registry);
+ assert.equal(restored.settings.retainDeadSkills,false);
+ assert.equal(T.battleState(restored,T.nextPendingMatch(restored.bracket)).retainDeadSkills,false);
+ delete run.settings.retainDeadSkills;
+ assert.equal(T.restore(JSON.stringify(run),registry).settings.retainDeadSkills,true);
+});

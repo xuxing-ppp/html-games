@@ -19,7 +19,7 @@ function updateHome(){
 }
 function format(mode,size){return mode==='wheel'?'车轮战 · 每队 '+size+' 名额':size+'V'+size;}
 function render(){
- updateHome();$('tournament-setup').hidden=!!run;$('tournament-bracket').hidden=!run;$('tournament-reset').hidden=!run;A.renderSettings(true,run);
+ updateHome();$('tournament-setup').hidden=!!run;$('tournament-bracket').hidden=!run;$('tournament-reset').hidden=!run;A.renderSettings(true,run,prefs.battleMode);
  if(!run){
   const definitions=T.pool(registry,prefs.filterElite),capacity=T.capacity(registry,prefs.teamSize,prefs.filterElite),unit=prefs.teamSize===1?'球':'队';if(prefs.size>capacity)prefs.size=null;
   $('tournament-status').textContent='开赛前设置';$('tournament-filter-elite').checked=prefs.filterElite;
@@ -80,7 +80,7 @@ $('tournament-detail-watch').onclick=()=>{if(detailMatch)startMatch(detailMatch)
 $('tournament-reset').onclick=()=>A.openDialog('tournament-reset-dialog');
 $('tournament-reset-confirm').onclick=()=>{A.discardExternalMatch();run=null;selectedRound=0;save();A.showScreen('tournament');render();};
 $('tournament-play').onclick=()=>{
- if(!run){try{run=T.draw(registry,{...prefs,physics:A.state.physics,hazards:A.state.hazards},A.state.seedText===''?randomSeed():Number(A.state.seedText));selectedRound=0;save();render();}catch(error){A.toast(error.message);}return;}
+ if(!run){try{run=T.draw(registry,{...prefs,retainDeadSkills:A.state.retainDeadSkills,physics:A.state.physics,hazards:A.state.hazards},A.state.seedText===''?randomSeed():Number(A.state.seedText));selectedRound=0;save();render();}catch(error){A.toast(error.message);}return;}
  if(officialLive()){A.resumeExternalMatch();return;}if(T.isTournamentComplete(run.bracket)){A.openDialog('tournament-reset-dialog');return;}startMatch(T.nextPendingMatch(run.bracket));
 };
 window.addEventListener('arena:navigate',e=>{updateHome();if(e.detail.screen==='tournament')render();});

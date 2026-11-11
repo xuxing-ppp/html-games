@@ -114,9 +114,10 @@ function pick(id){const d=registry.get(id);if(!M.eligible(d,state,editing.side))
 function favorite(id){state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):[...state.favorites,id];save();const top=$('roster').scrollTop;renderRoster(false);$('roster').scrollTop=top;if(detailId===id&&$('detail').open)$('detail-favorite').textContent=state.favorites.includes(id)?'★ 已收藏':'☆ 收藏';}
 function randomTeam(side){const pool=roles.filter(d=>M.eligible(d,state,side)&&(state.mode==='boss'&&side==='left'||state.expanded||d.rosterType==='normal'));if(!pool.length)return;state[side]=state[side].map(()=>pool[Math.floor(Math.random()*pool.length)].id);}
 function showDetail(id){detailId=id;const d=registry.get(id);$('detail-title').textContent=d.name;$('detail-content').innerHTML=`<div class="detail-hero"><canvas id="detail-preview" width="288" height="200" aria-hidden="true"></canvas><div><p>${M.TYPE_NAMES[d.rosterType]}${isOriginal(id)?' · 原创角色':''}</p><p class="detail-tags">${esc((ArenaTags[id]||[]).join(' · '))}</p></div></div><p class="detail-desc">${esc(detailOf(d))}</p><div class="detail-stats"><div><small>基础生命</small><strong>${d.stats.maxHp}</strong></div><div><small>速度</small><strong>${d.stats.speed}</strong></div><div><small>半径</small><strong>${d.stats.radius}</strong></div></div>`;drawPreview($('detail-preview'),id);$('detail-favorite').textContent=state.favorites.includes(id)?'★ 已收藏':'☆ 收藏';$('detail-pick').disabled=!M.eligible(d,state,editing.side);$('detail-pick').textContent=$('detail-pick').disabled?'不适用于当前位置':'选入'+sideName(editing.side)+'第'+(editing.index+1)+'位';openDialog('detail');}
-function renderSettings(tournament=false,run=null){
+function renderSettings(tournament=false,run=null,battleMode=null){
  const slot=$(tournament?'tournament-settings-slot':'free-settings-slot');slot.appendChild($('match-settings'));
  const locked=!!run,settings=run?run.settings:state,boss=!tournament&&state.mode==='boss';
+ $('wheel-setting').hidden=(run?run.settings.battleMode:battleMode||state.mode)!=='wheel';$('retain-dead-skills').checked=settings.retainDeadSkills!==false;$('retain-dead-skills').disabled=locked;
  $('physics').value=boss?'none':settings.physics;$('physics').disabled=locked||boss;
  $('physics-hint').textContent=boss?'Boss 挑战固定直线运动。':'';
  for(const k of ['pads','supplies','laser']){$('hazard-'+k).checked=settings.hazards[k];$('hazard-'+k).disabled=locked;}
@@ -124,6 +125,7 @@ function renderSettings(tournament=false,run=null){
  $('random-setting').hidden=tournament;$('random-expanded').checked=state.expanded;$('settings-lock').hidden=!locked;
 }
 function commitSettings(){
+ if(!$('retain-dead-skills').disabled)state.retainDeadSkills=$('retain-dead-skills').checked;
  if(!$('physics').disabled)state.physics=$('physics').value;for(const k of ['pads','supplies','laser'])state.hazards[k]=$('hazard-'+k).checked;state.expanded=$('random-expanded').checked;
  const value=$('seed').value.trim();if(value!==''&&(!/^\d{1,10}$/.test(value)||Number(value)>4294967295)){toast('种子须为 0–4294967295 的整数，已改为随机。');state.seedText='';$('seed').value='';}else state.seedText=value;
  save();
@@ -148,7 +150,7 @@ function startRound(seed,replay=false){
  const settings=matchState;
  try{
   engine=new B.BattleEngine({onBounce:(ball,intensity)=>{if(soundOn&&!paused)audio.impact(ball,intensity);},onSound:event=>{if(soundOn&&!paused)audio.playEvent(event);}});
-  session=B.createDeterministicSession({engine,seed:roundSeed,setup:e=>{e.createBattle(M.configFor(settings,B));mechanisms=new ArenaMechanisms(e,settings.hazards);e.beginFight();}});
+  session=B.createDeterministicSession({engine,seed:roundSeed,setup:e=>{e.createBattle(M.configFor(settings,B));M.installWheelSkillCleanup(e,settings);mechanisms=new ArenaMechanisms(e,settings.hazards);e.beginFight();}});
   const update=engine.update.bind(engine);
   engine.update=dt=>{if(engine.game.state!=='running')return;const t=engine.game.time;update(dt);if(engine.game.state==='running')mechanisms.update(Math.max(0,engine.game.time-t));};
   renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,teamColors:{left:'#ed796b',right:'#78b5e7'}});

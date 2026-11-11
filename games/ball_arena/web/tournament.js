@@ -15,7 +15,7 @@ function draw(registry,settings,seed){
  const definitions=pool(registry,filterElite);
  if(C.tournamentTeamCapacity(definitions,teamSize)<size)throw new Error('角色数量不足，无法组成所选规模');
  const bracket=C.createTeamTournament(definitions,{size,teamSize,filterElite,random:B.createSeededRandom(seed>>>0)});
- return {version:1,drawSeed:seed>>>0,bracket,settings:{battleMode,physics:['none','bounce','gyro'].includes(settings.physics)?settings.physics:'none',hazards:Object.fromEntries(['pads','supplies','laser'].map(k=>[k,settings.hazards?.[k]===true]))},records:{}};
+ return {version:1,drawSeed:seed>>>0,bracket,settings:{battleMode,retainDeadSkills:settings.retainDeadSkills!==false,physics:['none','bounce','gyro'].includes(settings.physics)?settings.physics:'none',hazards:Object.fromEntries(['pads','supplies','laser'].map(k=>[k,settings.hazards?.[k]===true]))},records:{}};
 }
 function seedFor(run,match){
  if(!match?.leftId||!match?.rightId)throw new Error('本场对手尚未确定');
@@ -30,7 +30,7 @@ function settle(run,matchId,winnerSide,seed){
  if(winnerSide!==0&&winnerSide!==1)return false;
  return C.recordMatchResult(run.bracket,matchId,winnerSide===0?match.leftId:match.rightId);
 }
-function battleState(run,match){return {mode:run.settings.battleMode==='wheel'?'wheel':run.bracket.teamSize===1?'duel':'team',left:entrantIds(run,match.leftId),right:entrantIds(run,match.rightId),series:1,physics:run.settings.physics,hazards:{...run.settings.hazards}};}
+function battleState(run,match){return {mode:run.settings.battleMode==='wheel'?'wheel':run.bracket.teamSize===1?'duel':'team',left:entrantIds(run,match.leftId),right:entrantIds(run,match.rightId),series:1,retainDeadSkills:run.settings.retainDeadSkills!==false,physics:run.settings.physics,hazards:{...run.settings.hazards}};}
 function restore(serialized,registry){
  try{
   const run=JSON.parse(serialized);if(!run||run.version!==1||!Number.isInteger(run.drawSeed)||run.drawSeed<0||run.drawSeed>4294967295)return null;
@@ -47,6 +47,8 @@ function restore(serialized,registry){
   }
   if(!run.settings||!['none','bounce','gyro'].includes(run.settings.physics)||typeof run.settings.hazards!=='object'||!run.settings.hazards)return null;
   if(run.settings.battleMode===undefined)run.settings.battleMode='standard';
+  if(run.settings.retainDeadSkills===undefined)run.settings.retainDeadSkills=true;
+  if(typeof run.settings.retainDeadSkills!=='boolean')return null;
   if(!validFormat(run.settings.battleMode,bracket.teamSize))return null;
   for(const k of ['pads','supplies','laser'])if(typeof run.settings.hazards[k]!=='boolean')return null;
   if(!run.records||typeof run.records!=='object'||Array.isArray(run.records))return null;

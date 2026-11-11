@@ -89,6 +89,12 @@ try:
    page.evaluate("ArenaApp.engine.endBattle(ArenaApp.engine.game.teams[0],ArenaApp.engine.game.teams[1]);ArenaApp.advanceSteps(0)");assert page.evaluate('ArenaApp.series.complete');assert page.locator('#next-round').is_hidden();page.click('#edit-result')
    for mode in ['team','wheel','brawl','boss']:
     page.select_option('#mode',mode)
+    assert page.locator('#wheel-setting').is_visible()==(mode=='wheel')
+    if mode=='wheel':
+     assert page.locator('#retain-dead-skills').is_checked();page.uncheck('#retain-dead-skills');assert page.evaluate('ArenaApp.state.retainDeadSkills===false')
+     for w,h in SIZES:
+      page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(60);fit(page,['#wheel-setting','#start','#roster']);snap(page,f'wheel-option-{prefix.strip("/") or "root"}-{w}x{h}')
+     page.set_viewport_size({'width':1440,'height':900})
     if mode=='brawl':
      for _ in range(10):page.click('[data-count="brawl"][data-delta="1"]')
     page.click('#random-all')

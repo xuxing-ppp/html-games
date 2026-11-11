@@ -160,3 +160,38 @@ test('wheel replacements draw fresh seeded headings after automatic death notifi
  }
  const first=capture(217,[1/60]);assert.deepEqual(first,capture(217,[1/120,1/120]));assert.notDeepEqual(first,capture(218,[1/60]));assert.notDeepEqual(first[0],first[2]);
 });
+
+test('wheel skill retention defaults on and disabling clears dead owners and summon descendants',()=>{
+ assert.equal(M.sanitize({},registry).retainDeadSkills,true);
+ for(const retain of [true,false]){
+  const e=battle(['spike','steelCoil'],['thumbtack','steelCoil'],'wheel');
+  M.installWheelSkillCleanup(e,{mode:'wheel',retainDeadSkills:retain});
+  const owner=e.game.teams[0].balls[0],enemy=e.game.teams[1].balls[0],next=e.game.teams[0].balls[1];
+  e.invokeHook(owner,'onWallBounce',wall());
+  const spike=e.game.combatEntities.find(x=>x.ownerInstanceId===owner.instanceId);assert(spike);
+  const summon=e.spawnSummon(owner,registry.get('steelCoil'));
+  const child=e.spawnCombatEntity({kind:'test-zone',life:100},summon);
+  const enemyEntity=e.spawnCombatEntity({kind:'test-zone',life:100},enemy);
+  e.entitySystem.beginStep();
+  const pending=e.spawnCombatEntity({kind:'test-zone',life:100},owner);
+  e.entitySystem.endStep();
+  owner.hp=0;e.notifyNewDeaths();
+  assert.equal(spike.entityActive,retain);assert.equal(child.entityActive,retain);assert.equal(pending.entityActive,retain);
+  assert.equal(summon.hp>0,retain);assert.equal(enemyEntity.entityActive,true);assert(next.hp>0);
+  run(e,.1);assert(e.isBallActive(next));
+  if(!retain)assert(!e.game.combatEntities.some(x=>x.entityActive&&[owner.instanceId,summon.instanceId].includes(x.ownerInstanceId)));
+  dispose(e);
+ }
+});
+
+test('thumbtack shots disappear with their defeated wheel owner when retention is off',()=>{
+ for(const retain of [true,false]){
+  const e=frozen(battle(['thumbtack','steelCoil'],['steelCoil','steelCoil'],'wheel'));
+  M.installWheelSkillCleanup(e,{mode:'wheel',retainDeadSkills:retain});
+  const owner=e.game.teams[0].balls[0];
+  e.invokeHook(owner,'update',null,10);e.invokeHook(owner,'afterUpdateStep');
+  const tacks=e.game.combatEntities.filter(x=>x.ownerInstanceId===owner.instanceId);
+  assert(tacks.length>0);owner.hp=0;e.notifyNewDeaths();
+  assert(tacks.every(x=>x.entityActive===retain));dispose(e);
+ }
+});

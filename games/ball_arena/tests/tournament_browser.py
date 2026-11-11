@@ -26,7 +26,7 @@ try:
   for prefix in ['/', '/Games/']:
    context=browser.new_context(viewport={'width':1440,'height':900},reduced_motion='reduce');page=context.new_page();errors=[];missing=[]
    page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:missing.append(r.url) if r.status>=400 else None)
-   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.4(1)';assert page.locator('.hall-link').count()==0
+   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.5';assert page.locator('.hall-link').count()==0
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90);fit(page,['#home-free','#home-tournament','#version','#help','#sound']);assert page.evaluate("(()=>{const e=document.querySelector('.home-arena');return Math.abs(e.clientWidth-e.clientHeight)<2})()");snap(page,f'home-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#home-tournament');assert page.locator('[data-tournament-size]').count()==6
@@ -66,9 +66,9 @@ try:
    page.reload(wait_until='networkidle');assert page.locator('#home-continue-tournament').inner_text()=='查看锦标赛结果';page.click('#home-continue-tournament');assert played(page)==3;assert page.locator('#tournament-champion').is_visible()
    # Wheel tournament: six slots, current combatant HUD, complete skills and persistence.
    page.click('#tournament-reset');page.click('#tournament-reset-confirm')
-   page.click('[data-battle-mode="wheel"]');page.click('[data-team-size="6"]');page.check('#tournament-filter-elite');page.click('[data-tournament-size="4"]')
+   page.click('[data-battle-mode="wheel"]');assert page.locator('#retain-dead-skills').is_checked();page.uncheck('#retain-dead-skills');page.click('[data-team-size="6"]');page.check('#tournament-filter-elite');page.click('[data-tournament-size="4"]')
    for w,h in SIZES:
-    page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(70);fit(page,['#tournament-modes button','#tournament-teams button','#tournament-sizes button','#tournament-play']);snap(page,f'wheel-setup-{prefix.strip("/") or "root"}-{w}x{h}')
+    page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(70);fit(page,['#wheel-setting','#tournament-modes button','#tournament-teams button','#tournament-sizes button','#tournament-play']);snap(page,f'wheel-setup-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#tournament-play');page.evaluate("document.querySelector('#tournament-play').click();ArenaApp.pause(true)")
    assert page.evaluate('ArenaApp.engine.game.config.mode')=='wheel';assert page.locator('#timer').inner_text().endswith('/ 10:00')
    assert page.locator('#score-left .hp-data').inner_text().endswith('HP');assert '人存活' not in page.locator('#score-left').inner_text()
