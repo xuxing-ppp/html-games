@@ -6,7 +6,7 @@
   root.BallBattle = Object.assign(root.BallBattle || {}, api);
 })(globalThis, function createLiangchenIIIPlugin(dependencies) {
   "use strict";
-  const { resolveArenaGeometry, registerBall, firstSegmentCircleContact, createSlashEffect } = dependencies;
+  const { resolveArenaGeometry, registerBall, firstSegmentCircleContact, createSlashEffect, canShareContactLayer } = dependencies;
 
   const RULES = Object.freeze({
     bodyDamage: 4,
@@ -100,6 +100,7 @@
         // 被敌方子弹打散（同丝状雷电）：血滴碎裂，那颗子弹也一并被打掉
         if (shootable) {
           for (const projectile of projectilesForStep(context.game)) {
+            if (!canShareContactLayer(entity, projectile)) continue;
             if (!projectile || projectile.isProjectile !== true || projectile.life <= 0
                 || projectile.entityActive === false || !services.isEnemy(projectile)) continue;
             // 钩尖等不可攻击的附属武器并非普通子弹，血滴不能把整套攻击打断。
@@ -343,6 +344,7 @@
           context.services.dealDamage(target,
             boosting ? RULES.boostBodyDamage : RULES.bodyDamage);
         },
+        onWallBounceWhileControlled(...args) { return this.onWallBounce(...args); },
         onWallBounce(context) {
           if (boosting && boostAge > 0.05) stopBoost(context.ball);
         },

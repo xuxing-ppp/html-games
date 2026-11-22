@@ -63,11 +63,7 @@
     return "side";
   }
 
-  // 圆环减速（作用在拳击手自己身上）直接走 setSpeedMultiplier 服务，而不是短时效果。
-  // 短时效果有两个坑：① 效果在被刷新的那一帧若已过期，新实例会把「当前已减速的倍率」
-  // 当成新基准，于是 0.2 叠成 0.04、再叠成 0.008；② 旧实例被覆盖时 onExpire 不会执行，
-  // 减速就永久留在身上（打 blitz 被眩晕打断刷新后就会复现）。
-  // 这里把基准倍率存在行为闭包里，只在「进入圆环」和「外部改过倍率」时重新采样。
+  // 临时状态由引擎另行叠加，圆环只影响角色基础速度倍率。
   function updateRingSlow(ball, shouldSlow, combatantServices, state) {
     if (!shouldSlow) {
       if (state.baseSpeedMultiplier === null) return;
@@ -77,16 +73,16 @@
       return;
     }
     if (state.baseSpeedMultiplier === null) {
-      state.baseSpeedMultiplier = ball.speedMultiplier;
+      state.baseSpeedMultiplier = ball.speedMultiplierBase;
     } else if (
       Number.isFinite(state.appliedMultiplier) &&
-      Math.abs(ball.speedMultiplier - state.appliedMultiplier) > EPSILON
+      Math.abs(ball.speedMultiplierBase - state.appliedMultiplier) > EPSILON
     ) {
       // 别的球改过倍率：以它为新的基准，不要覆盖别人的减速/加速。
-      state.baseSpeedMultiplier = ball.speedMultiplier;
+      state.baseSpeedMultiplier = ball.speedMultiplierBase;
     }
     const multiplier = state.baseSpeedMultiplier * SLOW_FACTOR;
-    if (Math.abs(ball.speedMultiplier - multiplier) > EPSILON) {
+    if (Math.abs(ball.speedMultiplierBase - multiplier) > EPSILON) {
       combatantServices.setSpeedMultiplier(multiplier);
     }
     state.appliedMultiplier = multiplier;

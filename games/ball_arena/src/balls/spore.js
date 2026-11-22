@@ -114,6 +114,12 @@
     const half = width / 2;
     const sway = Math.sin(entity.age * 1.4 + entity.phase) * 0.06;
     context.save();
+    const growth = clamp(entity.age / 0.42, 0, 1);
+    const release = Math.max(0, 1 - (entity.releaseAge ?? 1) / 0.24);
+    const size = 0.62 + 0.38 * growth;
+    context.translate(entity.x, entity.y);
+    context.scale(size * (1 + release * 0.16), size * (1 - release * 0.21));
+    context.translate(-entity.x, -entity.y);
     context.globalAlpha *= alpha;
     context.translate(entity.x, entity.y + entity.radius * 0.9);
     context.rotate(sway);
@@ -263,16 +269,20 @@
       stats: { radius: MUSHROOM_RADIUS, speed: 1, maxHp: 1 },
       createBehavior(services) {
         let spitTimer = 0;
+        let growthStarted = 0;
+        let lastRelease = -Infinity;
         let ballRef = null;
         return {
           onSpawn(context) {
             ballRef = context.ball;
+            growthStarted = context.game.time;
           },
           update(context, dt) {
             const elapsed = Math.max(0, dt);
             spitTimer += elapsed;
             while (spitTimer + EPSILON >= MUSHROOM_SPIT_INTERVAL) {
               spitTimer -= MUSHROOM_SPIT_INTERVAL;
+              lastRelease = context.game.time;
               for (let index = 0; index < MUSHROOM_SPIT_COUNT; index += 1) {
                 spawnBubble(
                   state,
@@ -308,7 +318,8 @@
                 x: context.ball.x,
                 y: context.ball.y,
                 radius: context.ball.radius,
-                age: context.game.time,
+                age: context.game.time - growthStarted,
+                releaseAge: context.game.time - lastRelease,
                 phase,
                 life: Number.MAX_SAFE_INTEGER
               },

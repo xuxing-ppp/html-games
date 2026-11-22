@@ -271,6 +271,7 @@
             { x: context.ball.x, y: context.ball.y }
           );
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context, event) {
           if (!event.actor || event.actor === context.ball || event.amount <= 0) return;
           debt *= 1 + interestRate(context.ball);

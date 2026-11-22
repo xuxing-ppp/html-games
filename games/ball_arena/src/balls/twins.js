@@ -188,6 +188,7 @@
             context.game
           ));
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context, event) {
           if (!clone || clone.life <= 0 || event.amount <= 0 || context.ball.hp <= 0) return;
           const bodyX = context.ball.x;

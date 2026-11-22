@@ -622,6 +622,7 @@
           }
           if (storm && storm.shotIndex >= storm.points.length) storm = null;
         },
+        onEnemyProjectileSpawnedWhileControlled(...args) { return this.onEnemyProjectileSpawned(...args); },
         onEnemyProjectileSpawned(context) {
           if (context.projectile) projectileStates.set(context.projectile, { time: 0 });
         },

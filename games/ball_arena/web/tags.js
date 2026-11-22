@@ -428,3 +428,4 @@ globalThis.ArenaTags = {
     "控制"
   ]
 };
+for(const role of globalThis.ArenaRosterExpansion||[])globalThis.ArenaTags[role.id]=role.tags;

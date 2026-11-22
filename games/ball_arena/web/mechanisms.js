@@ -19,10 +19,17 @@ class ArenaMechanisms{
    return Number.isFinite(e.radius)&&Math.hypot(e.x-p.x,e.y-p.y)<e.radius+10;
   });
  }
- pads(){const s=this.engine.arenaSize;return [[.25,.25],[.75,.25],[.25,.75],[.75,.75]].map(([x,y])=>({x:x*s,y:y*s,radius:9}));}
+ pads(){
+  const {left,top,width,height}=this.engine.arena;
+  return [[.25,.25],[.75,.25],[.25,.75],[.75,.75]].map(([x,y])=>({x:left+x*width,y:top+y*height,radius:9}));
+ }
+ laserPosition(vertical,fraction){
+  const {left,top,width,height}=this.engine.arena;
+  return vertical?left+width*fraction:top+height*fraction;
+ }
  update(dt){
   const g=this.engine.game;if(g.state!=='running'||dt<=0)return;this.time+=dt;
-  const active=this.participants(),s=this.engine.arenaSize;
+  const active=this.participants();
   if(this.options.pads)for(const b of active){
    if((this.cooldowns.get(b.instanceId)||0)>this.time||this.engine.getCapabilities(b).canMove===false||b.positionLocked)continue;
    for(const pad of this.pads())if(Math.hypot(b.x-pad.x,b.y-pad.y)<=b.radius+pad.radius){let dx=b.x-pad.x,dy=b.y-pad.y,m=Math.hypot(dx,dy);if(m<.001){dx=b.vx||1;dy=b.vy||0;m=Math.hypot(dx,dy);}
@@ -36,18 +43,30 @@ class ArenaMechanisms{
    this.supplies=this.supplies.filter(p=>{for(const b of active){if(b.definition?.healthless||b.hp>=b.maxHp||!Number.isFinite(b.maxHp))continue;if(Math.hypot(b.x-p.x,b.y-p.y)>b.radius+6)continue;const heal=Math.min(12,b.maxHp-b.hp);if(heal<=0)continue;b.hp+=heal;this.engine.spawnHitText(b.x,b.y,'+'+Math.round(heal),{color:'#8fefb4'});return false;}return true;});
   }
   if(this.options.laser){
-   if(this.time+1e-9>=this.nextLaser){this.sweep={start:this.nextLaser,vertical:this.laserNumber++%2===0,hits:new Set(),previous:s*.2};this.nextLaser+=12;}
+   if(this.time+1e-9>=this.nextLaser){
+    const vertical=this.laserNumber++%2===0;
+    this.sweep={start:this.nextLaser,vertical,hits:new Set(),previous:this.laserPosition(vertical,.2)};this.nextLaser+=12;
+   }
    const beam=this.sweep;if(beam){const age=this.time-beam.start;
-    if(age>=1.5&&age<=2.3){const pos=s*(.2+.6*(age-1.5)/.8),lo=Math.min(beam.previous,pos),hi=Math.max(beam.previous,pos);for(const b of active){const axis=beam.vertical?b.x:b.y;if(axis+b.radius<lo-2||axis-b.radius>hi+2||beam.hits.has(b.instanceId))continue;beam.hits.add(b.instanceId);this.engine.dealDamage(b,8,this.source);}beam.previous=pos;}
+    if(age>=1.5&&age<=2.3){const pos=this.laserPosition(beam.vertical,.2+.6*(age-1.5)/.8),lo=Math.min(beam.previous,pos),hi=Math.max(beam.previous,pos);for(const b of active){const axis=beam.vertical?b.x:b.y;if(axis+b.radius<lo-2||axis-b.radius>hi+2||beam.hits.has(b.instanceId))continue;beam.hits.add(b.instanceId);this.engine.dealDamage(b,8,this.source);}beam.previous=pos;}
     if(age>2.3)this.sweep=null;
    }
   }
  }
  draw(c){
-  const s=this.engine.arenaSize;c.save();
+  const {left,right,top,bottom,width,height,centerX}=this.engine.arena;c.save();
   if(this.options.pads)for(const p of this.pads()){c.strokeStyle='#e4b756';c.fillStyle='rgba(228,183,86,.08)';c.lineWidth=1;c.beginPath();c.arc(p.x,p.y,9,0,Math.PI*2);c.fill();c.stroke();c.beginPath();c.moveTo(p.x-4,p.y+2);c.lineTo(p.x,p.y-3);c.lineTo(p.x+4,p.y+2);c.stroke();}
   for(const p of this.supplies){c.fillStyle='#70e3ab';c.fillRect(p.x-5,p.y-5,10,10);c.fillStyle='#122a22';c.fillRect(p.x-3,p.y-1,6,2);c.fillRect(p.x-1,p.y-3,2,6);}
-  if(this.sweep){const b=this.sweep,age=this.time-b.start,warning=age<1.5;const pos=warning?s*.2:s*(.2+.6*Math.min(1,(age-1.5)/.8));c.strokeStyle=warning?'#e9ae60':'#ff5c65';c.fillStyle='rgba(255,92,101,.06)';if(b.vertical)c.fillRect(s*.2,0,s*.6,s);else c.fillRect(0,s*.2,s,s*.6);c.lineWidth=warning?1:3;if(warning)c.setLineDash([4,3]);c.beginPath();if(b.vertical){c.moveTo(pos,0);c.lineTo(pos,s);}else{c.moveTo(0,pos);c.lineTo(s,pos);}c.stroke();c.setLineDash([]);c.fillStyle='#ffdcae';c.font='5px sans-serif';c.textAlign='center';if(warning)c.fillText('激光预警 →',s/2,s-6);}
+  if(this.sweep){
+   const beam=this.sweep,age=this.time-beam.start,warning=age<1.5;
+   const pos=this.laserPosition(beam.vertical,warning?.2:.2+.6*Math.min(1,(age-1.5)/.8));
+   c.strokeStyle=warning?'#e9ae60':'#ff5c65';c.fillStyle='rgba(255,92,101,.06)';
+   if(beam.vertical)c.fillRect(left+width*.2,top,width*.6,height);else c.fillRect(left,top+height*.2,width,height*.6);
+   c.lineWidth=warning?1:3;if(warning)c.setLineDash([4,3]);c.beginPath();
+   if(beam.vertical){c.moveTo(pos,top);c.lineTo(pos,bottom);}else{c.moveTo(left,pos);c.lineTo(right,pos);}
+   c.stroke();c.setLineDash([]);c.fillStyle='#ffdcae';c.font='5px sans-serif';c.textAlign='center';
+   if(warning)c.fillText('激光预警 →',centerX,bottom-6);
+  }
   c.restore();
  }
  dispose(){this.cooldowns.clear();this.supplies=[];this.sweep=null;this.actor.active=false;}

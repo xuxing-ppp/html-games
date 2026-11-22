@@ -105,6 +105,7 @@
   const ARENA_PHYSICS_OPTIONS = Object.freeze(["none", "bounce", "gyro"]);
   const BOSS_BATTLE_MODES = new Set(["boss", "totalwar"]);
   const BOSS_SPAWN_CLEARANCE = 2;
+  const CUSTOM_ARENA_MODES = new Set(["1v1", "nvn", "wheel", "brawl", "totalwar"]);
   // Allocation safety for serialized roster expansion, NOT a gameplay count
   // limit: estimate UTF-16 IDs plus modifier/object/reference overhead across
   // all teams before duplicating roster descriptions in memory.
@@ -270,7 +271,7 @@
     }
 
     if (options.arena !== undefined) {
-      if (mode !== "nvn") throw new Error("Custom arenas are only supported in NVN mode");
+      if (!CUSTOM_ARENA_MODES.has(mode)) throw new Error(`${mode} does not support custom arenas`);
       config.arena = normalizeArenaDescriptor(options.arena, config.arenaSize);
       config.arenaSize = Math.max(config.arena.width, config.arena.height);
     }
@@ -394,7 +395,10 @@
       : gyroEnabled ? GYRO_ARENA_SIZE : rule.arenaSize;
     const arena = config.arena === undefined ? null
       : normalizeArenaDescriptor(config.arena, expectedArenaSize);
-    if (arena && config.mode !== "nvn") throw new Error("Custom arenas are only supported in NVN mode");
+    if (arena && (!CUSTOM_ARENA_MODES.has(config.mode) ||
+        (arena.shape === "circle" && config.mode !== "nvn"))) {
+      throw new Error(`${config.mode} does not support this arena shape`);
+    }
     const arenaSize = arena ? Math.max(arena.width, arena.height) : expectedArenaSize;
     if (config.arenaSize !== arenaSize) {
       throw new Error(`${config.mode} requires a ${expectedArenaSize} arena`);
@@ -567,8 +571,10 @@
     };
     if (arena) normalized.arena = Object.freeze(arena);
     if (config.spawnLayout !== undefined) normalized.spawnLayout = config.spawnLayout;
-    if (config.mode === "nvn") {
-      if (teams.some(team => team.role !== "team")) throw new Error("NVN requires team roles");
+    if (config.mode === "nvn" && teams.some(team => team.role !== "team")) {
+      throw new Error("NVN requires team roles");
+    }
+    if (config.mode === "nvn" || arena) {
       const radii = teams.map((team) => team.ballTypeIds.map((id) => {
         const stats = registry.get(id).stats;
         return stats == null ? undefined : stats.radius;
@@ -595,7 +601,7 @@
   }
 
   function spawnPointsForBattle(config, teamRadii) {
-    if (config.mode !== "nvn") {
+    if (config.mode !== "nvn" && !config.arena) {
       return teamRadii.map((radii, teamIndex) => spawnPointsForTeam(config, teamIndex, radii, teamRadii[1 - teamIndex]));
     }
     const geometry = createArenaGeometry(config.arena || config.arenaSize);
@@ -742,6 +748,22 @@
       return result;
     }
 
+    if (config.mode === "brawl") {
+      const radii = teamRadii[0];
+      return [pack(radii, left, right, [], balancedPositions(radii, left, right)), []];
+    }
+
+    if (config.mode === "1v1" || config.mode === "wheel") {
+      return teamRadii.map((radii, index) => {
+        if (!radii.length) return [];
+        const radius = Math.max(...radii);
+        const minX = index === 0 ? left : center;
+        const maxX = index === 0 ? center : right;
+        const [seat] = pack([radius], minX, maxX, [], [{ x: (minX + maxX) / 2, y: center }]);
+        return radii.map(() => seat);
+      });
+    }
+
     if (teamRadii.length > 2) {
       if (config.spawnLayout === "surround") throw new Error("Surround layout requires exactly two teams");
       const flatRadii = teamRadii.flat();
@@ -763,19 +785,23 @@
       });
     }
 
-    if (config.spawnLayout === "surround") {
+    if (config.spawnLayout === "surround" || isBossBattleMode(config.mode)) {
       if (teamRadii[0].length !== 1) throw new Error("Surround layout requires exactly one ball on the left team");
       const bossRadius = teamRadii[0][0];
       const boss = { x: center, y: center };
       if (!geometry.contains(center, center, bossRadius)) throw new Error("Center ball cannot fit in the arena");
       const radii = teamRadii[1];
       const maxRadius = radii.reduce((maximum, radius) => Math.max(maximum, radius), 0);
-      const ringRadius = Math.max(bossRadius + maxRadius + BOSS_SPAWN_CLEARANCE, Math.min(100, descriptor.width / 2 - maxRadius));
+      const rectangularBoss = isBossBattleMode(config.mode);
+      const diameter = rectangularBoss ? Math.min(descriptor.width, descriptor.height) : descriptor.width;
+      const clearance = rectangularBoss ? BOSS_SPAWN_CLEARANCE : 0;
+      const ringRadius = Math.max(bossRadius + maxRadius + BOSS_SPAWN_CLEARANCE,
+        Math.min(100, diameter / 2 - maxRadius));
       const preferred = radii.map((radius, index) => {
         const angle = -Math.PI / 2 + index * Math.PI * 2 / radii.length;
         return { x: stableCoordinate(center + Math.cos(angle) * ringRadius), y: stableCoordinate(center + Math.sin(angle) * ringRadius) };
       });
-      return [[boss], pack(radii, left, right, [{ ...boss, radius: bossRadius }], preferred)];
+      return [[boss], pack(radii, left, right, [{ ...boss, radius: bossRadius + clearance }], preferred)];
     }
     return teamRadii.map((radii, teamIndex) => {
       const minX = teamIndex === 0 ? left : center;
@@ -791,7 +817,7 @@
 
   function spawnPointsForTeam(config, teamIndex, radii, opposingRadii = []) {
     if (!Array.isArray(radii) || radii.length === 0) return [];
-    if (config.mode === "nvn") {
+    if (config.mode === "nvn" || config.arena) {
       if (config.teams && config.teams.length > 2) throw new Error("Multi-team NVN spawning requires spawnPointsForBattle with all team radii");
       return spawnPointsForBattle(config, teamIndex === 0 ? [radii, opposingRadii] : [opposingRadii, radii])[teamIndex];
     }

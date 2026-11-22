@@ -3,7 +3,7 @@
     ? {
         ...require("../core/ball-registry.js"),
         ...require("../core/damage-reduction.js"),
-        ...require("../core/arena-geometry.js"),
+        ...require("../core/arena-geometry.js"), ...require("../core/contact-model.js"),
         ...require("./train-weapon.js"),
         ...require("./shield-tool.js")
       }
@@ -16,6 +16,7 @@
   registerBall,
   applyDamageReduction,
   createArenaGeometry,
+  canShareContactLayer,
   createTrainKnockback,
   getShieldEntityContact,
   isShieldOversizedEntity
@@ -347,6 +348,7 @@
         const game = context.game;
         for (const entity of game.combatEntities) {
           if (!entity || entity === ball || entity.isProjectile) continue;
+          if (!canShareContactLayer(ball, entity)) continue;
           if (entity.entityActive === false || entity.life <= 0) continue;
           if (entity.teamId === ball.teamId) continue;
           // 持械等与本体绑定的装备不是可碾碎的第三方道具。

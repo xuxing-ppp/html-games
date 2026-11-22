@@ -756,7 +756,7 @@
       drawGrenadeSprite(
         context,
         effect.x,
-        effect.y,
+        effect.y - effect.height,
         GRENADE_SIZE,
         effect.spin * progress,
         false,
@@ -793,7 +793,11 @@
       damage: config.blastDamage,
       x: startX,
       y: startY,
-      vx: deltaX / FLIGHT_DURATION,
+      contactLayer: "air",
+      height: 0,
+      shadowX: startX,
+      shadowY: startY,
+      vx: distance > EPSILON ? deltaX / FLIGHT_DURATION : 1,
       vy: deltaY / FLIGHT_DURATION,
       startX,
       startY,
@@ -819,11 +823,16 @@
           effect.shadowX = groundX;
           effect.shadowY = groundY;
           effect.x = groundX;
-          effect.y = groundY - height;
+          effect.y = groundY;
+          effect.height = height;
           if (effect.travelElapsed + EPSILON >= FLIGHT_DURATION) {
             effect.landed = true;
+            effect.contactLayer = "ground";
+            effect.height = 0;
             effect.x = effect.destX;
             effect.y = effect.destY;
+            effect.previousX = effect.x;
+            effect.previousY = effect.y;
             entityServices.spawnVisualEffect(createLandingDust(effect.destX, effect.destY, {
               kind: config.landingDustKind,
               color: config.landingDustColor

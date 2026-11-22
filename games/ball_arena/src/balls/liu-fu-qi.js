@@ -9,7 +9,7 @@
   root.BallBattle = Object.assign(root.BallBattle || {}, api);
 })(globalThis, function createLiuFuQiPlugin(dependencies) {
   "use strict";
-  const { resolveArenaGeometry, registerBall, firstSegmentCircleContact, createKnockbackEffect } = dependencies;
+  const { resolveArenaGeometry, registerBall, firstSegmentCircleContact, createKnockbackEffect, canShareContactLayer } = dependencies;
 
   const EPSILON = 1e-8;
   const WIDTH = 20;
@@ -207,6 +207,7 @@
     entity.contacts = touching;
 
     for (const projectile of game.combatEntities) {
+      if (!canShareContactLayer(entity, projectile)) continue;
       if (!live(projectile) || !projectile.isProjectile || projectile.indestructible === true ||
           !services.isEnemy(projectile) || !Number.isFinite(projectile.x) || !Number.isFinite(projectile.y)) continue;
       const radius = Number.isFinite(projectile.radius) ? projectile.radius : 3;

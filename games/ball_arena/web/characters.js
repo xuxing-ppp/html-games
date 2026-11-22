@@ -98,6 +98,15 @@ function glyph(c,id,x,y,r,color){
  c.restore();
 }
 function drawGlyph(ball,id,c){glyph(c,id,ball.x,ball.y,ball.radius,ball.color);}
+function drawCharge({ball,game},c,level,max){
+ if(game.state==='ready'||ball.hp<=0)return;
+ const text=level+'/'+max,y=ball.y+ball.radius*.62;
+ c.save();
+ c.font='600 6.5px sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
+ c.lineWidth=2;c.strokeStyle='#18191b';c.fillStyle=level===max?'#fff0a5':'#fff';
+ c.strokeText(text,ball.x,y);c.fillText(text,ball.x,y);
+ c.restore();
+}
 
 function createSpring(services){
  let stacks=0,wallHits=0,collisions=0,lastPulseAt=-Infinity;
@@ -132,7 +141,7 @@ function createSpring(services){
   },
   getArenaExtensionState(){return {stacks,wallHits,collisions};},
   drawBody,
-  drawAfter({ball},c){drawGlyph(ball,'arenaSpring',c);}
+  drawAfter(context,c){drawGlyph(context.ball,'arenaSpring',c);drawCharge(context,c,stacks,3);}
  };
 }
 
@@ -187,21 +196,30 @@ function createPainter(services){
 }
 
 function createCourier(services){
- const interval=2.5,MAX_BOX_COUNT=3,ORBIT_RADIUS=40,ORBIT_SPEED=1.8,BOX_LIFE=3.2,HIT_COOLDOWN=.8;
+ const interval=2.5,ORBIT_RADIUS=40,ORBIT_SPEED=1.8,BOX_LIFE=3.2,HIT_COOLDOWN=.8,BOX_HIT_RADIUS=15;
  let clock=0,orbitAngle=0,spawns=0,hits=0,pickups=0,boxes=[];
- function addBox(){if(boxes.length>=MAX_BOX_COUNT)boxes.shift();boxes.push({offset:boxes.length*TAU/3,age:0,cooldowns:new Map()});spawns++;}
+ function addBox(){
+  if(boxes.length>=MAX_BOXES)boxes.shift();
+  const slots=Array.from({length:MAX_BOXES},(_,i)=>i);
+  const slot=slots.find(i=>!boxes.some(box=>box.slot===i));
+  boxes.push({slot,age:0,cooldowns:new Map()});spawns++;
+ }
+ function boxPosition(ball,arena,box){
+  const angle=orbitAngle+box.slot*TAU/MAX_BOXES;
+  return arena.clampPoint(ball.x+Math.cos(angle)*ORBIT_RADIUS,ball.y+Math.sin(angle)*ORBIT_RADIUS,BOX_HIT_RADIUS);
+ }
  return {
   onSpawn(){clock=0;orbitAngle=0;spawns=0;hits=0;pickups=0;boxes=[];},
   update({ball,game},dt){
    clock+=dt;while(clock+EPSILON>=interval){clock-=interval;addBox();}
    orbitAngle+=ORBIT_SPEED*dt;
+   const arena=B.resolveArenaGeometry(game);
    for(const box of boxes){
     box.age+=dt;
-    const angle=orbitAngle+box.offset;
-    const boxX=ball.x+Math.cos(angle)*ORBIT_RADIUS,boxY=ball.y+Math.sin(angle)*ORBIT_RADIUS;
+    const {x,y}=boxPosition(ball,arena,box);
     services.forEachEnemy(enemy=>{
-     if(Math.hypot(enemy.x-boxX,enemy.y-boxY)>15+enemy.radius)return;
-     if((box.cooldowns.get(enemy.instanceId)||-Infinity)+HIT_COOLDOWN>game.time)return;
+     if(Math.hypot(enemy.x-x,enemy.y-y)>BOX_HIT_RADIUS+enemy.radius)return;
+     if((box.cooldowns.get(enemy.instanceId)??-Infinity)+HIT_COOLDOWN>game.time)return;
      box.cooldowns.set(enemy.instanceId,game.time);
      if(services.dealDamage(enemy,7)){hits++;applySlow(services,ball,enemy,1.2,.65,'courier');}
     });
@@ -210,8 +228,9 @@ function createCourier(services){
    for(const box of boxes){
     if(box.age<BOX_LIFE){kept.push(box);continue;}
     if(ball.hp>0){
+     const before=ball.hp;
      ball.hp=Math.min(ball.maxHp,ball.hp+1);
-     services.spawnHitText(ball,'+1',{color:'#8fefb4'});
+     if(ball.hp>before)services.spawnHitText(ball,'+'+Number((ball.hp-before).toFixed(2)),{color:'#8fefb4'});
      services.applyEffect(ball,{id:effectId(ball,'courier-haste'),duration:2,speedFactor:1.25,visualType:'haste'});
      services.forEachEnemy(enemy=>{if(Math.hypot(enemy.x-ball.x,enemy.y-ball.y)<=35+enemy.radius){if(services.dealDamage(enemy,5)){hits++;applySlow(services,ball,enemy,1,.65,'courier');}}});
      pickups++;
@@ -222,12 +241,19 @@ function createCourier(services){
   },
   onBeforeDamage(context,event){if(event&&event.amount>0&&boxes.length>0)event.amount*=1-Math.min(.24,boxes.length*.08);return event;},
   getNextTransitionIn(){return Math.max(.001,Math.min(interval-clock,.25));},
-  getArenaExtensionState(){return {clock,spawns,hits,pickups,boxes:boxes.length};},
+  getArenaExtensionState(){return {clock,spawns,hits,pickups,boxes:boxes.length,slots:boxes.map(box=>box.slot)};},
   drawBody,
-  drawAfter({ball},c){
+  drawAfter({ball,game},c){
    drawGlyph(ball,'arenaCourier',c);
-   c.save();c.globalAlpha*=.32;c.setLineDash([3,4]);c.strokeStyle=ball.color;c.lineWidth=1;c.beginPath();c.arc(ball.x,ball.y,ORBIT_RADIUS,0,TAU);c.stroke();c.setLineDash([]);
-   for(const box of boxes){const angle=orbitAngle+box.offset,x=ball.x+Math.cos(angle)*ORBIT_RADIUS,y=ball.y+Math.sin(angle)*ORBIT_RADIUS;c.globalAlpha*=.9;c.fillStyle='#9a6a3d';c.strokeStyle='#f9dfb3';c.lineWidth=1;c.fillRect(x-8,y-8,16,16);c.strokeRect(x-8,y-8,16,16);c.strokeStyle='#e0bdff';c.beginPath();c.moveTo(x-5,y);c.lineTo(x+5,y);c.moveTo(x,y-5);c.lineTo(x,y+5);c.stroke();}
+   if(!boxes.length)return;
+   const arena=B.resolveArenaGeometry(game);
+   c.save();c.lineWidth=1;
+   for(const box of boxes){
+    const {x,y}=boxPosition(ball,arena,box);
+    c.strokeStyle='rgba(249,223,179,.38)';c.beginPath();c.arc(x,y,BOX_HIT_RADIUS,0,TAU);c.stroke();
+    c.fillStyle='#9a6a3d';c.strokeStyle='#f9dfb3';c.fillRect(x-8,y-8,16,16);c.strokeRect(x-8,y-8,16,16);
+    c.beginPath();c.moveTo(x-5,y);c.lineTo(x+5,y);c.moveTo(x,y-5);c.lineTo(x,y+5);c.stroke();
+   }
    c.restore();
   }
  };
@@ -362,7 +388,7 @@ function createBattery(services){
   getNextTransitionIn(){return .25;},
   getArenaExtensionState(){return {charge,discharges,hits,wallHits};},
   drawBody,
-  drawAfter({ball},c){drawGlyph(ball,'arenaBattery',c);}
+  drawAfter(context,c){drawGlyph(context.ball,'arenaBattery',c);drawCharge(context,c,charge,4);}
  };
 }
 

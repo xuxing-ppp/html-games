@@ -315,6 +315,8 @@
     const matrix = typeof context.getTransform === "function" ? context.getTransform() : null;
     const scale = matrix && matrix.a;
     const canDrawGpu = typeof document !== "undefined" && Number.isFinite(scale) && scale > 0 &&
+      // A zoomed camera only needs the visible portion of the silk strands.
+      game.arenaSize * scale <= context.canvas.width + 1 &&
       matrix.b === 0 && matrix.c === 0 && matrix.d === scale &&
       context.globalCompositeOperation === "source-over" && context.filter === "none" && context.shadowBlur === 0 &&
       entities.every(entity => entity.owner && /^#[0-9a-f]{6}$/i.test(entity.color || "#ffffff"));

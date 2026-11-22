@@ -9,7 +9,7 @@
   }
 
   root.BallBattle = Object.assign(root.BallBattle || {}, api);
-})(globalThis, function createShieldToolPlugin({ resolveArenaGeometry, registerBall, createKnockbackEffect: createSharedKnockback, firstSegmentCircleContact }) {
+})(globalThis, function createShieldToolPlugin({ resolveArenaGeometry, registerBall, createKnockbackEffect: createSharedKnockback, firstSegmentCircleContact, canShareContactLayer }) {
   const DEFENSE_DURATION = 1.5;
   const ATTACK_DURATION = 10.5;
   const SHIELD_SPEED = 350;
@@ -481,6 +481,7 @@
   function absorbProjectiles(shield, game, entityServices) {
     for (const entity of game.combatEntities) {
       if (!entity || !entity.isProjectile) continue;
+      if (!canShareContactLayer(shield, entity)) continue;
       if (!entity.entityActive || entity.life <= 0) continue;
       if (entity.teamId === shield.teamId) continue;
       // Bullets without a world position or radius (e.g. Gojo's red, Kuroko's

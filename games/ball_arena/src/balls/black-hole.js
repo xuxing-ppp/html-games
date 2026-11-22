@@ -136,6 +136,10 @@
         ball.vx = 0;
         ball.vy = 0;
       },
+      onTransfer({ ball, effect }) {
+        if (effect.anchor?.holdEffect !== effect) return;
+        effect.anchor.victim = ball;
+      },
       update({ ball, effect, game }) {
         if (game.time < effect.expiresAt) {
           ball.vx = 0;
@@ -143,6 +147,12 @@
         }
       },
       onExpire({ ball, effect, game, services: effectServices }) {
+        const anchor = effect.anchor;
+        if (anchor?.holdEffect === effect) {
+          anchor.victim = null;
+          anchor.holdEffect = null;
+        }
+        effect.anchor = null;
         ball.vx = effect.savedVx;
         ball.vy = effect.savedVy;
         ball.storedVx = effect.savedVx;
@@ -258,9 +268,15 @@
           holeServices.spawnVisualEffect(createHoleCollapseEffect(effect.x, effect.y));
         }
 
+        const held = effect.victim;
+        if (held && (held.hp <= 0 || held.effects?.get("black-hole-hold") !== effect.holdEffect)) {
+          effect.victim = null;
+          effect.holdEffect = null;
+        }
+
         // 吸入：只有踏进捕获半径的目标才会被吸住
         holeServices.forEachEnemy((target) => {
-          if (target.hp <= 0 || effect.victim) return;
+          if (target.hp <= 0 || effect.victim || target.effects?.has("black-hole-hold")) return;
           const dx = effect.x - target.x;
           const dy = effect.y - target.y;
           const distance = Math.hypot(dx, dy);
@@ -272,6 +288,7 @@
           if (!holdEffect) return;
           effect.victim = target;
           effect.holdEffect = holdEffect;
+          holdEffect.anchor = effect;
           holdEffect.holeX = effect.x;
           holdEffect.holeY = effect.y;
           holdEffect.capturedAt = game.time;

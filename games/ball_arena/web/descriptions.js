@@ -156,5 +156,6 @@ const entries={
  "arenaBattery":{summary:"受伤或撞墙蓄电，最多4层；接触敌人放电，造成2+2×电量伤害并击退；满4层后2.5秒自动放电，额外对55范围内其他敌人5点伤害并眩晕0.3秒。",detail:"受伤或撞墙都会蓄1层电，最多4层，撞墙蓄电有1.2秒间隔。接触敌人时放电，造成2+2×电量的伤害并击退，随后电量清零。满4层后若2.5秒内没碰到敌人，会自动向最近的敌人放电，并额外对55范围内的其他敌人造成5点伤害、眩晕0.3秒。"}
 };
 
+for(const role of root.ArenaRosterExpansion||[])entries[role.id]={summary:role.description,detail:role.description};
 root.ArenaDescriptions=entries;
 })(globalThis);

@@ -252,6 +252,10 @@
           lastHeadContactAt.set(targetKey(target), services.getTime());
           registerContact(context, target, !context.blockedAtContact);
         },
+        onCollisionWhileControlled(context, target) {
+          lastHeadContactAt.set(targetKey(target), services.getTime());
+          registerContact(context, target, false);
+        },
         afterUpdateStep(context, dt) {
           updateTail(context, dt, true);
         },

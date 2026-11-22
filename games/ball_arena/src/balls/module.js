@@ -217,6 +217,7 @@
         return angularDistance(Math.atan2(dy,dx),state.angle+ANGLES[1])<=Math.PI/4
           ?{amount:0,cancelAttack:true,showHitText:false}:event;
       },
+      onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
       onDamaged(context){bind(context);if(context.ball.hp<=0&&state.parts.length>1)split(context);},
       onWallBounce({ball,game}){
         if(!state.parts.includes(3)||!services.getCapabilities(ball).canAct)return;

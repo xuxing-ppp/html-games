@@ -406,6 +406,9 @@
         afterUpdateStepWhilePaused(context) {
           resolveTransitions(context);
         },
+        onContactUpdateWhileControlled(context, target) {
+          return this.onContactUpdate({ ...context, blockedAtContact: true }, target);
+        },
         onContactUpdate(context, target) {
           if (!transformed) return;
           const key = targetKey(target);

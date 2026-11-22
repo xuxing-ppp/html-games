@@ -50,6 +50,7 @@
             const low = axis === "x" ? arena.left : arena.top, high = axis === "x" ? arena.right : arena.bottom;
             return entering || (positive ? p > high-r-1 : p < low+r+1) ? "wrap" : "bounce";
           },
+          onArenaWrapWhileControlled(...args) { return this.onArenaWrap(...args); },
           onArenaWrap({ ball, game, wrappedX, wrappedY }) {
             const crossedAxis = entryNormal ? wrappedX || wrappedY : axis === "x" ? wrappedX : wrappedY;
             const velocity = entryNormal ? ball.vx * entryNormal.x + ball.vy * entryNormal.y : axis === "x" ? ball.vx : ball.vy;
@@ -122,6 +123,7 @@
           return Math.max(EPS, Math.min(untilWave, wave && wave.sent < wave.count ? wave.sent*3/wave.count-wave.elapsed : Infinity));
         },
         onCollision({ services: contact }, target) { contact.dealDamage(target, 5); },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context) { feedback(context); },
         drawBody() { return true; },
         onBorrowEnd() { wave = null; },

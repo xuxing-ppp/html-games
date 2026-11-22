@@ -470,6 +470,7 @@
           ) return;
           beginBoring(context, target);
         },
+        onWallBounceWhileControlled(...args) { return this.onWallBounce(...args); },
         onWallBounce() {
           if (phase === "dash") dashWallHit = true;
           else if (phase === "boring") boringWallHit = true;

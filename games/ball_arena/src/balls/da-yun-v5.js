@@ -282,6 +282,7 @@
           }
           return reduced;
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context) {
           ownerBall = context.ball;
           const ball = context.ball;

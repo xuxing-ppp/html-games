@@ -275,6 +275,7 @@
             breakAttachedShard(context.ball);
             return false;
           },
+          onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
           onDamaged(context) {
             services.spawnVisualEffect(createShatterEffect(
               context.ball.x,

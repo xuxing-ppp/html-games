@@ -509,10 +509,30 @@
       this.configuredArenaSize = this.engine.arenaSize;
     }
 
-    draw() {
+    draw(viewport = null) {
       if (this.configuredArenaSize !== this.engine.arenaSize) {
         this.configureCanvas();
       }
+      if (!viewport || this.gpu) {
+        this.drawScene();
+        return;
+      }
+
+      const { context, sourceScale, renderScale } = this;
+      const scale = this.sourceCanvas.width / viewport.size;
+      context.save();
+      this.sourceScale = this.renderScale = scale;
+      context.setTransform(scale, 0, 0, scale, -viewport.x * scale, -viewport.y * scale);
+      try {
+        this.drawScene(true);
+      } finally {
+        context.restore();
+        this.sourceScale = sourceScale;
+        this.renderScale = renderScale;
+      }
+    }
+
+    drawScene(showSquareBoundary = false) {
       const { context } = this;
       const shakeOffset = this.readArenaShakeOffset();
       if (this.gpuBatch) this.gpuBatch.reset();
@@ -604,7 +624,7 @@
         if (canTranslate) context.restore();
         if (customOutline) context.restore();
       }
-      if (customOutline) this.drawArenaOutline(context);
+      if (customOutline || showSquareBoundary) this.drawArenaOutline(context);
       this.presentGpuFrame();
       this.presentGpuPrimitives();
       this.presentGpuForegroundBalls(balls, shakeOffset);
@@ -612,7 +632,7 @@
 
     drawArenaOutline(context) {
       const arena = this.engine.arena;
-      if (!arena || arena.shape === "square") return;
+      if (!arena) return;
       context.save();
       context.strokeStyle = "#ffffff";
       context.lineWidth = 2 / this.sourceScale;

@@ -2,11 +2,13 @@
 'use strict';
 const B=globalThis.BallBattle,M=globalThis.ArenaModel,$=id=>document.getElementById(id);
 const registry=B.ballRegistry,roles=registry.list(),storageKey='ball-arena-settings-v1',reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const teamColors={left:'#ed796b',right:'#78b5e7'};
 const clarified=globalThis.ArenaDescriptions||{};
 let saved;try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
 let state=M.sanitize(saved,registry),editing={side:state.mode==='brawl'?'brawl':'left',index:0},session=null,engine=null,renderer=null,mechanisms=null,series=null,matchState=null,paused=false,speed=state.speed,replaying=false,settled=false,roundSeed=0,rosterScroll=0,detailId=null,accumulator=0,lastFrame=0,lastHud=0;
 let skillsAutoResume=false,lineupAutoResume=false,matchTimeLimit=M.timeLimit(state),roundTimedOut=false;
 let soundOn=state.soundOn,toastTimer,previewObserver,battleContext=null,homeDemo=null,previousDemoIds=[];
+let mapPanel={settings:state,mode:state.mode,locked:false},camera=null,cameraMinimum=0;
 try{const ids=JSON.parse(sessionStorage.getItem('ball-arena-home-demo-v1'));if(Array.isArray(ids)&&ids.length===2&&ids.every(id=>typeof id==='string'))previousDemoIds=ids;}catch{}
 const audio=new B.BattleAudio({voiceLimit:24}),previewCache=new Map();let previewEngine,previewRenderer;
 const filters=[['all','全部'],['normal','普通'],['zako','杂鱼'],['elite','精英'],['outOfSpec','规格外'],['boss','Boss'],['original','原创'],['favorites','收藏']];
@@ -53,7 +55,7 @@ function drawHomeDemo(dt){
   $('home-demo-label').innerHTML=esc(left.name)+' <span>VS</span> '+esc(right.name)+' · 演示';
   $('home-arena').setAttribute('aria-label',left.name+'与'+right.name+'对战演示');$('home-arena').dataset.leftId=left.id;$('home-arena').dataset.rightId=right.id;
   const demo=B.createDeterministicSession({registry,seed,setup:e=>{e.createGame(left.id,right.id);e.beginFight();}});
-  homeDemo={session:demo,visibleSeconds:0,renderer:new B.CanvasRenderer($('home-arena'),demo.engine,{enableGpu:false,targetPixelSize:640,teamColors:{left:'#ed796b',right:'#78b5e7'}})};
+  homeDemo={session:demo,visibleSeconds:0,renderer:new B.CanvasRenderer($('home-arena'),demo.engine,{enableGpu:false,targetPixelSize:640,teamColors:state.teamRings?teamColors:null})};
   homeDemo.renderer.readArenaShakeOffset=()=>({x:0,y:0});for(let i=0;i<180&&demo.engine.game.state==='running';i++)demo.advance(1/60);
  }
  homeDemo.visibleSeconds+=Math.min(.1,dt);
@@ -123,25 +125,82 @@ function renderSettings(tournament=false,run=null,battleMode=null){
  for(const k of ['pads','supplies','laser']){$('hazard-'+k).checked=settings.hazards[k];$('hazard-'+k).disabled=locked;}
  $('seed-label').textContent=tournament?'抽签种子':'对局种子';$('seed').value=run?String(run.drawSeed):state.seedText;$('seed').disabled=locked;
  $('random-setting').hidden=tournament;$('random-expanded').checked=state.expanded;$('settings-lock').hidden=!locked;
+ mapPanel={settings,mode:tournament?'team':state.mode,locked};
+ renderMapSettings();
+}
+const formatDimension=new Intl.NumberFormat('zh-CN',{maximumFractionDigits:1});
+function renderMapPreview(){
+ const {width,height}=M.mapDimensions({...mapPanel.settings,mode:mapPanel.mode},B);
+ const dimensions=formatDimension.format(width)+' × '+formatDimension.format(height);
+ const preset=$('map-preset');
+ $('map-setting-summary').textContent=preset.selectedOptions[0].textContent+' · '+dimensions;
+ $('map-dimensions').textContent=dimensions;
+ $('map-area').textContent='面积 '+formatDimension.format(width*height);
+ const canvas=$('map-preview'),c=canvas.getContext('2d');
+ const scale=Math.min((canvas.width-36)/width,(canvas.height-36)/height);
+ const w=width*scale,h=height*scale,x=(canvas.width-w)/2,y=(canvas.height-h)/2;
+ c.clearRect(0,0,canvas.width,canvas.height);
+ c.fillStyle='#232220';c.fillRect(x,y,w,h);
+ c.strokeStyle='#37342e';c.lineWidth=1;c.beginPath();
+ const grid=Math.max(14,20*scale);
+ for(let offset=grid;offset<w;offset+=grid){c.moveTo(x+offset,y);c.lineTo(x+offset,y+h);}
+ for(let offset=grid;offset<h;offset+=grid){c.moveTo(x,y+offset);c.lineTo(x+w,y+offset);}
+ c.stroke();
+ c.strokeStyle='#edbd66';c.lineWidth=2;c.strokeRect(x,y,w,h);
+}
+function renderMapSettings(){
+ const map=mapPanel.settings.map;
+ const custom=map.preset==='custom';
+ $('map-preset').value=map.preset;
+ $('map-ratio').value=$('map-ratio-slider').value=map.ratio;
+ $('map-width').value=map.width;$('map-height').value=map.height;
+ $('map-ratio-fields').hidden=custom;$('map-custom-fields').hidden=!custom;
+ for(const id of ['map-preset','map-ratio','map-ratio-slider','map-width','map-height'])$(id).disabled=mapPanel.locked;
+ $('map-invalid').hidden=true;
+ renderMapPreview();
+}
+function editMap(event){
+ if(mapPanel.locked)return;
+ const input=event.target;
+ if(input.id==='map-preset'){
+  state.map.preset=input.value;save();renderMapSettings();return;
+ }
+ const field=input.id==='map-ratio-slider'?'ratio':input.id.replace('map-','');
+ const invalid=$('map-invalid');
+ if(!input.validity.valid){
+  invalid.textContent=field==='ratio'?'宽高比例须在 0.5–2 之间。':'宽和高须为 100–900 的整数。';
+  invalid.hidden=false;return;
+ }
+ const value=input.valueAsNumber;
+ if(field==='ratio')$(input.id==='map-ratio'?'map-ratio-slider':'map-ratio').value=value;
+ state.map[field]=value;
+ const custom=state.map.preset==='custom';
+ const fields=custom?['map-width','map-height']:['map-ratio'];
+ invalid.hidden=fields.every(id=>$(id).validity.valid);
+ save();renderMapPreview();
 }
 function commitSettings(){
  if(!$('retain-dead-skills').disabled)state.retainDeadSkills=$('retain-dead-skills').checked;
  if(!$('physics').disabled)state.physics=$('physics').value;for(const k of ['pads','supplies','laser'])state.hazards[k]=$('hazard-'+k).checked;state.expanded=$('random-expanded').checked;
  const value=$('seed').value.trim();if(value!==''&&(!/^\d{1,10}$/.test(value)||Number(value)>4294967295)){toast('种子须为 0–4294967295 的整数，已改为随机。');state.seedText='';$('seed').value='';}else state.seedText=value;
- save();
+ save();renderMapPreview();
 }
 function seedValue(){return state.seedText===''?newSeed():Number(state.seedText)>>>0;}
 function newSeed(){return crypto.getRandomValues(new Uint32Array(1))[0];}
 function teardown(){
  session?.dispose();mechanisms?.dispose();
  if(engine?.game){for(const ball of engine.game.balls)engine.invokeHook(ball,'onBattleDispose');engine.entitySystem.reset();engine.visualEffectSystem.reset();engine.activeModeController()?.dispose();}
- session=null;mechanisms=null;engine=null;renderer=null;accumulator=0;replaying=false;
+ session=null;mechanisms=null;engine=null;renderer=null;camera=null;accumulator=0;replaying=false;
 }
 function dropReplaySession(){if(!session||!replaying)return false;teardown();battleContext=null;settled=false;paused=false;lastFrame=0;return true;}
 function unlockAudio(){try{const ctx=audio.ensureContext();ctx?.resume().catch(()=>{});if(audio.master)audio.master.gain.value=.8;return true;}catch{return false;}}
 function startMatch(){
  if(soundOn)unlockAudio();
  const error=M.validate(state,registry);if(error){toast(error);return;}
+ const config=M.configFor(state,B);
+ if(config.arena){
+  try{B.normalizeBattleConfig(config,registry);}catch{toast('地图放不下当前阵容，请增大地图。');return;}
+ }
  battleContext=null;rosterScroll=$('roster').scrollTop;matchState=M.clone(state);series=new M.Series(state.mode==='brawl'?1:state.series);startRound(seedValue(),false);
 }
 function startRound(seed,replay=false){
@@ -153,7 +212,10 @@ function startRound(seed,replay=false){
   session=B.createDeterministicSession({engine,seed:roundSeed,setup:e=>{e.createBattle(M.configFor(settings,B));M.installWheelSkillCleanup(e,settings);mechanisms=new ArenaMechanisms(e,settings.hazards);e.beginFight();}});
   const update=engine.update.bind(engine);
   engine.update=dt=>{if(engine.game.state!=='running')return;const t=engine.game.time;update(dt);if(engine.game.state==='running')mechanisms.update(Math.max(0,engine.game.time-t));};
-  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,teamColors:{left:'#ed796b',right:'#78b5e7'}});
+  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,teamColors:state.teamRings?teamColors:null});
+  cameraMinimum=M.standardMapSide(settings,B);
+  $('arena-wrap').classList.toggle('has-world-boundary',engine.arena.shape!=='square'||engine.arena.size>cameraMinimum);
+  $('team-rings').hidden=settings.mode==='brawl';renderTeamRings();
   if(reduced.matches)renderer.readArenaShakeOffset=()=>({x:0,y:0});
   showScreen('battle');$('pause-indicator').hidden=true;$('pause').textContent='暂停';$('pause').disabled=false;$('step').disabled=true;
   resizeArena();renderHud();drawBattle();
@@ -163,9 +225,24 @@ function startRound(seed,replay=false){
 function resizeArena(){
  if($('battle').hidden)return;const stage=$('stage'),size=Math.max(40,Math.min(stage.clientHeight,stage.clientWidth,700));$('arena-wrap').style.width=size+'px';$('arena-wrap').style.height=size+'px';
  if(renderer){const target=Math.min(1600,Math.round(size*Math.min(devicePixelRatio||1,2)));if(Math.abs(renderer.targetPixelSize-target)>8){renderer.targetPixelSize=target;renderer.configureCanvas();}}
- const overlay=$('hazards');overlay.width=Math.round(size*Math.min(devicePixelRatio||1,2));overlay.height=overlay.width;
+ const overlay=$('hazards'),pixels=Math.round(size*Math.min(devicePixelRatio||1,2));
+ if(overlay.width!==pixels||overlay.height!==pixels)overlay.width=overlay.height=pixels;
 }
-function drawBattle(){if(!renderer||!engine?.game)return;renderer.draw();const c=$('hazards').getContext('2d'),scale=$('hazards').width/engine.arenaSize;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,c.canvas.width,c.canvas.height);c.setTransform(scale,0,0,scale,0,0);mechanisms.draw(c);}
+function drawBattle(dt=0){
+ if(!renderer||!engine?.game)return;
+ const arena=engine.arena;
+ if(arena.size>cameraMinimum){
+  const fighters=engine.game.teams.flatMap(team=>team.balls).filter(ball=>
+   ball.hp>0&&engine.isBallActive(ball)&&renderer.isRenderableBall(ball));
+  camera=M.cameraFrame(arena,fighters,cameraMinimum,reduced.matches&&fighters.length?null:camera,dt);
+ }
+ renderer.draw(camera);
+ const c=$('hazards').getContext('2d'),scale=c.canvas.width/(camera?.size??arena.size);
+ c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,c.canvas.width,c.canvas.height);
+ c.setTransform(scale,0,0,scale,-(camera?.x??0)*scale,-(camera?.y??0)*scale);
+ const shake=renderer.readArenaShakeOffset();
+ c.save();arena.tracePath(c);c.clip();c.translate(shake.x,shake.y);mechanisms.draw(c);c.restore();
+}
 function renderHud(){
  if(!engine)return;
  const g=engine.game,s=matchState;
@@ -265,7 +342,7 @@ function frame(time){
  try{
   if(!$('home').hidden)drawHomeDemo(lastFrame?Math.min(.1,(time-lastFrame)/1000):0);
   if(session&&!$('battle').hidden){const dt=lastFrame?Math.min(.1,(time-lastFrame)/1000):0;if(!paused&&!settled){accumulator+=dt*speed;const steps=Math.floor((accumulator+1e-9)*60);accumulator-=steps/60;advanceSteps(steps);}
-   drawBattle();if(time-lastHud>100){renderHud();lastHud=time;}
+   drawBattle(dt);if(time-lastHud>100){renderHud();lastHud=time;}
   }
  }catch(error){console.error(error);pause(true);toast('对战遇到问题，已暂停。可返回选人后重试。');}
  lastFrame=time;requestAnimationFrame(frame);
@@ -291,6 +368,9 @@ $('detail-favorite').onclick=()=>favorite(detailId);$('detail-pick').onclick=()=
 $('help').onclick=()=>openDialog('help-dialog');
 for(const d of document.querySelectorAll('dialog')){d.addEventListener('click',e=>{if(e.target.closest('[data-close]'))d.close();if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}});}
 $('match-settings').addEventListener('change',commitSettings);
+$('map-settings').onclick=()=>{renderMapSettings();openDialog('map-dialog');};
+$('map-preset').addEventListener('change',editMap);
+for(const id of ['map-ratio','map-ratio-slider','map-width','map-height'])$(id).addEventListener('input',editMap);
 $('start').onclick=startMatch;$('pause').onclick=()=>pause();$('skills').onclick=openSkills;$('step').onclick=()=>{if(paused&&!settled){advanceSteps(1);drawBattle();renderHud();}};
 $('speeds').onclick=e=>{const b=e.target.closest('[data-speed]');if(!b)return;speed=Number(b.dataset.speed);state.speed=speed;save();for(const el of $('speeds').children){el.classList.toggle('active',el===b);el.setAttribute('aria-pressed',String(el===b));}};
 $('scoreboard').onclick=event=>{const button=event.target.closest('[data-team-roster]');if(!button||!engine)return;lineupAutoResume=!paused&&!settled;const i=Number(button.dataset.teamRoster),all=engine.game.teams.map(t=>t.balls),balls=matchState.mode==='brawl'?(i===0?all[0].slice(0,Math.ceil(all[0].length/2)):all[0].slice(Math.ceil(all[0].length/2))):all[i];$('lineup-detail-title').textContent=matchState.mode==='brawl'?'混战选手':(i===0?'红方':'蓝方')+'阵容';$('lineup-detail-body').innerHTML=visibleTeam(balls,i).map(skillRow).join('')||'<p>无上场角色</p>';openDialog('lineup-detail');};
@@ -301,13 +381,20 @@ $('replay-result').onclick=()=>startRound(roundSeed,true);$('rematch').onclick=(
 $('next-round').onclick=()=>{if(battleContext){if(replaying)return;battleContext.onNext();return;}if(series.next())startRound(newSeed(),false);};
 $('battle-note').onclick=()=>{if(settled)openDialog('result');};
 function renderSound(){ $('sound').textContent=soundOn?'声音开':'声音关';$('sound').setAttribute('aria-pressed',String(soundOn));}
+function renderTeamRings(){$('team-rings').setAttribute('aria-pressed',String(state.teamRings));}
+$('team-rings').onclick=()=>{
+ state.teamRings=!state.teamRings;
+ if(renderer)renderer.teamColors=state.teamRings?teamColors:null;
+ if(homeDemo)homeDemo.renderer.teamColors=state.teamRings?teamColors:null;
+ renderTeamRings();save();drawBattle();
+};
 $('sound').onclick=()=>{soundOn=!soundOn;if(soundOn&&!unlockAudio()){soundOn=false;toast('此浏览器暂不支持声音。');}if(!soundOn&&audio.master)audio.master.gain.value=0;state.soundOn=soundOn;renderSound();save();};
 document.addEventListener('pointerdown',()=>{if(soundOn)unlockAudio();},{passive:true});
 document.addEventListener('keydown',()=>{if(soundOn)unlockAudio();});
 renderSound();for(const button of $('speeds').children){const active=Number(button.dataset.speed)===speed;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
 
 function focusPause(){if(session&&!paused&&!settled)pause(true);}window.addEventListener('blur',focusPause);document.addEventListener('visibilitychange',()=>{if(document.hidden)focusPause();});
-window.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Space'&&session&&!settled){e.preventDefault();pause();}if(e.key==='Escape'&&session&&!settled){e.preventDefault();pause(true);}});
+window.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'))return;if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.code==='Space'&&session&&!settled&&e.target.id!=='team-rings'){e.preventDefault();pause();}if(e.key==='Escape'&&session&&!settled){e.preventDefault();pause(true);}});
 new ResizeObserver(resizeArena).observe($('stage'));window.addEventListener('resize',resizeArena);
 new ResizeObserver(()=>{const art=document.querySelector('.home-art');if($('home').hidden||!art.clientWidth)return;const size=Math.max(32,Math.min(art.clientWidth-12,art.clientHeight-48,600)),wrap=document.querySelector('.home-arena');wrap.style.width=size+'px';wrap.style.height=size+'px';wrap.style.maxHeight='none';}).observe(document.querySelector('.home-art'));
 $('home-back').onclick=goHome;$('home-free').onclick=enterFree;$('home-continue-free').onclick=()=>{showScreen('battle');pause(false);};

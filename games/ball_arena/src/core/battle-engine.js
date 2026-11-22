@@ -56,6 +56,7 @@
     SpeedModifierSystem,
     DamageResolver,
     normalizeDamageSource,
+    canShareContactLayer,
     createContactEvent,
     firstSegmentCircleContact,
     EntitySystem,
@@ -73,6 +74,11 @@
     createZombieHellModeController,
     createCompetitiveModeController
   } = dependencies;
+
+  const CONTROLLED_REACTIONS = new Set([
+    "onDamaged", "onCollision", "onContactUpdate", "onEntityCollision",
+    "onWallBounce", "onArenaWrap", "onEnemyProjectileSpawned"
+  ]);
 
   const HIT_EFFECT_LIFE = 0.7;
   // Bounce-mode hits give the victim a tiny, fixed positional nudge. This is
@@ -384,23 +390,7 @@
           this.reportCombatInteraction("block", source.actor, target, source.teamId)
         ) : null,
         getContactProfile: (target) => this.getContactProfile(target),
-        beforeDamage: (target, event) => (
-          this.isAbilitySealed(target) ? null : this.invokeHook(
-            target,
-            "onBeforeDamage",
-            {
-              combatSource: event.combatSource,
-              actor: event.actor,
-              owner: event.owner,
-              credit: event.credit,
-              entity: event.entity,
-              kind: event.kind,
-              amount: event.amount,
-              options: event.options
-            },
-            event
-          )
-        ),
+        beforeDamage: (target, event) => this.resolveDamageDefense(target, event),
         afterDamage: (target, event) => {
           this.playSound("hit", event.credit || event.owner || event.actor, {
             target,
@@ -512,7 +502,7 @@
     initializeBattle(config, legacyArenaSize) {
       // Validate geometry/capacity before disposing the currently loaded battle.
       const normalized = normalizeBattleConfig(config, this.registry);
-      const nvnSpawns = normalized.mode === "nvn" ? spawnPointsForBattle(normalized,
+      const battleSpawns = normalized.mode === "nvn" || normalized.arena ? spawnPointsForBattle(normalized,
         normalized.teams.map(team => team.ballTypeIds.map(id => this.registry.get(id).stats.radius))) : null;
       this.pendingTransformations.clear();
       if (this.game) {
@@ -549,7 +539,7 @@
         ));
         const opposingRadii = normalized.teams[teamIndex === 0 ? 1 : 0].ballTypeIds
           .map((typeId) => this.registry.get(typeId).stats.radius);
-        const spawnPoints = nvnSpawns ? nvnSpawns[teamIndex] : spawnPointsForTeam(
+        const spawnPoints = battleSpawns ? battleSpawns[teamIndex] : spawnPointsForTeam(
           normalized,
           teamIndex,
           radii,
@@ -2076,7 +2066,8 @@
       const sourceKind = source && source.actor ? source.kind : null;
       const targetabilityRequired = !["dot", "environment", "self"].includes(sourceKind);
       return Boolean(
-        actor && target && this.isCombatSourceActive(actor) && this.isBallActive(target) && (
+        actor && target && this.isCombatSourceActive(actor) && this.isBallActive(target) &&
+        (sourceKind !== "projectile" || canShareContactLayer(actor, target)) && (
           !forcedTargetInstanceId ||
           forcedTargetInstanceId === target.instanceId
         ) &&
@@ -2096,7 +2087,7 @@
       const forcedId = policy && policy.forcedTargetInstanceId
         ? policy.forcedTargetInstanceId : source && !source.actor && source.forcedTargetInstanceId;
       if (!actor || !target || !this.isCombatSourceActive(actor) || !this.isBallActive(target) ||
-          (forcedId && forcedId !== target.instanceId)) return false;
+          (forcedId && forcedId !== target.instanceId) || !canShareContactLayer(actor, target)) return false;
       const profile = this.getContactProfile(target);
       return profile.solid || profile.attackable;
     }
@@ -2123,6 +2114,7 @@
         first = enemy;
         firstProgress = candidateProgress;
       }, (enemy) => {
+        if (!canShareContactLayer(owner.actor || owner, enemy)) return false;
         candidateProgress = firstSegmentCircleContact(
           startX, startY, endX, endY, enemy.x, enemy.y, enemy.radius + radius
         );
@@ -2134,8 +2126,32 @@
       return first;
     }
 
+    resolveDamageDefense(target, event) {
+      const details = { ...event };
+      let result = this.isAbilitySealed(target) ? event :
+        this.invokeHook(target, "onBeforeDamage", details, event) || event;
+      if (result.cancelAttack) return result;
+      for (const effect of target.effects?.values() || []) {
+        if (effect.expiresAt <= this.game.time || typeof effect.beforeDamage !== "function") continue;
+        result = this.invokeEffectHook(target, effect, "beforeDamage", details, result) || result;
+        if (result.cancelAttack) break;
+      }
+      return result;
+    }
+
+    canInitiateReaction(ball) {
+      const caps = this.getCapabilities(ball);
+      return caps.canAct && caps.canBodyAttack && caps.canDealDamage;
+    }
+
+    reactionHook(ball, hook, details = null) {
+      if (!CONTROLLED_REACTIONS.has(hook)) return hook;
+      const blocked = details?.blockedAtContact ?? !this.canInitiateReaction(ball);
+      return blocked ? hook + "WhileControlled" : hook;
+    }
+
     invokeHook(ball, hook, details = null, firstArg, secondArg) {
-      const callback = ball && ball.behavior && ball.behavior[hook];
+      const callback = ball?.behavior?.[this.reactionHook(ball, hook, details)];
       if (typeof callback !== "function") return undefined;
 
       try {
@@ -2532,7 +2548,8 @@
       if (contacts.has(target)) return false;
       contacts.add(target);
       if (!this.getContactProfile(target).solid || this.isAbilitySealed(target) ||
-          this.isTimeFrozen(target) || this.isAttackBlocked(target)) return false;
+          this.isTimeFrozen(target) ||
+          typeof target.behavior?.[this.reactionHook(target, "onEntityCollision")] !== "function") return false;
       this.invokeHook(target, "onEntityCollision", { entity, source });
       return true;
     }
@@ -2787,7 +2804,7 @@
           speed
         });
       }, (target) => (
-        typeof (target.behavior && target.behavior.onEnemyProjectileSpawned) === "function" &&
+        typeof target.behavior?.[this.reactionHook(target, "onEnemyProjectileSpawned")] === "function" &&
         this.canAcquireTarget(projectile.combatSource, target)
       ));
       return projectile;
@@ -3207,6 +3224,7 @@
         if (previousPairs.has(frozenKey)) activeKeys.add(frozenKey);
         return;
       }
+      if (!canShareContactLayer(a, b)) return;
       const enemies = this.areEnemies(a, b);
       // 召唤物不与自己的召唤者、也不与同源召唤物发生实体碰撞
       // （例如雪人的主体不会推挤自己生成的各座小雪人）
@@ -3223,13 +3241,13 @@
       const overlapping = distanceSquared < minDistance * minDistance;
       const distance = overlapping ? Math.sqrt(distanceSquared) || 0.0001 : 0;
       const aTracksContact = enemies &&
-        typeof (a.behavior && a.behavior.onContactUpdate) === "function" &&
+        typeof a.behavior?.[this.reactionHook(a, "onContactUpdate")] === "function" &&
         a.hp > 0 && b.hp > 0 &&
         !this.isTimeFrozen(a) &&
         (!this.isAbilitySealed(a) || this.keepsPassiveContactReaction(a)) &&
         this.canTarget(a, b);
       const bTracksContact = enemies &&
-        typeof (b.behavior && b.behavior.onContactUpdate) === "function" &&
+        typeof b.behavior?.[this.reactionHook(b, "onContactUpdate")] === "function" &&
         b.hp > 0 && a.hp > 0 &&
         !this.isTimeFrozen(b) &&
         (!this.isAbilitySealed(b) || this.keepsPassiveContactReaction(b)) &&
@@ -3302,8 +3320,8 @@
           actor: b, target: a, overlapping, normalX: -dx / distance,
           normalY: -dy / distance, penetration: minDistance - distance, distance
         });
-        const aBlockedAtContact = this.isAttackBlocked(a);
-        const bBlockedAtContact = this.isAttackBlocked(b);
+        const aBlockedAtContact = !this.canInitiateReaction(a);
+        const bBlockedAtContact = !this.canInitiateReaction(b);
         // Both attacks belong to this contact. A lethal first hit must not
         // cancel the other participant's already-triggered collision hook.
         const aCanCollide = a.hp > 0 && b.hp > 0 && this.canTarget(a, b) && !this.isAbilitySealed(a) && !this.isTimeFrozen(a);

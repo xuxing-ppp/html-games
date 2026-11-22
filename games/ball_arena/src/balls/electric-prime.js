@@ -1,12 +1,12 @@
 (function initializeElectricPrime(root, factory) {
   const dependencies = typeof module === "object" && module.exports
-    ? { ...require("../core/ball-registry.js"), ...require("../core/arena-geometry.js") }
+    ? { ...require("../core/ball-registry.js"), ...require("../core/arena-geometry.js"), ...require("../core/contact-model.js") }
     : root.BallBattle;
   const api = factory(dependencies);
 
   if (typeof module === "object" && module.exports) module.exports = api;
   root.BallBattle = Object.assign(root.BallBattle || {}, api);
-})(globalThis, function createElectricPrimePlugin({ registerBall, resolveArenaGeometry }) {
+})(globalThis, function createElectricPrimePlugin({ registerBall, resolveArenaGeometry, canShareContactLayer }) {
   const FILAMENT_BASE_RATE = 1.4;
   const FILAMENT_INTERVAL = 1 / FILAMENT_BASE_RATE;
   const FILAMENT_LENGTH = 20;
@@ -1170,6 +1170,7 @@
         const segment = filamentSegment(effect);
         refreshEnemyProjectiles(game, entityServices);
         for (const projectile of (services.borrowedAttackOnly ? [] : enemyProjectiles)) {
+          if (!canShareContactLayer(effect, projectile)) continue;
           if (!projectile || projectile === effect || projectile.isProjectile !== true) {
             enemyProjectiles.delete(projectile);
             continue;
@@ -1309,6 +1310,7 @@
         afterUpdateStepWhilePaused(context) {
           releasePendingFilament(context);
         },
+        onEnemyProjectileSpawnedWhileControlled(...args) { return this.onEnemyProjectileSpawned(...args); },
         onEnemyProjectileSpawned(context) {
           if (context.projectile) enemyProjectiles.add(context.projectile);
         },

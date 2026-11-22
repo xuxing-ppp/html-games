@@ -9,6 +9,10 @@
 })(globalThis, function createContactModelApi() {
   "use strict";
 
+  function canShareContactLayer(left, right) {
+    return (left?.contactLayer || "ground") === (right?.contactLayer || "ground");
+  }
+
   function firstSegmentCircleContact(startX, startY, endX, endY, centerX, centerY, radius) {
     const epsilon = 1e-9;
     const offsetX = startX - centerX;
@@ -83,5 +87,5 @@
     });
   }
 
-  return { mergeContactProfiles, createContactEvent, firstSegmentCircleContact };
+  return { canShareContactLayer, mergeContactProfiles, createContactEvent, firstSegmentCircleContact };
 });

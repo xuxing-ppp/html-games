@@ -133,6 +133,7 @@
       let elapsed = 0;
       let angle = 0;
       let simulatedAngle = 0;
+      let simulatedCenter = null;
       let previousStep = STEP;
       let speed = 0;
       let launchPending = false;
@@ -142,6 +143,7 @@
         owner = ball;
         if (Boolean(arena)) angle = fittingAngle(ball, arena, angle);
         simulatedAngle = angle;
+        simulatedCenter = { x: owner.x, y: owner.y };
         let distance = ball.radius;
         points = Array.from({ length: LENGTHS.length + 1 }, (_, index) => {
           if (index > 0) distance += LENGTHS[index - 1];
@@ -160,17 +162,22 @@
         contacts.clear();
       }
 
-      function pin(a) {
+      function pin(a, map, center) {
+        const cosine = Math.cos(a);
+        const sine = Math.sin(a);
+        const reach = map.movementLimit(center.x, center.y, cosine, sine,
+          owner.radius + HANDLE_LENGTH, HANDLE_WIDTH / 2);
+        const base = Math.max(0, reach - HANDLE_LENGTH);
         for (let i = 0; i < 2; i += 1) {
-          const distance = owner.radius + i * HANDLE_LENGTH;
-          points[i].x = owner.x + Math.cos(a) * distance;
-          points[i].y = owner.y + Math.sin(a) * distance;
+          const distance = i === 0 ? base : reach;
+          Object.assign(points[i], map.clampPoint(center.x + cosine * distance,
+            center.y + sine * distance, HANDLE_WIDTH / 2));
         }
       }
 
-      function solve(held, a, arena) {
+      function solve(held, a, map, center) {
         for (let iteration = 0; iteration < 24; iteration += 1) {
-          if (held) pin(a);
+          if (held) pin(a, map, center);
           for (let i = 0; i < LENGTHS.length; i += 1) {
             const left = points[i];
             const right = points[i + 1];
@@ -190,10 +197,10 @@
           points.forEach((p, index) => {
             if (held && index < 2) return;
             const radius = index === points.length - 1 ? HEAD_RADIUS : 2;
-            Object.assign(p, resolveArenaGeometry(arena).clampPoint(p.x, p.y, radius));
+            Object.assign(p, map.clampPoint(p.x, p.y, radius));
           });
         }
-        if (held) pin(a);
+        if (held) pin(a, map, center);
       }
 
       function launch() {
@@ -305,6 +312,8 @@
         const held = phase === "held" || phase === "windup";
         let remaining = Math.max(0, dt);
         const startAngle = simulatedAngle;
+        const map = resolveArenaGeometry(context.game);
+        const origin = simulatedCenter || owner;
         let progressed = 0;
         do {
           const step = Math.min(STEP, remaining);
@@ -328,7 +337,11 @@
               p.y += vy * step * damping;
             }
             progressed += step;
-            solve(held, dt > 0 ? startAngle + (angle - startAngle) * progressed / dt : angle, context.game);
+            const fraction = progressed / dt;
+            solve(held, startAngle + (angle - startAngle) * fraction, map, {
+              x: origin.x + (owner.x - origin.x) * fraction,
+              y: origin.y + (owner.y - origin.y) * fraction
+            });
             if (!held) {
               const velocityScale = oldSpeed > 0 ? speed / oldSpeed / Math.max(travelScale, EPSILON) : 0;
               for (const p of points) {
@@ -349,6 +362,7 @@
           remaining -= step;
         } while (remaining > EPSILON);
         simulatedAngle = angle;
+        simulatedCenter = { x: owner.x, y: owner.y };
         const head = points.at(-1);
         context.entity.x = head.x;
         context.entity.y = head.y;
@@ -392,6 +406,7 @@
         },
         onAttackTransfer({ ball, previousBall }) {
           owner = ball;
+          simulatedCenter = { x: ball.x, y: ball.y };
           contacts.clear();
           if (phase === "held" || phase === "windup") {
             const dx = ball.x - previousBall.x;

@@ -403,6 +403,7 @@
             });
           }
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged({ ball }) {
           checkLifeline(ball);
         },

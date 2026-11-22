@@ -548,6 +548,7 @@
           fuseTouchingPiece(context);
         },
         // 触发条件从「碰撞」改成「受到伤害」。
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context, event) {
           split(context, event);
         },

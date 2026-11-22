@@ -80,7 +80,7 @@ $('tournament-detail-watch').onclick=()=>{if(detailMatch)startMatch(detailMatch)
 $('tournament-reset').onclick=()=>A.openDialog('tournament-reset-dialog');
 $('tournament-reset-confirm').onclick=()=>{A.discardExternalMatch();run=null;selectedRound=0;save();A.showScreen('tournament');render();};
 $('tournament-play').onclick=()=>{
- if(!run){try{run=T.draw(registry,{...prefs,retainDeadSkills:A.state.retainDeadSkills,physics:A.state.physics,hazards:A.state.hazards},A.state.seedText===''?randomSeed():Number(A.state.seedText));selectedRound=0;save();render();}catch(error){A.toast(error.message);}return;}
+ if(!run){try{run=T.draw(registry,{...prefs,retainDeadSkills:A.state.retainDeadSkills,physics:A.state.physics,map:A.state.map,hazards:A.state.hazards},A.state.seedText===''?randomSeed():Number(A.state.seedText));selectedRound=0;save();render();}catch(error){A.toast(error.message);}return;}
  if(officialLive()){A.resumeExternalMatch();return;}if(T.isTournamentComplete(run.bracket)){A.openDialog('tournament-reset-dialog');return;}startMatch(T.nextPendingMatch(run.bracket));
 };
 window.addEventListener('arena:navigate',e=>{updateHome();if(e.detail.screen==='tournament')render();});

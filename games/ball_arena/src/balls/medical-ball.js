@@ -273,6 +273,7 @@
           }
           return event;
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context) {
           updateEmergency(context.ball, context.game);
         },

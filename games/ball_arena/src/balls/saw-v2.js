@@ -397,6 +397,7 @@
           context.services.dealDamage(target, lastDamage);
           resetAfterImpact(context.ball);
         },
+        onCollisionWhileControlled({ ball }) { resetAfterImpact(ball); },
         getAttackCycleDuration() { return 5; },
         borrowedWeaponLayer: "before",
         drawBorrowedWeapon(context, canvasContext) { this.drawBefore(context, canvasContext); },

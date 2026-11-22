@@ -47,6 +47,13 @@
     "getNextTransitionIn", "getNextPausedTransitionIn", "onCollision", "onContactUpdate", "onEntityCollision", "onWallBounce",
     "getTimeControl", "getTimeDilation", "getNextTimeControlTransitionIn", "getTimeSkipRemaining", "updatePresentation",
     "onArenaWrap", "onDamaged", "onDamageObserved", "onEnemyProjectileSpawned", "getPrescribedMotion",
+    "onWallBounceWhileControlled",
+    "onArenaWrapWhileControlled",
+    "onCollisionWhileControlled",
+    "onContactUpdateWhileControlled",
+    "onEntityCollisionWhileControlled",
+    "onDamagedWhileControlled",
+    "onEnemyProjectileSpawnedWhileControlled",
     "drawArenaBackground", "drawArenaForeground", "drawBefore", "drawAfter", "getRenderOffset"
   ]);
 
@@ -707,6 +714,28 @@
         onDamageObserved(context, event) {
           rememberAttacker(event);
           forwardBorrowed("onDamageObserved", context, event);
+        },
+
+        onWallBounceWhileControlled(context, ...args) {
+          return forwardBorrowed("onWallBounceWhileControlled", context, ...args);
+        },
+        onArenaWrapWhileControlled(context, ...args) {
+          return forwardBorrowed("onArenaWrapWhileControlled", context, ...args);
+        },
+        onCollisionWhileControlled(context, ...args) {
+          return forwardBorrowed("onCollisionWhileControlled", context, ...args);
+        },
+        onContactUpdateWhileControlled(context, ...args) {
+          return forwardBorrowed("onContactUpdateWhileControlled", context, ...args);
+        },
+        onEntityCollisionWhileControlled(context, ...args) {
+          return forwardBorrowed("onEntityCollisionWhileControlled", context, ...args);
+        },
+        onDamagedWhileControlled(context, ...args) {
+          return forwardBorrowed("onDamagedWhileControlled", context, ...args);
+        },
+        onEnemyProjectileSpawnedWhileControlled(context, ...args) {
+          return forwardBorrowed("onEnemyProjectileSpawnedWhileControlled", context, ...args);
         },
 
         getPrescribedMotion(context) {

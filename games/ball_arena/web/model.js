@@ -2,16 +2,60 @@
 'use strict';
 const MODES={duel:'单挑',team:'团战',wheel:'车轮战',brawl:'自由混战',boss:'Boss 挑战'};
 const TYPE_NAMES={normal:'普通',zako:'杂鱼',elite:'精英',outOfSpec:'规格外',boss:'Boss'};
-const ORIGINAL_IDS=['arenaSpring','arenaPainter','arenaCourier','arenaBoomerang','arenaBubble','arenaBattery'];
+const ORIGINAL_IDS=['arenaSpring','arenaPainter','arenaCourier','arenaBoomerang','arenaBubble','arenaBattery',...(globalThis.ArenaRosterExpansion||[]).map(role=>role.id)];
 const TIME_LIMITS=Object.freeze({duel:240,team:360,wheel:600,brawl:480,boss:480});
+const MAP_PRESETS=Object.freeze({small:.8,medium:1,large:1.4,extraLarge:2,huge:4});
+const MAP_LIMITS=Object.freeze({minSide:100,maxSide:900,minRatio:.5,maxRatio:2});
 function timeLimit(state){return TIME_LIMITS[state?.mode]||TIME_LIMITS.duel;}
 const clone=value=>JSON.parse(JSON.stringify(value));
-function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,retainDeadSkills:true,physics:'none',hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
+function mapSettings(map){
+ const {minSide,maxSide,minRatio,maxRatio}=MAP_LIMITS;
+ const validSide=n=>Number.isInteger(n)&&n>=minSide&&n<=maxSide;
+ return {
+  preset:map?.preset==='custom'||Object.hasOwn(MAP_PRESETS,map?.preset)?map.preset:'medium',
+  ratio:Number.isFinite(map?.ratio)&&map.ratio>=minRatio&&map.ratio<=maxRatio?map.ratio:1,
+  width:validSide(map?.width)?map.width:200,
+  height:validSide(map?.height)?map.height:200
+ };
+}
+function standardMapSide(state,api){
+ if(state.mode==='boss')return api.MODE_RULES.totalwar.arenaSize;
+ if(state.physics==='bounce')return api.BOUNCE_ARENA_SIZE;
+ if(state.physics==='gyro')return api.GYRO_ARENA_SIZE;
+ return api.MODE_RULES['1v1'].arenaSize;
+}
+function mapDimensions(state,api){
+ const {preset,ratio,width,height}=mapSettings(state.map);
+ if(preset==='custom')return {width,height};
+ const side=standardMapSide(state,api)*MAP_PRESETS[preset],stretch=Math.sqrt(ratio);
+ return {width:side*stretch,height:side/stretch};
+}
+function cameraFrame(arena,balls,minSize,previous=null,dt=0){
+ const {left,right,top,bottom,size}=arena;
+ if(size<=minSize)return {x:0,y:0,size};
+ if(!balls.length)return previous||{x:0,y:0,size};
+ const minX=Math.max(left,Math.min(...balls.map(ball=>ball.x-3*ball.radius)));
+ const maxX=Math.min(right,Math.max(...balls.map(ball=>ball.x+3*ball.radius)));
+ const minY=Math.max(top,Math.min(...balls.map(ball=>ball.y-3*ball.radius)));
+ const maxY=Math.min(bottom,Math.max(...balls.map(ball=>ball.y+3*ball.radius)));
+ const targetSize=Math.min(size,Math.max(minSize,maxX-minX,maxY-minY));
+ const blend=1-Math.exp(-8*dt);
+ const viewSize=previous&&previous.size-targetSize>.1?previous.size+(targetSize-previous.size)*blend:targetSize;
+ const origin=(low,high,start,end,last)=>{
+  if(end-start<=viewSize)return (start+end-viewSize)/2;
+  const target=(low+high-viewSize)/2;
+  const next=last===undefined||Math.abs(last-target)<.1?target:last+(target-last)*blend;
+  return Math.max(start,high-viewSize,Math.min(end-viewSize,low,next));
+ };
+ return {x:origin(minX,maxX,left,right,previous?.x),y:origin(minY,maxY,top,bottom,previous?.y),size:viewSize};
+}
+function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,retainDeadSkills:true,physics:'none',map:mapSettings(),teamRings:true,hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
 function sanitize(value,registry){
  const s=Object.assign(defaults(),value&&typeof value==='object'?value:{}), ids=new Set(registry.list().map(d=>d.id));
  s.mode=Object.hasOwn(MODES,s.mode)?s.mode:'duel'; s.series=[1,3,5].includes(Number(s.series))?Number(s.series):1;
  s.retainDeadSkills=s.retainDeadSkills!==false;
  s.physics=['none','bounce','gyro'].includes(s.physics)?s.physics:'none';
+ s.map=mapSettings(s.map);s.teamRings=s.teamRings!==false;
  for(const key of ['left','right','brawl']){
   const fallback=defaults()[key]; s[key]=Array.isArray(s[key])?s[key].slice(0,key==='brawl'?12:6).map(id=>id===null?null:ids.has(id)?id:null):fallback;
   if(!s[key].length)s[key]=fallback;
@@ -39,6 +83,8 @@ function validate(state,registry){
 function configFor(state,api){
  const mode={duel:'1v1',team:'nvn',wheel:'wheel',brawl:'brawl',boss:'totalwar'}[state.mode];
  const options=state.mode==='boss'?{}:{bounce:state.physics==='bounce',gyro:state.physics==='gyro'};
+ const {width,height}=mapDimensions(state,api),standard=standardMapSide(state,api);
+ if(width!==standard||height!==standard)options.arena={shape:width===height?'square':'rectangle',width,height};
  const cfg=api.createModeBattleConfig(mode,state.mode==='brawl'?state.brawl:state.left,state.mode==='brawl'?[]:state.right,options);
  return cfg;
 }
@@ -77,5 +123,5 @@ class Series{
  }
  next(){if(this.complete||!this.history.some(r=>r.round===this.round))return false;this.round++;return true;}
 }
-return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,timeLimit,defaults,sanitize,eligible,validate,configFor,installWheelSkillCleanup,Series,clone};
+return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,MAP_PRESETS,MAP_LIMITS,timeLimit,mapSettings,standardMapSide,mapDimensions,cameraFrame,defaults,sanitize,eligible,validate,configFor,installWheelSkillCleanup,Series,clone};
 });

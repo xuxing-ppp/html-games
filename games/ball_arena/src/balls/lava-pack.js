@@ -508,12 +508,16 @@
       kind: tomato ? "tomato-lob" : "magma-lob", combatKind: "projectile", life: duration + 0.05,
       x: ball.x, y: ball.y, startX: ball.x, startY: ball.y, targetX: x, targetY: y,
       flightDuration: duration, arcHeight: tomato ? 50 : 150, landed: false,
+      contactLayer: "air", height: 0,
       update({ entity: e, services }) {
         const p = clamp(e.age / duration, 0, 1);
         e.x = e.startX + (e.targetX - e.startX) * p;
         e.y = e.startY + (e.targetY - e.startY) * p;
+        e.height = 4 * e.arcHeight * p * (1 - p);
         if (p < 1 || e.landed) return;
         e.landed = true;
+        e.contactLayer = "ground";
+        e.height = 0;
         if (tomato) {
           services.forEachEnemy(target => {
             if (Math.hypot(target.x - e.x, target.y - e.y) <= 30 + target.radius) services.dealDamage(target, 2);
@@ -531,7 +535,7 @@
         e.entityActive = false;
       },
       draw({ entity: e, game }, ctx) {
-        const p = clamp(e.age / duration, 0, 1), altitude = 4 * e.arcHeight * p * (1 - p);
+        const altitude = e.height;
         ctx.save(); ctx.globalAlpha *= 0.3; ctx.fillStyle = "#ff6620";
         ctx.beginPath(); ctx.ellipse(e.x, e.y, 7, 2.5, 0, 0, TAU); ctx.fill(); ctx.restore();
         if (tomato) drawTomato(ctx, e.x, e.y - altitude, 6);
@@ -595,6 +599,7 @@
           nextGap=6+Math.random()*6;
           services.spawnCombatEntity(createLavaPuddle(ball.x,ball.y));
         },
+        onArenaWrapWhileControlled(...args) { return this.onArenaWrap(...args); },
         onArenaWrap(){previousX=null;previousY=null;travelled=0;},
         drawBody({ball,game},ctx){drawMoltenBall(ctx,ball,game.time);return true;},
         onCollision(context,target){

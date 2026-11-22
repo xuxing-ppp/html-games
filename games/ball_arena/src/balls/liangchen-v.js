@@ -242,6 +242,7 @@
           emitEnemyBloodDroplets(context.ball, target, RULES.bodyDamage);
         },
 
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context, event) {
           emitDropletOnHit(context.ball, event && event.amount);
         },

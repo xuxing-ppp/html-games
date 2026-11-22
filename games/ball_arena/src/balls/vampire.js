@@ -189,6 +189,21 @@
       }
 
       return {
+        onAttackTransfer({ ball, previousBall, game }) {
+          if (!lock) return;
+          if (lock.target === ball) lock.target = previousBall;
+          const dx = lock.target.x - ball.x;
+          const dy = lock.target.y - ball.y;
+          const length = Math.hypot(dx, dy);
+          if (length > EPSILON) {
+            lock.directionX = dx / length;
+            lock.directionY = dy / length;
+            const swing = SWING_MAX_ANGLE * Math.sin((game.time - lock.startedAt) * SWING_OMEGA);
+            lock.baseAngle = Math.atan2(-dy, -dx) - swing;
+          }
+          lock.lastX = ball.x;
+          lock.lastY = ball.y;
+        },
         update(context) {
           if (!lock) return;
           const targetContact = services.getContactProfile(lock.target);

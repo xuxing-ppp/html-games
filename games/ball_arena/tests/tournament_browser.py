@@ -26,24 +26,28 @@ try:
   for prefix in ['/', '/Games/']:
    context=browser.new_context(viewport={'width':1440,'height':900},reduced_motion='reduce');page=context.new_page();errors=[];missing=[]
    page.on('pageerror',lambda e:errors.append(str(e)));page.on('response',lambda r:missing.append(r.url) if r.status>=400 else None)
-   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.0.5';assert page.locator('.hall-link').count()==0
+   page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle');assert page.locator('#home').is_visible();assert page.locator('#version').inner_text()=='v1.1.0';assert page.locator('.hall-link').count()==0
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(90);fit(page,['#home-free','#home-tournament','#version','#help','#sound']);assert page.evaluate("(()=>{const e=document.querySelector('.home-arena');return Math.abs(e.clientWidth-e.clientHeight)<2})()");snap(page,f'home-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#home-tournament');assert page.locator('[data-tournament-size]').count()==6
    assert page.locator('#random-setting').is_hidden();page.select_option('#physics','bounce');assert page.evaluate('ArenaApp.state.physics')=='bounce'
-   page.click('[data-tournament-size="64"]');page.click('[data-team-size="3"]');assert page.locator('[data-tournament-size="64"]').is_disabled();assert page.locator('[data-tournament-size="128"]').is_disabled();assert page.locator('#tournament-play').is_disabled();assert '60 队' in page.locator('#tournament-capacity').inner_text()
-   page.check('#tournament-filter-elite');assert '58 队' in page.locator('#tournament-capacity').inner_text();page.uncheck('#tournament-filter-elite')
+   page.click('[data-tournament-size="64"]');page.click('[data-team-size="3"]');assert page.locator('[data-tournament-size="64"]').is_enabled();assert page.locator('[data-tournament-size="128"]').is_disabled();assert page.locator('#tournament-play').is_enabled();assert '67 队' in page.locator('#tournament-capacity').inner_text()
+   page.check('#tournament-filter-elite');assert '65 队' in page.locator('#tournament-capacity').inner_text();page.uncheck('#tournament-filter-elite')
    page.click('[data-team-size="2"]');assert page.locator('[data-tournament-size="64"]').is_enabled();assert page.locator('[data-tournament-size="128"]').is_disabled()
    page.click('[data-team-size="1"]');page.click('[data-tournament-size="128"]')
+   page.click('#map-settings');page.select_option('#map-preset','custom');page.fill('#map-width','340');page.fill('#map-height','180');page.click('#map-dialog [data-close]')
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(70);fit(page,['#home-back','#tournament-teams button','#tournament-sizes button','#tournament-play','#tournament-filter-elite']);snap(page,f'setup-{prefix.strip("/") or "root"}-{w}x{h}')
    page.click('#tournament-play');assert page.evaluate('ArenaTournamentUI.run.bracket.size')==128;assert page.locator('#physics').is_disabled();assert page.locator('#seed').is_disabled();assert page.locator('#settings-lock').is_visible();assert page.locator('[data-tournament-match]').count()==64
+   page.click('#map-settings');assert page.locator('#map-width').is_disabled();assert page.locator('#map-dimensions').inner_text()=='340 × 180';page.click('#map-dialog [data-close]')
    for w,h in SIZES:
     page.set_viewport_size({'width':w,'height':h});page.wait_for_timeout(70);fit(page,['#home-back','#tournament-heading','#tournament-rounds','#tournament-matches','#tournament-play']);before=page.locator('.tournament-heading').bounding_box();page.locator('#tournament-matches').evaluate('(e)=>e.scrollTop=e.scrollHeight');assert page.locator('.tournament-heading').bounding_box()==before;snap(page,f'bracket128-{prefix.strip("/") or "root"}-{w}x{h}')
    page.set_viewport_size({'width':1440,'height':900});page.click('#tournament-play');page.click('#pause');page.evaluate('ArenaApp.advanceSteps(30)');firstseed=page.evaluate('ArenaApp.seed');steps=page.evaluate('ArenaApp.session.steps')
+   assert page.evaluate('[ArenaApp.engine.arena.width,ArenaApp.engine.arena.height]')==[340,180]
    page.click('#back');assert page.locator('#tournament').is_visible();assert page.locator('#tournament-play').inner_text()=='继续当前比赛 ↗';page.wait_for_timeout(80);assert page.evaluate('ArenaApp.session.steps')==steps
    page.click('#home-back');assert page.locator('#home-continue-tournament').is_visible();page.click('#home-continue-tournament');page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.seed')==firstseed
    page.reload(wait_until='networkidle');page.click('#home-continue-tournament');page.click('#tournament-play');page.click('#pause');assert page.evaluate('ArenaApp.seed')==firstseed;assert page.evaluate('ArenaApp.session.steps')<30
+   assert page.evaluate('[ArenaApp.engine.arena.width,ArenaApp.engine.arena.height]')==[340,180]
    settle(page);assert played(page)==1;page.click('#edit-result');page.click('[data-tournament-match="r0-m0"]');page.click('#tournament-detail-watch');page.click('#pause');settle(page);assert played(page)==1;page.click('#edit-result')
    # A replay is a transient session: leaving it must not block the next official match.
    assert page.evaluate('ArenaApp.session===null');assert page.evaluate('ArenaApp.context===null');assert page.evaluate('ArenaApp.replaying===false');assert page.locator('#tournament-play').inner_text()=='开始下一场 ↗'

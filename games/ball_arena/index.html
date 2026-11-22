@@ -4,7 +4,7 @@
 <header class="masthead"><button id="home-back" hidden>‹ 主界面</button><h1>小球<span>擂台</span></h1><div class="header-actions"><span id="version" data-game-version="ball_arena"></span><button id="help" aria-label="玩法帮助与致谢">?</button><button id="sound" aria-pressed="true">声音开</button></div></header>
 <section id="home" class="home-screen" aria-label="主界面">
  <div class="home-art"><div class="home-arena"><canvas id="home-arena" width="640" height="640" aria-label="随机角色对战演示"></canvas></div><p id="home-demo-label">随机对战 · 演示</p></div>
- <div class="home-menu"><h2>小球<br><span>擂台</span></h2><p class="home-description">190 个角色 · 自动对战</p><div class="home-buttons"><button id="home-free" class="primary">自由对战 <span>↗</span></button><button id="home-tournament">锦标赛 <span>♜</span></button><button id="home-continue-free" hidden>继续当前对战</button><button id="home-continue-tournament" hidden>继续锦标赛</button></div></div>
+ <div class="home-menu"><h2>小球<br><span>擂台</span></h2><p class="home-description">211 个角色 · 自动对战</p><div class="home-buttons"><button id="home-free" class="primary">自由对战 <span>↗</span></button><button id="home-tournament">锦标赛 <span>♜</span></button><button id="home-continue-free" hidden>继续当前对战</button><button id="home-continue-tournament" hidden>继续锦标赛</button></div></div>
 </section>
 <section id="selection" class="selection" hidden>
  <div class="setup-toolbar"><label>玩法 <select id="mode"><option value="duel">单挑</option><option value="team">团战</option><option value="wheel">车轮战</option><option value="brawl">自由混战</option><option value="boss">Boss 挑战</option></select></label><label id="series-label">赛制 <select id="series"><option value="1">单局</option><option value="3">三局两胜</option><option value="5">五局三胜</option></select></label><button id="random-all">随机对阵</button></div>
@@ -19,7 +19,7 @@
  <div id="scoreboard" class="scoreboard"><div id="score-left"></div><div class="score-center"><div id="series-score" class="series-score"></div><button id="skills" class="primary" aria-haspopup="dialog" aria-controls="skills-dialog">角色技能</button></div><div id="score-right"></div></div>
  <div id="stage" class="stage"><div id="arena-wrap" class="arena-wrap"><canvas id="arena" aria-label="自动对战场地"></canvas><canvas id="hazards" aria-hidden="true"></canvas><div id="pause-indicator" hidden>已暂停</div></div></div>
  <button id="battle-note" class="battle-note" disabled aria-label="查看对局结果"></button>
- <footer class="battle-controls"><button id="pause">暂停</button><button id="step">单步</button><div id="speeds" class="speed-group" role="group" aria-label="播放速度"><button data-speed="0.5">½×</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button></div><button id="restart">重放本局</button></footer>
+ <footer class="battle-controls"><button id="pause">暂停</button><button id="step">单步</button><div id="speeds" class="speed-group" role="group" aria-label="播放速度"><button data-speed="0.5">½×</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button></div><button id="restart">重放本局</button><button id="team-rings" aria-pressed="true">阵营圈</button></footer>
 </section>
 <section id="tournament" class="tournament-screen" hidden aria-label="锦标赛">
  <div class="tournament-heading"><div><h2>锦标赛</h2><p id="tournament-status" role="status">选择队伍规格与比赛规模</p></div><div class="tournament-heading-actions"><button id="tournament-reset" hidden>重新抽签</button></div></div>
@@ -36,13 +36,33 @@
 <dialog id="detail"><div class="dialog-head"><h2 id="detail-title"></h2><button data-close aria-label="关闭详情">×</button></div><div id="detail-content"></div><div class="dialog-actions"><button id="detail-favorite"></button><button id="detail-pick" class="primary">选入当前位置</button></div></dialog>
 <section id="match-settings" class="match-settings" aria-label="对战设置">
  <label class="setting-motion">运动 <select id="physics" aria-describedby="physics-hint"><option value="none">直线运动</option><option value="bounce">重力弹跳</option><option value="gyro">陀螺引力</option></select></label>
+ <button id="map-settings" aria-haspopup="dialog" aria-controls="map-dialog">地图 <span id="map-setting-summary"></span></button>
  <fieldset class="setting-hazards"><legend>场地机关</legend><label title="四处对称弹射，无伤害，单角色冷却 1 秒。"><input type="checkbox" id="hazard-pads">弹射垫</label><label title="每 10 秒出现，接触回复 12 点生命。"><input type="checkbox" id="hazard-supplies">急救补给</label><label title="每 12 秒预警后扫射，造成 8 点普通伤害。"><input type="checkbox" id="hazard-laser">横扫激光</label></fieldset>
  <label id="wheel-setting" hidden title="关闭后，阵亡小球留下的尖刺、图钉、投射物和召唤物等会消失。"><input type="checkbox" id="retain-dead-skills" checked>保留阵亡小球技能</label>
  <label class="setting-seed"><span id="seed-label">对局种子</span><input id="seed" aria-labelledby="seed-label" inputmode="numeric" placeholder="留空随机" maxlength="10"></label>
  <label id="random-setting" class="setting-random"><input type="checkbox" id="random-expanded"><span>随机选人包含特殊角色<small>仅影响“随机对阵”和双方“随机”：增加杂鱼、精英、规格外；Boss 只进 Boss 槽位。</small></span></label>
  <p id="physics-hint" class="settings-hint"></p><p id="settings-lock" hidden>本届设置已锁定，重新抽签后可修改。</p>
 </section>
-<dialog id="help-dialog"><div class="dialog-head"><h2>怎么玩</h2><button data-close aria-label="关闭帮助">×</button></div><div class="dialog-body help-copy"><p>先点红方或蓝方的阵容位置，再点角色。阵容始终在上方，只有角色目录滚动。</p><p>角色自动移动、释放技能。开战后可以暂停、单步或调速，不能干预战局。空格暂停或继续，Esc 关闭弹窗或暂停。点红蓝血条中间的“角色技能”可查看本场双方全部角色的机制：打开时自动暂停，关闭后继续；如果打开前已手动暂停，关闭后保持暂停。</p><p>团战同时入场；车轮战依次入场，胜者保留生命；自由混战各自为战；Boss 挑战由红方 Boss 对抗蓝方挑战者。</p><p>锦标赛支持 4、8、16、32、64、128 球／队，同时上场支持 1V1、2V2、3V3，车轮战支持每队 2–6 个名额，按抽签顺序依次上场、胜者保留生命。精英球在组队中占两个名额，角色全程不重复；数量不足的规模不可选。单败淘汰，每场重新满血；限时按剩余总生命判定，总生命相同才平局并换种子重赛，赛程自动保存。观看重放不会占用“继续当前比赛”，退出重放即结束。</p><p>每局按模式限时：单挑 4:00、团战 6:00、车轮战 10:00、自由混战 8:00、Boss 挑战 8:00；到时按剩余总生命判定，总生命相同才平局。系列赛每局重置生命、换新种子，平局不计胜场；连续三次平局则并列结束。</p><p>顶部设置直接修改并自动保存。运动规则不改变角色技能，Boss 挑战固定为直线运动。弹射垫：四处对称弹射，无伤害，单角色冷却 1 秒；急救补给：每 10 秒出现，接触回复 12 点生命；横扫激光：每 12 秒预警后扫射，造成 8 点普通伤害。随机选人默认只选普通角色，勾选“随机选人包含特殊角色”后，点击“随机对阵”或双方的“随机”还会选到杂鱼、精英和规格外角色，不影响手动选人或锦标赛抽签。锦标赛中的种子用于整届抽签及比赛种子的生成。</p><p>场地机关默认关闭。规格外与 Boss 强度较高，普通随机池不会抽到。原种子重放不重复计入系列赛比分。</p><p>窗口失焦会自动暂停；恢复窗口后按“继续”。收藏、设置和最近阵容保存在此浏览器中。</p><h3>致谢</h3><p>感谢原作者 <a class="credit-link" href="https://space.bilibili.com/3546819271330077" target="_blank" rel="noopener noreferrer">Kizu_Na ↗</a> 创作《小球对战》。本作沿用原作的战斗核心与 184 个角色，重新设计交互，并加入原创角色与场地机关。</p></div></dialog>
+<dialog id="map-dialog" aria-labelledby="map-title">
+ <div class="dialog-head"><h2 id="map-title">地图大小</h2><button data-close aria-label="关闭地图设置">×</button></div>
+ <div class="dialog-body map-layout">
+  <div class="map-controls">
+   <label for="map-preset">尺寸</label>
+   <select id="map-preset"><option value="small">小</option><option value="medium">中</option><option value="large">大</option><option value="extraLarge">超大</option><option value="huge">巨大</option><option value="custom">自定义</option></select>
+   <div id="map-ratio-fields" class="map-ratio-fields">
+    <label for="map-ratio">宽 ÷ 高</label><input id="map-ratio" type="number" min="0.5" max="2" step="any" required>
+    <input id="map-ratio-slider" aria-label="宽高比例" type="range" min="0.5" max="2" step="0.01">
+   </div>
+   <div id="map-custom-fields" class="map-custom-fields" hidden>
+    <label for="map-width">宽</label><input id="map-width" type="number" min="100" max="900" step="1" required>
+    <label for="map-height">高</label><input id="map-height" type="number" min="100" max="900" step="1" required>
+   </div>
+   <p id="map-invalid" role="status" hidden></p>
+  </div>
+  <figure class="map-preview"><canvas id="map-preview" width="440" height="248" aria-label="地图轮廓预览"></canvas><figcaption><output id="map-dimensions"></output><span id="map-area"></span></figcaption></figure>
+ </div>
+</dialog>
+<dialog id="help-dialog"><div class="dialog-head"><h2>怎么玩</h2><button data-close aria-label="关闭帮助">×</button></div><div class="dialog-body help-copy"><p>先点红方或蓝方的阵容位置，再点角色。阵容始终在上方，只有角色目录滚动。</p><p>角色自动移动、释放技能。开战后可以暂停、单步或调速，不能干预战局。空格暂停或继续，Esc 关闭弹窗或暂停。点红蓝血条中间的“角色技能”可查看本场双方全部角色的机制：打开时自动暂停，关闭后继续；如果打开前已手动暂停，关闭后保持暂停。</p><p>团战同时入场；车轮战依次入场，胜者保留生命；自由混战各自为战；Boss 挑战由红方 Boss 对抗蓝方挑战者。</p><p>锦标赛支持 4、8、16、32、64、128 球／队，同时上场支持 1V1、2V2、3V3，车轮战支持每队 2–6 个名额，按抽签顺序依次上场、胜者保留生命。精英球在组队中占两个名额，角色全程不重复；数量不足的规模不可选。单败淘汰，每场重新满血；限时按剩余总生命判定，总生命相同才平局并换种子重赛，赛程自动保存。观看重放不会占用“继续当前比赛”，退出重放即结束。</p><p>每局按模式限时：单挑 4:00、团战 6:00、车轮战 10:00、自由混战 8:00、Boss 挑战 8:00；到时按剩余总生命判定，总生命相同才平局。系列赛每局重置生命、换新种子，平局不计胜场；连续三次平局则并列结束。</p><p>顶部设置直接修改并自动保存。运动规则不改变角色技能，Boss 挑战固定为直线运动。弹射垫：四处对称弹射，无伤害，单角色冷却 1 秒；急救补给：每 10 秒出现，接触回复 12 点生命；横扫激光：每 12 秒预警后扫射，造成 8 点普通伤害。随机选人默认只选普通角色，勾选“随机选人包含特殊角色”后，点击“随机对阵”或双方的“随机”还会选到杂鱼、精英和规格外角色，不影响手动选人或锦标赛抽签。锦标赛中的种子用于整届抽签及比赛种子的生成。</p><p>场地机关默认关闭。地图可选预设或自定义宽高，预设调整宽高比例时保持面积；大地图会自动调整镜头。对战底栏可切换阵营圈，选择会自动保存。规格外与 Boss 强度较高，普通随机池不会抽到。原种子重放不重复计入系列赛比分。</p><p>窗口失焦会自动暂停；恢复窗口后按“继续”。收藏、设置和最近阵容保存在此浏览器中。</p><h3>致谢</h3><p>感谢原作者 <a class="credit-link" href="https://space.bilibili.com/3546819271330077" target="_blank" rel="noopener noreferrer">Kizu_Na ↗</a> 创作《小球对战》。本作沿用原作的战斗核心与 184 个角色，重新设计交互，并加入原创角色与场地机关。</p></div></dialog>
 <dialog id="lineup-detail"><div class="dialog-head"><h2 id="lineup-detail-title">当前阵容</h2><button data-close aria-label="关闭阵容">×</button></div><div id="lineup-detail-body" class="dialog-body"></div></dialog>
 <dialog id="tournament-reset-dialog"><div class="dialog-head"><h2>重新抽签？</h2><button data-close aria-label="取消重新抽签">×</button></div><div class="dialog-body"><p>本届赛程和比赛结果将被清除，返回开赛设置。自由对战的阵容和收藏会保留。</p></div><div class="dialog-actions"><button data-close>保留赛程</button><button id="tournament-reset-confirm" class="primary">重新设置</button></div></dialog>
 <dialog id="tournament-match-detail"><div class="dialog-head"><h2 id="tournament-detail-title">比赛详情</h2><button data-close aria-label="关闭比赛详情">×</button></div><div id="tournament-detail-body" class="dialog-body"></div><div class="dialog-actions"><button id="tournament-detail-watch" class="primary">观看比赛</button></div></dialog>
@@ -277,6 +297,7 @@
 <script defer src="src/ui/canvas-renderer.js"></script>
 <script defer src="src/ui/audio.js"></script>
 <script defer src="web/characters.js"></script>
+<script defer src="web/roster-expansion.js"></script>
 <script defer src="web/tags.js"></script>
 <script defer src="web/descriptions.js"></script>
 <script defer src="web/model.js"></script>

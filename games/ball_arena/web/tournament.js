@@ -1,6 +1,6 @@
 (function(root){
 'use strict';
-const C=root.ArenaTournamentCore,B=root.BallBattle;
+const C=root.ArenaTournamentCore,B=root.BallBattle,M=root.ArenaModel;
 const SIZES=[4,8,16,32,64,128];
 function validFormat(mode,size){return (mode==='standard'?[1,2,3]:mode==='wheel'?[2,3,4,5,6]:[]).includes(size);}
 const BANNED=new Set(['hina','sixKing','daYun','daYunV2','sixZoneUltra','yiWanRen']);
@@ -15,7 +15,15 @@ function draw(registry,settings,seed){
  const definitions=pool(registry,filterElite);
  if(C.tournamentTeamCapacity(definitions,teamSize)<size)throw new Error('角色数量不足，无法组成所选规模');
  const bracket=C.createTeamTournament(definitions,{size,teamSize,filterElite,random:B.createSeededRandom(seed>>>0)});
- return {version:1,drawSeed:seed>>>0,bracket,settings:{battleMode,retainDeadSkills:settings.retainDeadSkills!==false,physics:['none','bounce','gyro'].includes(settings.physics)?settings.physics:'none',hazards:Object.fromEntries(['pads','supplies','laser'].map(k=>[k,settings.hazards?.[k]===true]))},records:{}};
+ const run={version:1,drawSeed:seed>>>0,bracket,settings:{battleMode,retainDeadSkills:settings.retainDeadSkills!==false,physics:['none','bounce','gyro'].includes(settings.physics)?settings.physics:'none',map:M.mapSettings(settings.map),hazards:Object.fromEntries(['pads','supplies','laser'].map(k=>[k,settings.hazards?.[k]===true]))},records:{}};
+ // Custom team maps allot identical space to both sides. Check each entrant
+ // against its mirror to cover every possible later pairing.
+ for(const id of bracket.entrants){
+  const config=M.configFor(battleState(run,{leftId:id,rightId:id}),B);
+  if(!config.arena)break;
+  try{B.normalizeBattleConfig(config,registry);}catch{throw new Error('地图放不下抽中的队伍，请增大地图后再抽签。');}
+ }
+ return run;
 }
 function seedFor(run,match){
  if(!match?.leftId||!match?.rightId)throw new Error('本场对手尚未确定');
@@ -30,7 +38,7 @@ function settle(run,matchId,winnerSide,seed){
  if(winnerSide!==0&&winnerSide!==1)return false;
  return C.recordMatchResult(run.bracket,matchId,winnerSide===0?match.leftId:match.rightId);
 }
-function battleState(run,match){return {mode:run.settings.battleMode==='wheel'?'wheel':run.bracket.teamSize===1?'duel':'team',left:entrantIds(run,match.leftId),right:entrantIds(run,match.rightId),series:1,retainDeadSkills:run.settings.retainDeadSkills!==false,physics:run.settings.physics,hazards:{...run.settings.hazards}};}
+function battleState(run,match){return {mode:run.settings.battleMode==='wheel'?'wheel':run.bracket.teamSize===1?'duel':'team',left:entrantIds(run,match.leftId),right:entrantIds(run,match.rightId),series:1,retainDeadSkills:run.settings.retainDeadSkills!==false,physics:run.settings.physics,map:M.mapSettings(run.settings.map),hazards:{...run.settings.hazards}};}
 function restore(serialized,registry){
  try{
   const run=JSON.parse(serialized);if(!run||run.version!==1||!Number.isInteger(run.drawSeed)||run.drawSeed<0||run.drawSeed>4294967295)return null;
@@ -48,6 +56,7 @@ function restore(serialized,registry){
   if(!run.settings||!['none','bounce','gyro'].includes(run.settings.physics)||typeof run.settings.hazards!=='object'||!run.settings.hazards)return null;
   if(run.settings.battleMode===undefined)run.settings.battleMode='standard';
   if(run.settings.retainDeadSkills===undefined)run.settings.retainDeadSkills=true;
+  run.settings.map=M.mapSettings(run.settings.map);
   if(typeof run.settings.retainDeadSkills!=='boolean')return null;
   if(!validFormat(run.settings.battleMode,bracket.teamSize))return null;
   for(const k of ['pads','supplies','laser'])if(typeof run.settings.hazards[k]!=='boolean')return null;

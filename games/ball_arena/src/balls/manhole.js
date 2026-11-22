@@ -328,6 +328,7 @@
       let charge = 0;
       let steamTime = 0;
       let jumpStartedAt = null;
+      let jumpLock = null;
       let nextCoverAt = null;
       let entryOffsetX = 0;
       let entryOffsetY = 0;
@@ -361,6 +362,8 @@
         phase = "airborne";
         services.playSound("ability", { cue: "explosion" });
         jumpStartedAt = game.time;
+        jumpLock = { body: ball, wasLocked: ball.movementLocked };
+        services.setMovementLocked(true);
         nextCoverAt = game.time + RULES.cooldown;
         services.forEachEnemy((target) => {
           if (Math.hypot(target.x - x, target.y - y) <= RULES.blastRadius + target.radius) {
@@ -384,6 +387,16 @@
         }
       }
 
+      function finishJump() {
+        if (jumpLock) {
+          jumpLock.body.movementLocked = jumpLock.wasLocked;
+          jumpLock.body.speedNeedsNormalization = true;
+          jumpLock = null;
+        }
+        if (phase === "airborne") phase = "cooldown";
+        jumpStartedAt = null;
+      }
+
       function syncWorld(context) {
         owner = context.ball;
         // Fresh borrowed behaviors do not receive onSpawn.
@@ -398,8 +411,7 @@
           nextCoverAt = context.game.time + RULES.cooldown;
         }
         if (phase === "airborne" && context.game.time + EPSILON >= jumpStartedAt + RULES.jump) {
-          phase = "cooldown";
-          jumpStartedAt = null;
+          finishJump();
         }
         if (!cover && phase !== "airborne" && nextCoverAt !== null &&
           context.game.time + EPSILON >= nextCoverAt && owner.hp > 0 && owner.active !== false) {
@@ -458,6 +470,7 @@
       }
 
       function cleanup() {
+        finishJump();
         if (cover) cover.entityActive = false;
         cover = null;
         phase = "cooldown";
@@ -513,6 +526,7 @@
           canvas.restore();
         },
         onAttackTransfer(context) {
+          finishJump();
           owner = context.ball;
           entryOffsetX = entryOffsetY = 0;
           if (phase === "underground" && cover) {

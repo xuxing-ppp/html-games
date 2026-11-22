@@ -583,6 +583,7 @@
           if (phase !== "normal") return { amount: 0, showHitText: false };
           return event;
         },
+        onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
         onDamaged(context, event) {
           if (
             phase !== "normal" ||
@@ -592,6 +593,7 @@
           ) return;
           damageSources.add(targetKey(event.credit));
         },
+        onCollisionWhileControlled(...args) { return this.onCollision(...args); },
         onCollision(context, target) {
           if (phase !== "normal") return;
           collisionSources.add(targetKey(target));

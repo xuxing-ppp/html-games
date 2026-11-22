@@ -6,7 +6,7 @@
 
   if (typeof module === "object" && module.exports) module.exports = api;
   root.BallBattle = Object.assign(root.BallBattle || {}, api);
-})(globalThis, function createOldWoodMasterPlugin({ registerBall, firstSegmentCircleContact, createArenaGeometry }) {
+})(globalThis, function createOldWoodMasterPlugin({ registerBall, firstSegmentCircleContact, createArenaGeometry, canShareContactLayer }) {
   const EPSILON = 1e-9;
   const TWO_PI = Math.PI * 2;
 
@@ -953,6 +953,7 @@
     const live = new Set();
     for (const other of entities) {
       if (!other || other === entity || !other.isProjectile) continue;
+      if (!canShareContactLayer(entity, other)) continue;
       if (other.entityActive === false || other.life <= 0) continue;
       if (!entityServices.isEnemy(other)) continue;
       live.add(other);
@@ -1134,7 +1135,9 @@
           if (spansOverlap({ min: box.minX, max: box.maxX }, { min: other.minX, max: other.maxX }) &&
               spansOverlap({ min: box.minY, max: box.maxY }, { min: other.minY, max: other.maxY })) return false;
         }
-        return true;
+        const blocks = target => target !== context.ball && services.getContactProfile(target).solid &&
+          plankContact(spec, target.x, target.y, target.radius - EPSILON);
+        return !services.getEnemies().some(blocks) && !services.getAllies().some(blocks);
       }
 
       // 干活期间把速度扣住：老木师是"停在墙边钉完再走"的。
@@ -1183,6 +1186,16 @@
           body.vx = body.storedVx = released.x;
           body.vy = body.storedVy = released.y;
         }
+      }
+
+      function constructionDisplaced(ball) {
+        if (!nailing) return false;
+        const offset = nailing.retreatDistance * easeOutCubic(nailing.elapsed / nailing.duration);
+        const x = nailing.startX + nailing.frame.normalX * offset;
+        const y = nailing.startY + nailing.frame.normalY * offset;
+        if (Math.hypot(ball.x - x, ball.y - y) <= 1) return false;
+        releaseBall(ball, false);
+        return true;
       }
 
       function startNailing(context, support, contact) {
@@ -1356,7 +1369,7 @@
         onSpawn(context) {
         },
         update(context, dt) {
-          if (!nailing) return;
+          if (!nailing || constructionDisplaced(context.ball)) return;
           if (nailing.support && !isLivePlank(nailing.support)) {
             releaseBall(context.ball, false);
             return;
@@ -1375,7 +1388,7 @@
         },
         updateWhilePaused(context) {
           // 被控住的时候钉板动作也停住：干活是要花时间的。
-          if (nailing) holdBall(context.ball);
+          if (nailing && !constructionDisplaced(context.ball)) holdBall(context.ball);
         },
         afterUpdateStep(context) { touchPlanks(context, true); },
         afterUpdateStepWhilePaused(context) { touchPlanks(context, false); },

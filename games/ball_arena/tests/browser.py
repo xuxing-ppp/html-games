@@ -19,6 +19,90 @@ def fit(page,selectors):
  assert not problems,(page.viewport_size,problems)
 def snap(page,name):page.screenshot(path=str(OUT/f'{name}.png'))
 def snapshot(page):return page.evaluate('JSON.stringify(ArenaApp.engine.game.balls.map(b=>({id:b.id,hp:b.hp,x:b.x,y:b.y})))')
+def check_maps_and_camera(page):
+ saved=page.evaluate("localStorage.getItem('ball-arena-settings-v1')")
+ page.locator('#toast').wait_for(state='hidden')
+ page.click('#map-settings')
+ page.select_option('#map-preset','huge')
+ assert page.locator('#map-dimensions').inner_text()=='800 × 800'
+ page.locator('#map-ratio-slider').press('End')
+ assert page.locator('#map-ratio').input_value()=='2'
+ assert page.locator('#map-area').inner_text()=='面积 640,000'
+ page.fill('#map-ratio','0.5')
+ assert page.locator('#map-ratio-slider').input_value()=='0.5'
+ assert page.locator('#map-area').inner_text()=='面积 640,000'
+ page.fill('#map-ratio','2.1')
+ assert page.locator('#map-invalid').is_visible()
+ assert page.evaluate('ArenaApp.state.map.ratio')==.5
+ page.fill('#map-ratio','2')
+ for width,height in SIZES:
+  page.set_viewport_size({'width':width,'height':height})
+  fit(page,['#map-dialog','#map-preset','#map-ratio-slider','#map-preview','#map-dimensions'])
+  snap(page,f'map-preview-{width}x{height}')
+ page.select_option('#map-preset','custom')
+ page.fill('#map-width','550');page.fill('#map-height','130')
+ assert page.locator('#map-dimensions').inner_text()=='550 × 130'
+ assert page.locator('#map-ratio-slider').is_hidden()
+ page.select_option('#map-preset','huge');page.click('#map-dialog [data-close]')
+ page.fill('#seed','217');page.locator('#seed').blur()
+ page.evaluate('''() => {
+  const ctx=CanvasRenderingContext2D.prototype,fill=ctx.fillText,stroke=ctx.stroke;
+  window.paint={charge:{},rings:[]};
+  ctx.fillText=function(text,x,y,...rest){
+   if(this.canvas.id==='arena'&&/^[0-4]\\/[34]$/.test(text))paint.charge[String(text).slice(-1)]={text,x,y,scale:this.getTransform().a,tx:this.getTransform().e,ty:this.getTransform().f};
+   return fill.call(this,text,x,y,...rest);
+  };
+  ctx.stroke=function(...args){
+   if(this.canvas.id==='arena'&&['#ed796b','#78b5e7'].includes(this.strokeStyle)){
+    if(!paint.rings.includes(this.strokeStyle))paint.rings.push(this.strokeStyle);
+   }
+   return stroke.apply(this,args);
+  };
+  ArenaApp.state.left=['arenaSpring'];ArenaApp.state.right=['arenaBattery'];
+  ArenaApp.startMatch();ArenaApp.pause(true);
+ }''')
+ assert page.evaluate('Math.abs(ArenaApp.engine.arena.width*ArenaApp.engine.arena.height-640000)<1e-8')
+ page.wait_for_function("paint.charge['3']?.text==='0/3'&&paint.charge['4']?.text==='0/4'&&paint.rings.length===2")
+ page.click('#team-rings');page.evaluate('paint.rings=[]')
+ assert page.locator('#team-rings').get_attribute('aria-pressed')=='false'
+ page.evaluate('ArenaApp.advanceSteps(180)')
+ page.evaluate("paint.rings=[]")
+ page.wait_for_timeout(85)
+ assert page.evaluate('paint.rings.length')==0
+ first=snapshot(page)
+ page.evaluate("document.querySelector('#restart').click();ArenaApp.pause(true);ArenaApp.advanceSteps(180)")
+ assert snapshot(page)==first
+ assert page.locator('#team-rings').get_attribute('aria-pressed')=='false'
+ page.evaluate('''() => {
+  const e=ArenaApp.engine,[spring,battery]=e.game.balls;
+  spring.x=spring.prevX=210;spring.y=spring.prevY=e.arena.centerY;
+  battery.x=battery.prevX=260;battery.y=battery.prevY=e.arena.centerY;
+  e.invokeHook(spring,'onSpawn');
+  e.invokeHook(spring,'onWallBounce',{bouncedX:true});
+  for(let i=0;i<4;i++)e.dealDamage(battery,1,spring);
+ }''')
+ page.wait_for_function("paint.charge['3'].text==='1/3'&&paint.charge['4'].text==='4/4'&&Math.abs(paint.charge['3'].scale*200-document.querySelector('#arena').width)<1")
+ for width,height in SIZES:
+  page.set_viewport_size({'width':width,'height':height})
+  fit(page,['#arena-wrap','#pause','#step','#restart','#team-rings'])
+  snap(page,f'camera-close-{width}x{height}')
+ page.evaluate('''() => {
+  const e=ArenaApp.engine,[spring,battery]=e.game.balls;
+  spring.x=spring.prevX=e.arena.left+spring.radius;
+  battery.x=battery.prevX=e.arena.right-battery.radius;
+ }''')
+ page.wait_for_function('''() => {
+  const width=document.querySelector('#arena').width;
+  return Object.values(paint.charge).every(d=>d.scale<width/1000&&d.x*d.scale+d.tx>=0&&d.x*d.scale+d.tx<=width);
+ }''')
+ snap(page,'camera-wide')
+ page.reload(wait_until='networkidle');page.click('#home-free')
+ assert '巨大' in page.locator('#map-settings').inner_text()
+ page.evaluate('ArenaApp.startMatch();ArenaApp.pause(true)')
+ assert page.locator('#team-rings').get_attribute('aria-pressed')=='false'
+ page.evaluate("value=>value===null?localStorage.removeItem('ball-arena-settings-v1'):localStorage.setItem('ball-arena-settings-v1',value)",saved)
+ page.set_viewport_size({'width':1440,'height':900})
+ page.reload(wait_until='networkidle');page.click('#home-free')
 try:
  with sync_playwright() as p:
   browser=p.chromium.launch(headless=True)
@@ -32,12 +116,38 @@ try:
   for prefix in ['/', '/Games/']:
    page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle')
    page.evaluate('localStorage.clear()');page.reload(wait_until='networkidle');page.click('#home-free')
-   assert page.locator('.role-card').count()==190
+   assert page.locator('.role-card').count()==211
+   page.click('[data-filter="original"]')
+   assert page.locator('.role-card').count()==27
+   for width,height in SIZES:
+    page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(55)
+    fit(page,['#lineup','#roster','#start','#filters','#search'])
+    snap(page,f'original-{prefix.strip("/") or "root"}-{width}x{height}')
+   if prefix=='/':
+    page.fill('#search','风筝匣')
+    assert page.locator('.role-card').count()==1
+    page.locator('[data-info="arenaKiteBox"]').click()
+    assert '落地' in page.locator('#detail-content').inner_text()
+    page.locator('#detail [data-close]').click()
+    page.click('[data-pick="arenaKiteBox"]')
+    assert page.evaluate("ArenaApp.state.left[0]==='arenaKiteBox'")
+    page.evaluate("ArenaApp.startMatch();ArenaApp.pause(true);ArenaApp.advanceSteps(258)")
+    assert page.evaluate("ArenaApp.engine.game.combatEntities.some(e=>e.kind==='arena-kite'&&e.height>0)")
+    snap(page,'original-kite-flight-390x844')
+    page.click('#skills')
+    assert '风筝匣' in page.locator('#skills-body').inner_text()
+    page.click('#skills-dialog [data-close]')
+    page.click('#back')
+    page.fill('#search','')
+    page.evaluate("ArenaApp.state.left=['oldWoodMaster'];ArenaApp.renderSelection()")
+   page.click('[data-filter="all"]')
+   page.set_viewport_size({'width':1440,'height':900})
    assert page.locator('#settings-dialog').count()==0
    page.check('#random-expanded');assert page.evaluate('ArenaApp.state.expanded');page.uncheck('#random-expanded')
    page.fill('#seed','4294967296');page.locator('#seed').blur();assert page.evaluate('ArenaApp.state.seedText')==''
    page.select_option('#physics','gyro');page.select_option('#mode','boss');assert page.locator('#physics').is_disabled();assert page.locator('#physics').input_value()=='none'
    page.check('#hazard-pads');assert page.evaluate('ArenaApp.state.physics')=='gyro';page.uncheck('#hazard-pads');page.select_option('#mode','duel');assert page.locator('#physics').input_value()=='gyro';page.select_option('#physics','none')
+   if prefix=='/':check_maps_and_camera(page)
 
    for width,height in SIZES:
     page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(100)
@@ -101,6 +211,7 @@ try:
     if mode=='brawl':
      page.set_viewport_size({'width':390,'height':844});fit(page,['#lineup','#roster','#start']);page.set_viewport_size({'width':1440,'height':900})
     page.click('#start');limits={'team':'6:00','wheel':'10:00','brawl':'8:00','boss':'8:00'};assert page.locator('#timer').inner_text().endswith('/ '+limits[mode]);page.click('#pause');page.evaluate('ArenaApp.advanceSteps(120)');snap(page,f'mode-{prefix.strip("/") or "root"}-{mode}');assert page.evaluate('!!ArenaApp.engine')
+    assert page.locator('#team-rings').is_hidden()==(mode=='brawl')
     page.click('#skills');assert page.locator('#skills-dialog').is_visible();assert page.locator('#skills-body .skills-row').count()>=(12 if mode=='brawl' else 2);page.click('#skills-dialog [data-close]');page.wait_for_timeout(30)
     page.click('#back')
    page.reload(wait_until='networkidle');assert page.evaluate("ArenaApp.state.favorites.includes('arenaBubble')")
@@ -121,7 +232,7 @@ try:
   context=browser.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True)
   context.add_init_script("Storage.prototype.getItem=function(){throw Error('denied')};Storage.prototype.setItem=function(){throw Error('denied')}")
   page=context.new_page();file_errors=[];page.on('pageerror',lambda e:file_errors.append(str(e)))
-  page.goto((ROOT/'games/ball_arena/index.html').as_uri(),wait_until='networkidle');page.click('#home-free');assert page.locator('.role-card').count()==190
+  page.goto((ROOT/'games/ball_arena/index.html').as_uri(),wait_until='networkidle');page.click('#home-free');assert page.locator('.role-card').count()==211
   page.click('#start');page.click('#pause');page.evaluate('ArenaApp.advanceSteps(60)');fit(page,['#arena-wrap','#pause']);assert not file_errors,file_errors
   context.close();browser.close();print('PASS: root/subpath, six sizes, scrolling, roles, modes, replay, series, timeout, touch and denied storage; screenshots:',OUT)
 finally:server.shutdown();server.server_close()

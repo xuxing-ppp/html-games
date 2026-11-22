@@ -16,8 +16,8 @@ function stateOf(ball){return ball.behavior.getArenaExtensionState();}
 function stunActive(ball){return [...ball.effects.values()].some(effect=>effect.visualType==='stun');}
 function wall(context={x:0,y:100,normalX:1,normalY:0}){return {bouncedX:true,bouncedY:false,wallContacts:[context]};}
 
-test('184 original definitions preserved plus six original characters',()=>{
- assert.equal(registry.list().length,190);assert.equal(M.ORIGINAL_IDS.length,6);
+test('184 original definitions preserved plus 27 local characters',()=>{
+ assert.equal(registry.list().length,211);assert.equal(M.ORIGINAL_IDS.length,27);
  const source=require('./original-roster.json');
  for(const original of source.roles){const d=registry.get(original.id);assert.equal(d.name,original.name);assert.equal(d.description,original.description);assert.deepEqual({...d.stats},original.stats);}
  assert(Object.values(c.ArenaTags).every(tags=>Array.isArray(tags)));
@@ -35,6 +35,70 @@ test('mode config preserves physical field size, limits and eligibility',()=>{
  s.left=[registry.list().find(d=>d.rosterType==='boss').id];assert.match(M.validate(s,registry),/Boss/);
  s.mode='boss';assert.equal(M.validate(s,registry),'');assert.equal(M.configFor(s,B).mode,'totalwar');
 });
+test('map presets preserve area across ratios and keep the legacy medium arena',()=>{
+ const s=M.defaults();
+ assert.equal(M.configFor(s,B).arena,undefined);
+ for(const [preset,scale] of Object.entries(M.MAP_PRESETS)){
+  s.map.preset=preset;
+  for(const ratio of [.5,1,1.37,2]){
+   s.map.ratio=ratio;
+   const {width,height}=M.mapDimensions(s,B),side=200*scale;
+   assert(Math.abs(width/height-ratio)<1e-12);
+   assert(Math.abs(width*height-side*side)<1e-8);
+  }
+ }
+ s.map={preset:'huge',ratio:1};assert.equal(M.mapDimensions(s,B).width,800);
+ s.mode='boss';assert.equal(M.mapDimensions(s,B).height,1200);
+ s.map={preset:'custom',ratio:.5,width:550,height:125};
+ assert.deepEqual({...M.mapDimensions(s,B)},{width:550,height:125});
+ assert.deepEqual({...M.sanitize({map:{preset:'bad',ratio:NaN,width:901,height:101.1}},registry).map},
+  {preset:'medium',ratio:1,width:200,height:200});
+ assert.equal(M.sanitize({},registry).teamRings,true);
+ assert.equal(M.sanitize({teamRings:false},registry).teamRings,false);
+});
+test('rectangular maps spawn and contain fighters in every game mode',()=>{
+ const boss=registry.list().find(d=>d.rosterType==='boss').id;
+ for(const mode of Object.keys(M.MODES))for(const [width,height] of [[340,190],[190,340]]){
+  const s={...M.defaults(),mode,map:{preset:'custom',width,height}};
+  if(mode==='boss')s.left=[boss];
+  if(mode==='wheel'||mode==='team')s.left=['oldWoodMaster','arenaSpring'];
+  if(mode==='brawl')s.brawl=Array(12).fill('arenaSpring');
+  if(mode!=='boss')s.physics=width>height?'gyro':'bounce';
+  const e=new B.BattleEngine();e.createBattle(M.configFor(s,B));e.beginFight();
+  assert.equal(e.arena.width,width);assert.equal(e.arena.height,height);
+  const active=e.game.balls.filter(b=>e.isBallActive(b));
+  for(const b of active){
+   assert(e.arena.contains(b.x,b.y,b.radius));
+   for(const other of active)if(b!==other)assert(Math.hypot(b.x-other.x,b.y-other.y)+1e-9>=b.radius+other.radius);
+  }
+  if(mode==='wheel'){
+   e.dealDamage(active[0],1e4,active[1]);e.update(1/60);
+   const next=e.game.competitiveMode.activeFor('left');
+   assert.equal(next.id,'arenaSpring');assert(e.arena.contains(next.x,next.y,next.radius));
+  }
+  const mechanisms=new c.ArenaMechanisms(e,{laser:true});
+  for(const pad of mechanisms.pads())assert(e.arena.contains(pad.x,pad.y,pad.radius));
+  assert.equal(mechanisms.laserPosition(true,0),e.arena.left);
+  assert.equal(mechanisms.laserPosition(false,1),e.arena.bottom);
+  mechanisms.dispose();dispose(e);
+ }
+ const s={...M.defaults(),mode:'team',map:{preset:'custom',width:100,height:100},left:Array(6).fill('arenaSpring')};
+ assert.throws(()=>B.normalizeBattleConfig(M.configFor(s,B),registry),/cannot fit/);
+});
+test('camera contains distant fighters, eases in and respects the original viewport floor',()=>{
+ const arena=B.createArenaGeometry({shape:'rectangle',width:800,height:500});
+ const balls=[{x:15,y:165,radius:15},{x:785,y:635,radius:15}];
+ const wide=M.cameraFrame(arena,balls,200);
+ assert.equal(wide.size,800);
+ const close=balls.map((b,index)=>({...b,x:65+index*35,y:195}));
+ const easing=M.cameraFrame(arena,close,200,wide,1/60);
+ assert(easing.size>200&&easing.size<wide.size);
+ const tight=M.cameraFrame(arena,close,200);
+ assert.deepEqual({...tight},{x:0,y:150,size:200});
+ const expanded=M.cameraFrame(arena,balls,200,tight,1/60);
+ assert.equal(expanded.size,800);
+ assert.deepEqual({...M.cameraFrame(B.createArenaGeometry(160),balls,200)},{x:0,y:0,size:160});
+});
 test('series settlement idempotence, early win and three draws',()=>{
  const s=new M.Series(3);s.record(0);assert.equal(s.record(1),false);assert.deepEqual([...s.scores],[1,0]);assert(s.next());s.record(0);assert(s.complete);assert(!s.next());
  const d=new M.Series(5);for(let i=0;i<3;i++){d.record(null);if(i<2)d.next();}assert(d.complete);assert.deepEqual([...d.scores],[0,0]);
@@ -50,7 +114,7 @@ test('team, wheel, brawl and Boss battles can start',()=>{
   const e=battle(left,mode==='brawl'?[]:['steelCoil','electric'],mode);run(e,2);assert(e.game.time>0);if(mode==='wheel'){assert.equal(e.game.balls.filter(b=>e.isBallActive(b)).length,2);const first=e.game.teams[0].balls[0];first.hp=0;run(e,.2);assert(e.isBallActive(e.game.teams[0].balls[1]));}dispose(e);
  }
 });
-test('all six original characters have finite state and no entity leaks',()=>{
+test('all 27 local characters have finite state and no entity leaks',()=>{
  dummy();
  for(const id of M.ORIGINAL_IDS){
   const e=frozen(battle(id,'arenaDummy'));run(e,12);const own=e.game.balls[0];assert(Number.isFinite(own.hp));assert(Number.isFinite(own.x)&&Number.isFinite(own.y));assert(stateOf(own));
@@ -86,6 +150,30 @@ test('courier boxes orbit, damage enemies, and return as supplies',()=>{
  assert(stateOf(own).spawns>=1);assert(stateOf(own).hits>=1);assert(stateOf(own).boxes<=3);assert(target.hp<1000);
  const beforeHp=own.hp;e.dealDamage(own,20,target);assert(own.hp>beforeHp-20);
  target.x=target.prevX=190;own.hp=90;run(e,3.2);assert(stateOf(own).pickups>=1);assert(own.hp>90);
+ dispose(e);
+});
+test('courier reuses only vacant box slots and draws boxes inside the arena',()=>{
+ dummy();
+ const s={...M.defaults(),left:['arenaCourier'],right:['arenaDummy'],map:{preset:'custom',width:330,height:180}};
+ const e=new B.BattleEngine();e.createBattle(M.configFor(s,B));e.beginFight();frozen(e);
+ const [own,target]=e.game.balls;
+ own.x=own.prevX=e.arena.left+own.radius;own.y=own.prevY=e.arena.top+own.radius;
+ target.x=target.prevX=e.arena.right-target.radius;
+ const hitTexts=[];
+ e.spawnHitText=(x,y,text)=>hitTexts.push(text);
+ run(e,7.6);
+ const state=stateOf(own);
+ assert.equal(state.spawns,3);assert.equal(state.boxes,2);assert.equal(new Set(state.slots).size,2);
+ assert.equal(own.hp,own.maxHp);assert(!hitTexts.some(text=>String(text).startsWith('+')));
+ const boxes=[];
+ const canvas=new Proxy({strokeRect(x,y,w){if(w===16)boxes.push({x:x+8,y:y+8});}},
+  {get:(ctx,key)=>key in ctx?ctx[key]:()=>{}});
+ e.invokeHook(own,'drawAfter',null,canvas);
+ assert.equal(boxes.length,2);
+ assert.notDeepEqual(boxes[0],boxes[1]);
+ for(const box of boxes)assert(e.arena.contains(box.x,box.y,15));
+ Object.assign(target,boxes[0],{prevX:boxes[0].x,prevY:boxes[0].y});
+ const hp=target.hp;e.update(1/60);assert(target.hp<=hp-7);
  dispose(e);
 });
 test('boomerang ricochets without tracking and hits for three per target',()=>{
@@ -194,4 +282,271 @@ test('thumbtack shots disappear with their defeated wheel owner when retention i
   assert(tacks.length>0);owner.hp=0;e.notifyNewDeaths();
   assert(tacks.every(x=>x.entityActive===retain));dispose(e);
  }
+});
+
+function originalFixture(id,x,y,ownerX=45,ownerY=100){
+ dummy();
+ const e=frozen(battle(id,'arenaDummy')), [owner,target]=e.game.balls;
+ move(owner,ownerX,ownerY);move(target,x,y);
+ owner.storedVx=150;owner.storedVy=0;
+ return {e,owner,target};
+}
+
+function move(ball,x,y){ball.x=ball.prevX=x;ball.y=ball.prevY=y;}
+
+test('new periodic skills honor their first cooldown and per-target damage limits',()=>{
+ const cases=[
+  ['Beacon',3,3.65,3,108,100],
+  ['Tremor',4,4.85,4,40,100,93],
+  ['Bellows',3,4,2,100,100],
+  ['HourglassMagnet',5,5.75,3,120,100,70],
+  ['KiteBox',4,5.1,4,98,100],
+  ['Ruler',3,3.05,4,98,100],
+  ['RainBarrel',4,4.81,4,105,100],
+  ['FoldingBarrier',5,5.68,2,62,125,85],
+  ['TideWheel',4,4.56,3,100,150,100],
+  ['MirrorShard',3,3.65,4,87,100],
+  ['CarbonTape',5,6.1,4,138,100,100],
+  ['PrismLamp',4,4.9,4,105,100],
+  ['Gate',5,7,3,120,100],
+  ['StepLight',5,6,4,88,100]
+ ];
+ for(const [id,period,time,damage,x,y,ownerX] of cases){
+  const {e,owner,target}=originalFixture('arena'+id,x,y,ownerX);
+  run(e,period-1/60);
+  assert.equal(stateOf(owner).casts,0,id);
+  assert.equal(target.hp,1000,id);
+  run(e,time-period+1/60);
+  assert.equal(stateOf(owner).casts,1,id);
+  assert.equal(target.hp,1000-damage,id);
+  if(id==='Beacon')assert.equal(e.getSlowFactor(target),.75);
+  if(id==='StepLight')assert.equal(owner.speedMultiplier,1.25);
+  dispose(e);
+ }
+});
+
+test('rivets are collected once, paper breaks locally, and the spool snaps on crossing',()=>{
+ {
+  const {e,owner,target}=originalFixture('arenaRiveter',36,140,100);
+  run(e,4.6);
+  const rivet=e.game.combatEntities.find(entity=>entity.kind==='arena-rivet');
+  assert(rivet);
+  move(owner,rivet.x-15,rivet.y);
+  run(e,.45);
+  e.invokeHook(owner,'onCollision',null,target);
+  assert.equal(target.hp,993);
+  e.invokeHook(owner,'onCollision',null,target);
+  assert.equal(target.hp,991);
+  dispose(e);
+ }
+ {
+  const {e,target}=originalFixture('arenaCardboard',35,140,100);
+  run(e,5.1);
+  const board=e.game.combatEntities.find(entity=>entity.kind==='arena-cardboard');
+  assert.equal(board.segments.filter(s=>s.alive).length,6);
+  move(target,77,105);
+  e.updateCombatEntity(board,1/60);
+  assert.equal(board.segments.filter(s=>s.alive).length,5);
+  move(target,35,140);
+  const shot=e.spawnProjectile({kind:'test-paper-shot',x:66,y:125,vx:80,vy:0,radius:2,life:1},target);
+  shot.previousX=66;shot.previousY=125;shot.x=85;
+  e.updateCombatEntity(board,1/60);
+  assert.equal(shot.entityActive,false);
+  assert.equal(board.segments.filter(s=>s.alive).length,4);
+  dispose(e);
+ }
+ {
+  const {e,target}=originalFixture('arenaSpool',130,135);
+  run(e,5.1);
+  const thread=e.game.combatEntities.find(entity=>entity.kind==='arena-thread');
+  assert(thread);
+  move(target,90,100);target.prevX=53;
+  e.updateCombatEntity(thread,1/60);
+  assert.equal(target.hp,997);
+  assert.equal(thread.entityActive,false);
+  dispose(e);
+ }
+});
+
+test('ceramic armor, ink stacks, heat shields and lantern recall settle through the engine',()=>{
+ {
+  const {e,owner,target}=originalFixture('arenaPottery',110,100);
+  run(e,5.05);
+  e.dealDamage(owner,7,target);assert.equal(owner.hp,97);assert.equal(owner.speedMultiplier,1.2);
+  e.dealDamage(owner,7,target);assert.equal(owner.hp,90);
+  dispose(e);
+ }
+ {
+  const {e,owner,target}=originalFixture('arenaInkStamp',110,100);
+  e.invokeHook(owner,'onCollision',null,target);
+  e.invokeHook(owner,'onCollision',null,target);
+  const mark=[...target.effects.values()][0];
+  e.invokeEffectHook(target,mark,'onWallBounce');
+  assert.equal(target.hp,993);assert.equal(target.effects.size,0);
+  dispose(e);
+ }
+ {
+  const e=frozen(battle(['arenaHeatPump','arenaDummy'],'arenaDummy','nvn'));
+  const [owner,ally,enemy]=e.game.balls;
+  move(owner,45,70);move(ally,45,120);move(enemy,110,100);
+  e.applyEffect(owner,{id:'control',duration:5,preventsAttack:true,pausesBehavior:true},enemy);
+  for(let i=0;i<3;i++)e.dealDamage(owner,1,enemy);
+  assert.equal(owner.hp,97);
+  e.dealDamage(ally,4,enemy);assert.equal(ally.hp,999);
+  e.dealDamage(owner,2,enemy);assert.equal(owner.hp,97);
+  e.dealDamage(owner,3,enemy);assert.equal(owner.hp,95);
+  dispose(e);
+ }
+ {
+  const {e,owner,target}=originalFixture('arenaSlideLantern',115,100);
+  run(e,5.05);
+  move(owner,82,70);
+  e.dealDamage(owner,2,target);assert.equal(owner.x,45);assert.equal(owner.y,100);
+  move(owner,82,70);
+  e.dealDamage(owner,2,target);assert.equal(owner.x,82);
+  dispose(e);
+ }
+});
+
+test('airborne projectiles skip ground hits and interception until they land',()=>{
+ const {e,owner,target}=originalFixture('arenaKiteBox',98,100);
+ run(e,4.15);
+ const flight=e.game.combatEntities.find(entity=>entity.kind==='arena-kite');
+ assert.equal(flight.contactLayer,'air');
+ assert(flight.height>0&&flight.y===100);
+ assert.equal(e.canContact(flight.combatSource,target),false);
+ assert.equal(e.dealDamage(target,9,flight.combatSource),false);
+ assert.equal(target.hp,1000);
+ run(e,.95);
+ assert.equal(target.hp,996);
+ dispose(e);
+});
+
+test('controlled collision and wall events cannot run an active original skill',()=>{
+ const {e,owner,target}=originalFixture('arenaInkStamp',110,100);
+ e.applyEffect(owner,{id:'control',duration:3,pausesBehavior:true,preventsAttack:true},target);
+ e.invokeHook(owner,'onCollision',null,target);
+ assert.equal(target.hp,1000);assert.equal(target.effects.size,0);
+ e.removeEffect(owner,'control');
+ e.invokeHook(owner,'onCollision',null,target);
+ assert.equal(target.hp,998);assert.equal(target.effects.size,1);
+ dispose(e);
+});
+
+test('new skills replay deterministically on normal and rectangular arena presets',()=>{
+ for(const map of [{preset:'medium'},{preset:'huge',ratio:2},{preset:'large',ratio:.5}]){
+  function replay(){
+   const e=new B.BattleEngine();
+   const settings={...M.defaults(),mode:'team',left:['arenaKiteBox','arenaCardboard','arenaTremor'],
+    right:['arenaStepLight','arenaMirrorShard','arenaHeatPump'],map};
+   const session=B.createDeterministicSession({engine:e,seed:332,setup(engine){
+    engine.createBattle(M.configFor(settings,B));engine.beginFight();
+   }});
+   for(let i=0;i<600;i++)session.advance(1/60);
+   const results=JSON.stringify({
+    balls:e.game.balls.map(({id,x,y,hp})=>({id,x,y,hp})),
+    entities:e.game.combatEntities.map(({kind,age,x,y})=>({kind,age,x,y}))
+   });
+   session.dispose();dispose(e);return results;
+  }
+  assert.equal(replay(),replay());
+ }
+});
+
+test('temporary haste is never written into the boxer base multiplier',()=>{
+ const {e,owner,target}=originalFixture('boxer',100,100);
+ e.applyEffect(owner,{id:'temporary-haste',duration:.4,speedFactor:1.5},owner);
+ run(e,.1);
+ assert(owner.behavior.getBoxerState().anchored);
+ assert.equal(owner.speedMultiplierBase,B.BOXER_SLOW_FACTOR);
+ assert(Math.abs(owner.speedMultiplier-B.BOXER_SLOW_FACTOR*1.5)<1e-10);
+ move(target,175,175);
+ run(e,.6);
+ assert.equal(owner.speedMultiplierBase,1);
+ assert.equal(owner.speedMultiplier,1);
+ dispose(e);
+});
+
+test('carpentry releases its movement lock after displacement on a rectangular map',()=>{
+ dummy();
+ const e=new B.BattleEngine(),s={...M.defaults(),left:['oldWoodMaster'],right:['arenaDummy'],map:{preset:'custom',width:340,height:190}};
+ e.createBattle(M.configFor(s,B));e.beginFight();
+ const [owner,target]=e.game.balls;
+ move(owner,e.arena.left+owner.radius,e.arena.centerY);move(target,180,170);
+ e.setMovementLocked(target,true);
+ e.invokeHook(owner,'onWallBounce',wall({x:e.arena.left,y:owner.y,normalX:1,normalY:0}));
+ assert(owner.behavior.getOldWoodMasterState().nailing);
+ assert(owner.movementLocked);
+ move(owner,owner.x+30,owner.y);
+ e.invokeHook(owner,'update',null,1/60);
+ assert(!owner.behavior.getOldWoodMasterState().nailing);
+ assert.equal(owner.movementLocked,false);
+ dispose(e);
+});
+
+test('manhole transfer clears the original jump lock without leaving the borrower locked',()=>{
+ const {e,owner,target}=originalFixture('manhole',165,165,80);
+ const initial=owner.behavior.getManholeState().cover;
+ e.setMovementLocked(owner,false);
+ // Advance only the behavior during the animation to fix the relative positions.
+ e.game.time+=.7;
+ move(owner,initial.x,initial.y);
+ e.invokeHook(owner,'afterUpdateStep');
+ assert.equal(owner.behavior.getManholeState().phase,'underground');
+ for(let i=0;i<125;i++){
+  e.game.time+=1/60;
+  e.invokeHook(owner,'update',null,1/60);
+  e.invokeHook(owner,'afterUpdateStep');
+ }
+ assert.equal(owner.behavior.getManholeState().phase,'airborne');
+ assert.equal(owner.movementLocked,true);
+ e.setMovementLocked(target,false);
+ const lease=e.borrowAttack(owner,target);
+ assert(lease);
+ assert.equal(owner.movementLocked,false);
+ assert.equal(target.movementLocked,false);
+ lease.release();dispose(e);
+});
+
+test('impact of an exchanged black-hole effect tracks the new victim and releases on expiry',()=>{
+ const {e,owner,target}=originalFixture('blackHole',130,100,60);
+ const hole=e.spawnCombatEntity(B.createBlackHoleVortex(target.x,target.y,e.arenaSize),owner);
+ e.updateCombatEntity(hole,1/60);
+ assert.equal(hole.victim,target);
+ assert.equal(hole.holdEffect,target.effects.get('black-hole-hold'));
+ e.exchangeEffects(owner,target,effect=>effect.id==='black-hole-hold');
+ assert.equal(hole.victim,owner);
+ e.removeEffect(owner,'black-hole-hold');
+ assert.equal(hole.victim,null);assert.equal(hole.holdEffect,null);
+ dispose(e);
+});
+
+test('meteor hammer keeps its nodes inside rectangular walls as the owner moves',()=>{
+ dummy();
+ const e=new B.BattleEngine(),s={...M.defaults(),left:['meteor-hammer'],right:['arenaDummy'],map:{preset:'custom',width:280,height:120}};
+ e.createBattle(M.configFor(s,B));e.beginFight();
+ const [owner,target]=e.game.balls;
+ move(target,240,e.arena.centerY);
+ for(const [x,y] of [[15,e.arena.top+15],[15,e.arena.bottom-15],[e.arena.right-15,e.arena.bottom-15]]){
+  move(owner,x,y);run(e,.19);
+  const {points}=owner.behavior.getMeteorHammerState();
+  assert(points.every(p=>e.arena.contains(p.x,p.y)));
+ }
+ dispose(e);
+});
+
+test('vampire bite follows the transferred bind and stops targeting the borrower',()=>{
+ const {e,owner, target:borrower}=originalFixture('vampire',96,100);
+ e.invokeHook(owner,'onCollision',null,borrower);
+ assert(borrower.effects.has('vampire-bind'));
+ const lease=e.borrowAttack(owner,borrower);
+ assert(lease);
+ e.exchangeEffects(owner,borrower,effect=>effect.id==='vampire-bind');
+ assert(owner.effects.has('vampire-bind'));assert(!borrower.effects.has('vampire-bind'));
+ const ownerHp=owner.hp,borrowerHp=borrower.hp;
+ e.game.time+=.75;
+ lease.invoke('update',{game:e.gameView()},.75);
+ assert(owner.hp<ownerHp);assert(borrower.hp>=borrowerHp);
+ e.exchangeEffects(owner,borrower,effect=>effect.id==='vampire-bind');
+ lease.release();dispose(e);
 });

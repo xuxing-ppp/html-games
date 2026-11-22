@@ -1001,6 +1001,7 @@
               targetHp: finiteOr(target.hp, 0)
             });
           },
+          onDamagedWhileControlled(...args) { return this.onDamaged(...args); },
           onDamaged(_context, event) {
             emitEvent("damaged", {
               amount: finiteOr(event && event.amount, 0)
