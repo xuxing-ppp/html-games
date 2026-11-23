@@ -46,8 +46,12 @@ def check_maps_and_camera(page):
  page.select_option('#map-preset','huge');page.click('#map-dialog [data-close]')
  page.fill('#seed','217');page.locator('#seed').blur()
  page.evaluate('''() => {
-  const ctx=CanvasRenderingContext2D.prototype,fill=ctx.fillText,stroke=ctx.stroke;
-  window.paint={charge:{},rings:[]};
+  const ctx=CanvasRenderingContext2D.prototype,fill=ctx.fillText,stroke=ctx.stroke,strokeRect=ctx.strokeRect;
+  window.paint={charge:{},rings:[],frame:null};
+  ctx.strokeRect=function(x,y,w,h){
+   if(this.canvas.id==='arena-minimap'&&this.strokeStyle==='#f5d88e')paint.frame={x,y,w,h};
+   return strokeRect.call(this,x,y,w,h);
+  };
   ctx.fillText=function(text,x,y,...rest){
    if(this.canvas.id==='arena'&&/^[0-4]\\/[34]$/.test(text))paint.charge[String(text).slice(-1)]={text,x,y,scale:this.getTransform().a,tx:this.getTransform().e,ty:this.getTransform().f};
    return fill.call(this,text,x,y,...rest);
@@ -81,10 +85,17 @@ def check_maps_and_camera(page):
   e.invokeHook(spring,'onWallBounce',{bouncedX:true});
   for(let i=0;i<4;i++)e.dealDamage(battery,1,spring);
  }''')
- page.wait_for_function("paint.charge['3'].text==='1/3'&&paint.charge['4'].text==='4/4'&&Math.abs(paint.charge['3'].scale*200-document.querySelector('#arena').width)<1")
+ page.wait_for_function("""() => {
+  const canvas=document.querySelector('#arena');
+  const expected=Math.min(canvas.width/(200*Math.SQRT2),canvas.height/(200/Math.SQRT2));
+  return paint.charge['3'].text==='1/3'&&paint.charge['4'].text==='4/4'&&Math.abs(paint.charge['3'].scale-expected)<.01&&paint.frame?.w>0;
+ }""")
+ assert page.locator('#arena-overview').is_visible()
+ close_frame=page.evaluate('paint.frame.w/document.querySelector("#arena-minimap").width')
  for width,height in SIZES:
   page.set_viewport_size({'width':width,'height':height})
-  fit(page,['#arena-wrap','#pause','#step','#restart','#team-rings'])
+  page.wait_for_timeout(90)
+  fit(page,['#arena-wrap','#arena-overview','#pause','#step','#restart','#team-rings'])
   snap(page,f'camera-close-{width}x{height}')
  page.evaluate('''() => {
   const e=ArenaApp.engine,[spring,battery]=e.game.balls;
@@ -95,11 +106,21 @@ def check_maps_and_camera(page):
   const width=document.querySelector('#arena').width;
   return Object.values(paint.charge).every(d=>d.scale<width/1000&&d.x*d.scale+d.tx>=0&&d.x*d.scale+d.tx<=width);
  }''')
+ assert page.evaluate('paint.frame.w/document.querySelector("#arena-minimap").width')>close_frame*2
  snap(page,'camera-wide')
  page.reload(wait_until='networkidle');page.click('#home-free')
  assert '巨大' in page.locator('#map-settings').inner_text()
  page.evaluate('ArenaApp.startMatch();ArenaApp.pause(true)')
  assert page.locator('#team-rings').get_attribute('aria-pressed')=='false'
+ for preset,ratio in [('medium',2),('small',.5)]:
+  page.click('#back')
+  page.click('#map-settings');page.select_option('#map-preset',preset)
+  page.fill('#map-ratio',str(ratio));page.click('#map-dialog [data-close]')
+  page.evaluate('ArenaApp.startMatch();ArenaApp.pause(true)')
+  assert page.locator('#arena-overview').is_hidden()
+  aspect=page.locator('#arena').bounding_box()
+  assert abs(aspect['width']/aspect['height']-ratio)<.02
+  snap(page,f'camera-full-{preset}')
  page.evaluate("value=>value===null?localStorage.removeItem('ball-arena-settings-v1'):localStorage.setItem('ball-arena-settings-v1',value)",saved)
  page.set_viewport_size({'width':1440,'height':900})
  page.reload(wait_until='networkidle');page.click('#home-free')
@@ -116,14 +137,50 @@ try:
   for prefix in ['/', '/Games/']:
    page.goto(BASE+prefix+'games/ball_arena/',wait_until='networkidle')
    page.evaluate('localStorage.clear()');page.reload(wait_until='networkidle');page.click('#home-free')
-   assert page.locator('.role-card').count()==211
+   assert page.locator('.role-card').count()==212
    page.click('[data-filter="original"]')
-   assert page.locator('.role-card').count()==27
+   assert page.locator('.role-card').count()==28
    for width,height in SIZES:
     page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(55)
     fit(page,['#lineup','#roster','#start','#filters','#search'])
     snap(page,f'original-{prefix.strip("/") or "root"}-{width}x{height}')
    if prefix=='/':
+    page.fill('#search','镂木匠')
+    assert page.locator('.role-card').count()==1
+    page.locator('[data-info="arenaLatticeCarpenter"]').click()
+    assert '回复1点生命' in page.locator('#detail-content').inner_text()
+    page.locator('#detail [data-close]').click()
+    page.click('[data-pick="arenaLatticeCarpenter"]')
+    assert page.evaluate("ArenaApp.state.left[0]==='arenaLatticeCarpenter'")
+    result=page.evaluate("""() => {
+     const opponent=ArenaApp.state.right[0];
+     ArenaApp.state.right[0]='arenaSpring';
+     ArenaApp.startMatch();ArenaApp.pause(true);
+     ArenaApp.state.right[0]=opponent;
+     const engine=ArenaApp.engine,[builder,target]=engine.game.balls;
+     const {left,centerX,centerY}=engine.arena;
+     builder.x=builder.prevX=left+builder.radius;builder.y=builder.prevY=centerY;
+     builder.vx=builder.storedVx=150;builder.vy=builder.storedVy=0;
+     engine.setMovementLocked(target,true);
+     target.x=target.prevX=centerX+40;target.y=target.prevY=centerY;
+     ArenaApp.session.runSeeded(()=>engine.invokeHook(builder,'onWallBounce',{
+      bouncedX:true,bouncedY:false,wallContacts:[{x:left,y:centerY,normalX:1,normalY:0}]
+     }));
+     ArenaApp.advanceSteps(46);
+     const board=engine.game.combatEntities.find(e=>e.solidParts);
+     if(!board)return {built:false};
+     const face=board.x+board.width/2+builder.radius;
+     builder.x=face-1;builder.prevX=face+5;builder.y=builder.prevY=board.y;
+     builder.vx=-150;builder.vy=0;builder.hp=98;
+     engine.invokeHook(builder,'afterUpdateStep',null,1/60);
+     const result={built:true,health:builder.hp,parts:board.solidParts.length,
+      passable:!board.contactAt(board.x,board.y,builder.radius)};
+     ArenaApp.advanceSteps(1);
+     return result;
+    }""")
+    assert result=={'built':True,'health':99,'parts':2,'passable':True},result
+    snap(page,'original-lattice-opening-390x844')
+    page.click('#back')
     page.fill('#search','风筝匣')
     assert page.locator('.role-card').count()==1
     page.locator('[data-info="arenaKiteBox"]').click()
@@ -131,7 +188,16 @@ try:
     page.locator('#detail [data-close]').click()
     page.click('[data-pick="arenaKiteBox"]')
     assert page.evaluate("ArenaApp.state.left[0]==='arenaKiteBox'")
-    page.evaluate("ArenaApp.startMatch();ArenaApp.pause(true);ArenaApp.advanceSteps(258)")
+    page.evaluate("""() => {
+     ArenaApp.startMatch();ArenaApp.pause(true);
+     const engine=ArenaApp.engine;
+     for(const [i,ball] of engine.game.balls.entries()){
+      engine.setMovementLocked(ball,true);
+      ball.x=ball.prevX=i===0?55:145;
+      ball.y=ball.prevY=100;
+     }
+     ArenaApp.advanceSteps(258);
+    }""")
     assert page.evaluate("ArenaApp.engine.game.combatEntities.some(e=>e.kind==='arena-kite'&&e.height>0)")
     snap(page,'original-kite-flight-390x844')
     page.click('#skills')
@@ -232,7 +298,7 @@ try:
   context=browser.new_context(viewport={'width':390,'height':844},has_touch=True,is_mobile=True)
   context.add_init_script("Storage.prototype.getItem=function(){throw Error('denied')};Storage.prototype.setItem=function(){throw Error('denied')}")
   page=context.new_page();file_errors=[];page.on('pageerror',lambda e:file_errors.append(str(e)))
-  page.goto((ROOT/'games/ball_arena/index.html').as_uri(),wait_until='networkidle');page.click('#home-free');assert page.locator('.role-card').count()==211
+  page.goto((ROOT/'games/ball_arena/index.html').as_uri(),wait_until='networkidle');page.click('#home-free');assert page.locator('.role-card').count()==212
   page.click('#start');page.click('#pause');page.evaluate('ArenaApp.advanceSteps(60)');fit(page,['#arena-wrap','#pause']);assert not file_errors,file_errors
   context.close();browser.close();print('PASS: root/subpath, six sizes, scrolling, roles, modes, replay, series, timeout, touch and denied storage; screenshots:',OUT)
 finally:server.shutdown();server.server_close()

@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
 const B=root.BallBattle,TAU=Math.PI*2,EPS=1e-8;
+const CARDBOARD_DAMAGE=3;
 const {resolveArenaGeometry:arena,firstSegmentCircleContact:circleHit}=B;
 const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
 const delta=(a,b)=>({x:b.x-a.x,y:b.y-a.y});
@@ -13,6 +14,11 @@ function heading(ball){
 }
 const inside=(a,b,r)=>distance(a,b)<=r+b.radius;
 const point=(game,p,r=0)=>arena(game).clampPoint(p.x,p.y,r);
+const lead=(game,target,time)=>arena(game).advanceMotion(target,time,{maxBounces:4});
+function aimPoint(game,ball,target,time,range){
+ const p=lead(game,target,time);
+ return point(game,offset(ball,angleTo(ball,p),Math.min(range,distance(ball,p))));
+}
 
 function line(c,a,b){
  c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
@@ -36,7 +42,7 @@ function ring(services,p,color,radius,life=.28){
   }});
 }
 function enemiesIn(services,p,r,fn){
- services.forEachEnemy(target=>{if(inside(p,target,r))fn(target);});
+ services.forEachContactEnemy(target=>{if(inside(p,target,r))fn(target);});
 }
 function impact(services,p,r,damage,color,hit=new Set()){
  enemiesIn(services,p,r,target=>{
@@ -114,7 +120,12 @@ function riveter(services,color){
    const rivet=zone(services,'arena-rivet',position,5,{
     update({entity},dt){
      const holder=entity.owner;
-     if(entity.age+dt<.35||!holder||holder.hp<=0||holder.active===false||!inside(entity,holder,5))return;
+     if(entity.age+dt<.35||!holder||holder.hp<=0||holder.active===false)return;
+     if(entity.age>=1.2){
+      const next=offset(entity,angleTo(entity,holder),Math.min(distance(entity,holder),320*dt));
+      entity.x=next.x;entity.y=next.y;
+     }
+     if(!inside(entity,holder,5))return;
      charged=true;entity.entityActive=false;ring(services,holder,color,18);
     },
     draw({entity},c){
@@ -126,41 +137,50 @@ function riveter(services,color){
   }});
  },{
   onSpawn(){rivets=[];charged=false;},
-  onCollision({ball},target){if(charged&&services.dealDamage(target,5)){charged=false;ring(services,ball,color,23);}},
+  onCollision({ball},target){if(charged&&services.dealDamage(target,10)){charged=false;ring(services,ball,color,23);}},
   drawAfter({ball},c){if(charged){c.save();c.strokeStyle=color;c.lineWidth=2;circle(c,ball,19);c.restore();}}
  });
 }
 
 function beacon(services,color){
- return timed(services,3,({ball,game})=>{
+ return timed(services,2.6,({ball,game})=>{
   const target=services.getOpponent();if(!target)return false;
-  const p=point(game,offset(ball,angleTo(ball,target),Math.min(88,distance(ball,target))),6);
+  const p=aimPoint(game,ball,target,.65,150);
   throwTo(services,ball,p,'arena-beacon-flight',color,{onLand(position){
    zone(services,'arena-beacon',position,2,{
     update({entity,services:source}){
-     enemiesIn(source,entity,22,target=>{
+     enemiesIn(source,entity,32,target=>{
       if(!entity.entityActive)return;
       entity.entityActive=false;
-      if(source.dealDamage(target,3))boost(source,target,effectId(ball,'beacon'),.75,1);
+      if(source.dealDamage(target,5))boost(source,target,effectId(ball,'beacon'),.75,1);
       ring(source,entity,color,22);
      });
     },
-    draw({entity},c){warning(c,entity,22,color);c.save();c.fillStyle=color;c.fillRect(entity.x-2,entity.y-6,4,12);c.restore();}
+    draw({entity},c){warning(c,entity,32,color);c.save();c.fillStyle=color;c.fillRect(entity.x-2,entity.y-6,4,12);c.restore();}
    });
   }});
  });
 }
 
 function pottery(services,color){
+ function shatter(ball,game){
+  const target=services.getOpponent();
+  ring(services,ball,color,23);
+  if(target)shard(services,ball,angleTo(ball,lead(game,target,Math.min(.55,distance(ball,target)/290))),color,'arena-pottery-shard',new Map(),1,7,0,{speed:290,radius:7});
+ }
  let expires=0;
- return timed(services,5,({game})=>{expires=game.time+2;},{
+ return timed(services,4,({game})=>{expires=game.time+1.5;},{
   onSpawn(){expires=0;},
+  update({ball,game}){
+   if(expires===0||game.time<expires)return;
+   expires=0;shatter(ball,game);
+  },
   onBeforeDamage({ball,game},event){
    const actor=event.combatSource?.actor;
    if(!actor||actor===ball||event.amount<=0||B.isTrueDamage(event)||game.time>=expires||!Number.isFinite(actor.x)||!Number.isFinite(actor.y))return event;
    if(Math.cos(angleTo(ball,actor)-heading(ball))<.5)return event;
    expires=0;event.amount=Math.max(0,event.amount-4);
-   boost(services,ball,effectId(ball,'pottery'),1.2,1);ring(services,ball,color,19);
+   boost(services,ball,effectId(ball,'pottery'),1.2,1);shatter(ball,game);
    return event;
   },
   drawAfter({ball,game},c){
@@ -178,32 +198,33 @@ function sequence(services,kind,positions,delays,radius,color,callback){
 }
 
 function tremor(services,color){
- return timed(services,4,({ball,game})=>{
-  const hit=new Set(),a=heading(ball)+Math.PI;
-  const positions=[18,34,50].map(n=>point(game,offset(ball,a,n)));
-  sequence(services,'arena-tremor',positions,[.35,.55,.75],16,color,
-   (p,source)=>impact(source,p,16,4,color,hit));
+ return timed(services,3.2,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const hit=new Set(),delays=[.35,.55,.75];
+  const positions=delays.map(t=>aimPoint(game,ball,target,t,155));
+  sequence(services,'arena-tremor',positions,delays,26,color,
+   (p,source)=>impact(source,p,26,6,color,hit));
  });
 }
 
 function bellows(services,color){
- return timed(services,3,({ball})=>{
+ return timed(services,2.8,({ball,game})=>{
   const target=services.getOpponent();if(!target)return false;
-  const rotation=angleTo(ball,target),hit=new Set(),origin=offset(ball,rotation,12);
+  const rotation=angleTo(ball,lead(game,target,.25)),hit=new Set(),origin=offset(ball,rotation,12);
   zone(services,'arena-wind-strip',origin,1.2,{
    update({entity,services:source}){
     source.forEachEnemy(enemy=>{
      const d=delta(entity,enemy),x=d.x*Math.cos(rotation)+d.y*Math.sin(rotation);
      const side=-d.x*Math.sin(rotation)+d.y*Math.cos(rotation);
-     if(x<0||x>62+enemy.radius||Math.abs(side)>10+enemy.radius||hit.has(enemy.instanceId))return;
+     if(x<0||x>110+enemy.radius||Math.abs(side)>18+enemy.radius||hit.has(enemy.instanceId))return;
      hit.add(enemy.instanceId);
-     if(source.dealDamage(enemy,2))push(source,enemy,rotation+(side>=0?1:-1)*Math.PI/2,12);
+     if(source.dealDamage(enemy,4))push(source,enemy,rotation+(side>=0?1:-1)*Math.PI/2,12);
     });
    },
    draw({entity},c){
     c.save();c.strokeStyle=color;c.globalAlpha*=.7;c.lineWidth=1.4;
-    for(const y of [-8,0,8]){
-     const p=offset(entity,rotation+Math.PI/2,y);line(c,p,offset(p,rotation,62));
+    for(const y of [-16,0,16]){
+     const p=offset(entity,rotation+Math.PI/2,y);line(c,p,offset(p,rotation,110));
     }
     c.restore();
    }});
@@ -238,19 +259,19 @@ function oldPosition(actor){
 function cardboard(services,color){
  let boards=[];
  return timed(services,5,({ball,game})=>{
-  const a=heading(ball),center=offset(ball,a,-23),map=arena(game),sides=[-42,42];
+  const a=heading(ball),map=arena(game),center=point(game,offset(ball,a,-23),4),sides=[-42,42];
   const ends=sides.map(n=>offset(center,a+Math.PI/2,n));
-  if(!map.contains(center.x,center.y,4))return false;
   const start=map.clampPoint(ends[0].x,ends[0].y,3),end=map.clampPoint(ends[1].x,ends[1].y,3);
   const length=distance(start,end);
   if(length<24)return false;
   boards=boards.filter(b=>b.entityActive!==false);
-  if(boards.length>=2)boards.shift().entityActive=false;
+  if(boards.some(b=>distance(b,center)<90&&b.segments.some(s=>s.alive&&crossedStrip(start,end,s.a,s.b,4))))return;
   const segments=Array.from({length:6},(_,i)=>{
    const p=offset(start,angleTo(start,end),i*length/6);
    return {a:p,b:offset(start,angleTo(start,end),(i+1)*length/6),alive:true};
   });
-  const board=zone(services,'arena-cardboard',center,6,{
+  const touching=new Set();
+  const board=zone(services,'arena-cardboard',center,Number.MAX_SAFE_INTEGER,{
    solid:true,segments,
    update({entity,services:source,game}){
     function hit(actor,radius){
@@ -259,9 +280,18 @@ function cardboard(services,color){
      part.alive=false;ring(source,part.a,color,9,.18);
      return true;
     }
+    const remainingContacts=new Set();
     source.forEachContactEnemy(enemy=>{
-     if(!source.getContactProfile(enemy).solid||!hit(enemy,enemy.radius))return;
-     if(source.isMovementLocked(enemy))return;
+     if(!source.getContactProfile(enemy).solid)return;
+     const id=enemy.instanceId;
+     if(touching.has(id)){
+      if(crossedStrip(enemy,enemy,start,end,enemy.radius+2.5))remainingContacts.add(id);
+      return;
+     }
+     if(!hit(enemy,enemy.radius))return;
+     remainingContacts.add(id);
+     source.dealDamage(enemy,CARDBOARD_DAMAGE);
+     if(enemy.hp<=0||source.isMovementLocked(enemy))return;
      const normal=angleTo(start,end)+Math.PI/2,prior=oldPosition(enemy);
      const side=Math.cos(angleTo(center,prior)-normal)<0?-1:1;
      const depth=(enemy.x-center.x)*Math.cos(normal)+(enemy.y-center.y)*Math.sin(normal);
@@ -269,6 +299,8 @@ function cardboard(services,color){
      Object.assign(enemy,map.clampPoint(corrected.x,corrected.y,enemy.radius));
      push(source,enemy,normal+(side<0?Math.PI:0),7);
     });
+    touching.clear();
+    for(const id of remainingContacts)touching.add(id);
     for(const shot of game.combatEntities){
      if(!shot.entityActive||!shot.isProjectile||!source.isEnemy(shot)||!B.canShareContactLayer(entity,shot))continue;
      if(hit(shot,shot.radius||0)&&!shot.indestructible)shot.entityActive=false;
@@ -284,14 +316,92 @@ function cardboard(services,color){
  },{onSpawn(){boards=[];}});
 }
 
+function latticeCarpenter(services,color){
+ function setSpans(board,spans){
+  board.woodSpans=spans;
+  board.hp=spans.reduce((total,[start,end])=>total+end-start,0);
+  board.solidParts=spans.map(([start,end])=>({
+   ...offset(board,board.angle,(start+end)/2),length:end-start,
+   width:board.width,angle:board.angle,wallSide:board.wallSide
+  }));
+ }
+ const material={
+  initialize(board){
+   setSpans(board,[[-board.length/2,board.length/2]]);
+   board.maxHp=board.length;
+  },
+  remove(board,x,attacker){
+   const radius=Math.max(5,(attacker.radius||0)+3);
+   const left=x-radius,right=x+radius,spans=[];
+   for(const [start,end] of board.woodSpans){
+    if(end<=left||start>=right){spans.push([start,end]);continue;}
+    if(left-start>1)spans.push([start,left]);
+    if(end-right>1)spans.push([right,end]);
+   }
+   const previous=board.hp;
+   setSpans(board,spans);
+   return previous-board.hp>EPS;
+  },
+  onBuilderCut(ball){
+   const heal=Math.min(1,ball.maxHp-ball.hp);
+   if(heal<=0)return;
+   ball.hp+=heal;
+   services.spawnHitText(ball,'+'+heal,{color:'#8fefb4'});
+  },
+  draw(c,board,flash){
+   c.save();c.translate(board.x,board.y);c.rotate(board.angle);
+   const half=board.width/2;
+   for(const [start,end] of board.woodSpans||[[-board.length/2,board.length/2]]){
+    const length=end-start;
+    c.save();
+    c.beginPath();c.rect(start,-half,length,board.width);c.clip();
+    c.fillStyle=flash>.6?'#fbf8eb':color;
+    c.fillRect(start,-half,length,board.width);
+    c.strokeStyle='#a7a18f';c.lineWidth=.65;
+    for(const grain of [-.72,-.36,0,.36,.72]){
+     const y=grain*half,bend=Math.min(2,half*.19)*(grain>0?1:-1);
+     c.beginPath();c.moveTo(start,y);
+     c.bezierCurveTo(start+length*.32,y-bend,end-length*.28,y+bend,end,y-bend*.4);
+     c.stroke();
+    }
+    c.strokeStyle='#786f5d';c.lineWidth=1.4;
+    c.strokeRect(start,-half,length,board.width);
+    c.restore();
+   }
+   c.restore();
+  }
+ };
+ const behavior=B.oldWoodMasterDefinition.createBehavior(services,{material,minimumLength:48,
+  drawBuilder({ball},c,nailing){
+   c.save();c.translate(ball.x,ball.y);
+   c.fillStyle=color;c.strokeStyle='#786f5d';c.lineWidth=1.4;
+   c.beginPath();c.arc(0,0,ball.radius-.5,0,TAU);c.fill();c.stroke();
+   c.strokeStyle='#a7a18f';c.lineWidth=.65;
+   for(const outer of [.34,.6,.83]){
+    c.beginPath();c.ellipse(-2,1,ball.radius*outer,ball.radius*outer*.8,-.45,0,TAU);c.stroke();
+   }
+   c.restore();
+   c.save();c.strokeStyle='#786f5d';c.lineWidth=2;
+   if(nailing){
+    const angle=heading(ball)+Math.sin(nailing.elapsed*45)*.6;
+    const tip=offset(ball,angle,ball.radius+6);
+    line(c,ball,tip);line(c,offset(tip,angle+Math.PI/2,-5),offset(tip,angle+Math.PI/2,5));
+   }
+   c.restore();
+  }});
+ return {...behavior,getArenaExtensionState:behavior.getOldWoodMasterState};
+}
+
 function magnet(services,color){
- return timed(services,5,({ball})=>{
+ return timed(services,4,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const center=aimPoint(game,ball,target,.35,120);
   let pullAt=0,reversed=false;
-  zone(services,'arena-magnet',ball,.85,{
+  zone(services,'arena-magnet',center,.85,{
    update({entity,services:source},dt){
     if(entity.age+dt>=.52&&!reversed){
      reversed=true;enemiesIn(source,entity,60,target=>{
-      if(source.dealDamage(target,3))push(source,target,angleTo(entity,target),18);
+      if(source.dealDamage(target,6))push(source,target,angleTo(entity,target),18);
      });
      ring(source,entity,color,60);
     }else if(!reversed&&entity.age+dt>=pullAt){
@@ -305,20 +415,26 @@ function magnet(services,color){
  });
 }
 function kite(services,color){
- return timed(services,4,({ball,game})=>{
-  const p=point(game,offset(ball,heading(ball),45),4);
-  throwTo(services,ball,p,'arena-kite',color,{flight:1,radius:21,
-   onLand(position,source){impact(source,position,24,4,color);},
+ return timed(services,3.8,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const p=aimPoint(game,ball,target,1,185);
+  throwTo(services,ball,p,'arena-kite',color,{flight:1,radius:29,
+   onLand(position,source){impact(source,position,35,7,color);},
    art(c){c.rotate(Math.PI/4);c.fillRect(-5,-5,10,10);line(c,{x:4,y:4},{x:10,y:12});}});
  });
 }
 function ruler(services,color){
  let extra=false;
- return timed(services,3,({ball,game})=>{
-  const end=offset(ball,heading(ball),extra?90:62);
+ return timed(services,2.4,({ball,game})=>{
+  const opponent=services.getOpponent();if(!opponent)return false;
+  const length=extra?128:96;
+  const inReach=distance(ball,opponent)<=length+opponent.radius;
+  if(!inReach&&extra)return false;
+  const end=offset(ball,inReach?angleTo(ball,opponent):heading(ball),length);
   const wall=arena(game).traceSegment(ball.x,ball.y,end.x,end.y,2);
+  if(!inReach&&!wall)return false;
   const tip=wall||end,target=services.getFirstEnemyHit(ball.x,ball.y,tip.x,tip.y,2);
-  if(target)services.dealDamage(target,4);
+  if(target)services.dealDamage(target,6);
   extra=!target&&Boolean(wall);
   const start={x:ball.x,y:ball.y};
   services.spawnVisualEffect({kind:'arena-ruler',life:.26,draw({effect},c){
@@ -331,37 +447,38 @@ function ruler(services,color){
  });
 }
 function rain(services,color){
- let history=[],nextSample=0,tracked=null;
- return timed(services,4,({game})=>{
-  if(!history.length)return false;
-  const hits=new Map(),positions=history.map(p=>point(game,p,4));
-  sequence(services,'arena-rain',positions,[.28,.48,.68],15,color,(p,source)=>{
-   enemiesIn(source,p,15,target=>{
+ let previous=null,nextSample=0,tracked=null;
+ return timed(services,3.2,({game})=>{
+  const target=services.getOpponent();
+  if(!target||!previous)return false;
+  const hits=new Map(),positions=[previous,lead(game,target,.48),lead(game,target,.68)].map(p=>point(game,p,4));
+  sequence(services,'arena-rain',positions,[.28,.48,.68],24,color,(p,source)=>{
+   enemiesIn(source,p,24,target=>{
     const count=hits.get(target.instanceId)||0;if(count>=2)return;
-    hits.set(target.instanceId,count+1);source.dealDamage(target,2);
+    hits.set(target.instanceId,count+1);source.dealDamage(target,3);
    });
-   ring(source,p,color,15);
+   ring(source,p,color,24);
   });
  },{
-  onSpawn(){history=[];nextSample=0;tracked=null;},
+  onSpawn(){previous=null;nextSample=0;tracked=null;},
   update({game}){
    const target=services.getOpponent();
-   if(!target){history=[];tracked=null;return;}
-   if(tracked!==target.instanceId){tracked=target.instanceId;history=[];nextSample=0;}
+   if(!target){previous=null;tracked=null;return;}
+   if(tracked!==target.instanceId){tracked=target.instanceId;previous=null;nextSample=0;}
    if(game.time+EPS<nextSample)return;
    nextSample=game.time+.23;
-   history.push({x:target.x,y:target.y});
-   if(history.length>3)history.shift();
+   previous={x:target.x,y:target.y};
   }
  });
 }
 function foldingBarrier(services,color){
- return timed(services,5,({ball,game})=>{
-  const p=point(game,offset(ball,heading(ball),-22),3),a=heading(ball)+Math.PI/2;
+ return timed(services,4.2,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const p=aimPoint(game,ball,target,.45,125),a=heading(target)+Math.PI/2;
   let phase=-1,hit=new Set();
   const tips=(age,map)=>{
    const opening=Math.max(0,Math.sin((age%.9)/.9*Math.PI));
-   return [offset(p,a,-26*opening),offset(p,a,26*opening)].map(v=>map.clampPoint(v.x,v.y,3));
+   return [offset(p,a,-36*opening),offset(p,a,36*opening)].map(v=>map.clampPoint(v.x,v.y,3));
   };
   zone(services,'arena-folding-barrier',p,3,{
    update({entity,game,services:source}){
@@ -373,7 +490,7 @@ function foldingBarrier(services,color){
      if(hit.has(target.instanceId)||!source.getContactProfile(target).solid||
        !crossedStrip(oldPosition(target),target,left,right,target.radius+2))return;
      hit.add(target.instanceId);
-     if(hostile)source.dealDamage(target,2);
+     if(hostile)source.dealDamage(target,5);
      push(hostile?source:target.services,target,a+(Math.sin(angleTo(p,target)-a)>0?1:-1)*Math.PI/2,13);
     }
     source.forEachContactEnemy(target=>redirect(target,true));
@@ -388,10 +505,9 @@ function foldingBarrier(services,color){
  });
 }
 
-function shard(services,ball,angle,color,kind,hits,max,damage,curvature=0){
- const speed=200;
+function shard(services,ball,angle,color,kind,hits,max,damage,curvature=0,{speed=200,radius=4}={}){
  services.spawnProjectile({kind,x:ball.x,y:ball.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-  radius:4,life:.75,hitIds:new Set(),
+  radius,life:.75,hitIds:new Set(),
   update({entity,game,services:source},dt){
    const dir=Math.atan2(entity.vy,entity.vx)+curvature*dt;
    const from={x:entity.x,y:entity.y},end=offset(from,dir,speed*dt),map=arena(game);
@@ -421,22 +537,25 @@ function shard(services,ball,angle,color,kind,hits,max,damage,curvature=0){
   }});
 }
 function tides(services,color){
- return timed(services,4,({ball})=>{
-  const hits=new Map(),a=heading(ball);
-  for(const side of [-1,1])shard(services,ball,a+side*Math.PI/2,color,'arena-tide',hits,1,3,side*1.8);
+ return timed(services,3.2,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const hits=new Map(),a=angleTo(ball,lead(game,target,.38));
+  for(const side of [-1,1])shard(services,ball,a+side*.43,color,'arena-tide',hits,1,6,-side*2.2);
  });
 }
 function mirror(services,color){
- return timed(services,3,({ball})=>{
+ return timed(services,2.4,({ball,game})=>{
   const target=services.getOpponent();
   if(!target)return false;
-  const a=angleTo(ball,target),hits=new Map();
-  for(const spread of [-.3,0,.3])shard(services,ball,a+spread,color,'arena-mirror',hits,2,2);
+  const a=angleTo(ball,lead(game,target,Math.min(.65,distance(ball,target)/240))),hits=new Map();
+  for(const spread of [-.3,0,.3])shard(services,ball,a+spread,color,'arena-mirror',hits,2,3);
  });
 }
 function carbon(services,color){
- return timed(services,5,({ball})=>{
-  delayed(services,'arena-carbon',ball,1,28,color,(p,source)=>impact(source,p,28,4,color));
+ return timed(services,3.5,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const position=aimPoint(game,ball,target,.55,110);
+  delayed(services,'arena-carbon',position,.55,42,color,(p,source)=>impact(source,p,42,6,color));
  });
 }
 function stamp(services,color){
@@ -444,12 +563,13 @@ function stamp(services,color){
   getArenaExtensionState(){return {};},
   onCollision({ball,game},target){
    const id=effectId(ball,'stamp'),old=target.effects.get(id);
-   const expirations=[...(old?.expirations||[]).filter(time=>time>game.time),game.time+4].slice(-2);
-   services.applyEffect(target,{id,expirations,duration:4,
+   const expirations=[...(old?.expirations||[]).filter(time=>time>game.time),game.time+8].slice(-2);
+   services.applyEffect(target,{id,expirations,duration:8,
     onWallBounce({ball:victim,effect,game,services:source}){
-     if(effect.expirations.filter(time=>time>game.time).length<2||victim.hp<=0)return;
+     const count=effect.expirations.filter(time=>time>game.time).length;
+     if(!count||victim.hp<=0)return;
      source.clearEffect(victim,id);
-     source.dealDamage(victim,3);ring(source,victim,color,20);
+     source.dealDamage(victim,count*5);ring(source,victim,color,20);
     },
     draw({ball:victim,effect,game},c){
      const count=effect.expirations.filter(time=>time>game.time).length;
@@ -461,26 +581,34 @@ function stamp(services,color){
  };
 }
 function prism(services,color){
- return timed(services,4,({ball,game})=>{
+ return timed(services,3.5,({ball,game})=>{
   const target=services.getOpponent();if(!target)return false;
-  const a=angleTo(ball,target),center=offset(ball,a,Math.min(75,distance(ball,target))),hit=new Set();
-  const positions=[-27,0,27].map(n=>point(game,offset(center,a+Math.PI/2,n),4));
-  sequence(services,'arena-prism',positions,[.38,.58,.78],15,color,
-   (p,source)=>impact(source,p,15,4,color,hit));
+  const hit=new Set(),delays=[.38,.58,.78];
+  const positions=delays.map((time,i)=>{
+   const center=aimPoint(game,ball,target,time,150);
+   return point(game,offset(center,heading(target)+Math.PI/2,[-12,0,12][i]),4);
+  });
+  sequence(services,'arena-prism',positions,delays,24,color,
+   (p,source)=>impact(source,p,24,6,color,hit));
  });
 }
 function spool(services,color){
- return timed(services,5,({ball,game})=>{
-  const a=heading(ball),center=offset(ball,a,27);
-  const left=point(game,offset(center,a+Math.PI/2,-29),3);
-  const right=point(game,offset(center,a+Math.PI/2,29),3);
+ return timed(services,4,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const a=heading(target),center=aimPoint(game,ball,target,.42,135);
+  const left=point(game,offset(center,a+Math.PI/2,-37),3);
+  const right=point(game,offset(center,a+Math.PI/2,37),3);
   if(distance(left,right)<12)return false;
-  zone(services,'arena-thread',center,3,{
+  zone(services,'arena-thread',center,3.5,{
    update({entity,services:source}){
+    const direction=delta(left,right);
+    const sideOf=p=>(p.x-left.x)*direction.y-(p.y-left.y)*direction.x;
     source.forEachContactEnemy(target=>{
-     if(!entity.entityActive||!crossedStrip(oldPosition(target),target,left,right,1.7))return;
+     const previous=oldPosition(target),before=sideOf(previous),after=sideOf(target);
+     if(!entity.entityActive||before*after>0||Math.abs(before-after)<EPS||
+       !crossedStrip(previous,target,left,right,target.radius+1.7))return;
      entity.entityActive=false;
-     if(source.dealDamage(target,3))push(source,target,angleTo(left,right),14);
+     if(source.dealDamage(target,6))push(source,target,angleTo(left,right),14);
      ring(source,target,color,17);
     });
    },
@@ -491,13 +619,13 @@ function spool(services,color){
  });
 }
 function gate(services,color){
- return timed(services,5,({ball,game})=>{
+ return timed(services,4.2,({ball,game})=>{
   const target=services.getOpponent();if(!target)return false;
-  const a=angleTo(ball,target),center=point(game,offset(ball,a,Math.min(75,distance(ball,target))));
+  const a=heading(target),center=aimPoint(game,ball,target,.4,130);
   const hit=new Set();
   const ends=(age,side,map)=>{
    const p=offset(center,a,side*(36-26*clamp(age/2,0,1)));
-   return [-25,25].map(n=>offset(p,a+Math.PI/2,n)).map(v=>map.clampPoint(v.x,v.y,2));
+   return [-34,34].map(n=>offset(p,a+Math.PI/2,n)).map(v=>map.clampPoint(v.x,v.y,2));
   };
   zone(services,'arena-gate',center,2,{
    update({entity,game,services:source},dt){
@@ -506,7 +634,7 @@ function gate(services,color){
      source.forEachContactEnemy(victim=>{
       if(hit.has(victim.instanceId)||!crossedStrip(oldPosition(victim),victim,left,right,victim.radius+2))return;
       hit.add(victim.instanceId);
-      if(source.dealDamage(victim,3))push(source,victim,a+Math.PI/2,14);
+      if(source.dealDamage(victim,5))push(source,victim,a+Math.PI/2,14);
      });
     }
    },
@@ -539,7 +667,12 @@ function heatPump(services,color){
    .sort((a,b)=>a.hp-b.hp)[0];
   if(ally)shield(ball,ally);
  }
- return {
+ return timed(services,4,({ball,game})=>{
+  const target=services.getOpponent();
+  if(!target)return false;
+  const p=aimPoint(game,ball,target,.4,165);
+  delayed(services,'arena-heat-vent',p,.4,38,color,(position,source)=>impact(source,position,38,6,color));
+ },{
   onSpawn(){layers=0;readyAt=0;},onDamaged:charge,onDamagedWhileControlled:charge,
   getArenaExtensionState(){return {layers,readyAt};},
   drawAfter({ball},c){
@@ -547,39 +680,57 @@ function heatPump(services,color){
    for(let i=0;i<layers;i++)c.fillRect(ball.x-7+i*5,ball.y+10,3,3);
    c.restore();
   }
- };
+ });
 }
 function lantern(services,color){
  let mark=null;
- return timed(services,5,({ball,game})=>{
-  mark={x:ball.x,y:ball.y,expiresAt:game.time+5};
+ function flash(position,game){
+  const hit=new Set();
+  impact(services,position,38,6,color,hit);
+  const target=services.getOpponent();
+  if(target&&!hit.has(target.instanceId)){
+   const aim=lead(game,target,Math.min(.65,distance(position,target)/240));
+   shard(services,position,angleTo(position,aim),color,'arena-lantern-spark',new Map(),1,6,0,{speed:240});
+  }
+ }
+ return timed(services,3.8,({ball,game})=>{
+  const previous=mark;
+  mark={x:ball.x,y:ball.y,expiresAt:game.time+3.8};
+  if(previous)flash(previous,game);
  },{
   onSpawn(){mark=null;},
+  update({ball,game}){
+   if(!mark||game.time+EPS<mark.expiresAt||!services.getCapabilities(ball).canDealDamage)return;
+   const expired=mark;mark=null;flash(expired,game);
+  },
   onDamaged({ball,game},event){
    if(!mark||game.time>=mark.expiresAt||ball.hp<=0||event.amount<=0)return;
    const p=point(game,mark,ball.radius);mark=null;
-   ring(services,ball,color,24,.45);
+   const origin={x:ball.x,y:ball.y};
    ball.x=ball.prevX=p.x;ball.y=ball.prevY=p.y;
+   flash(origin,game);
   },
-  drawArenaBackground({game},c){if(mark&&game.time<mark.expiresAt)warning(c,mark,12,color);}
+  drawArenaBackground({game},c){if(mark&&game.time<mark.expiresAt)warning(c,mark,38,color);}
  });
 }
 function stairs(services,color){
- return timed(services,5,({ball,game})=>{
-  const map=arena(game),a=heading(ball);
+ return timed(services,3.8,({ball,game})=>{
+  const target=services.getOpponent();if(!target)return false;
+  const map=arena(game),aim=lead(game,target,.45),a=angleTo(ball,aim);
+  const first=clamp(distance(ball,aim)-34,13,72);
   let count=0;
   for(let i=1;i<=4;i++){
-   const p=offset(ball,a,i*19);
+   const p=offset(ball,a,first+(i-1)*21);
    if(!map.contains(p.x,p.y,8))break;
    count++;
    zone(services,'arena-step-light',p,3.7,{
     update({entity,services:source}){
      if(entity.age+EPS<i*.2)return;
      const candidates=[entity.owner,...source.getAllies(),...source.getEnemies()];
-     const target=candidates.find(b=>b?.hp>0&&b.active!==false&&source.getContactProfile(b).solid&&inside(entity,b,8));
+     const target=candidates.find(b=>b?.hp>0&&b.active!==false&&source.getContactProfile(b).solid&&inside(entity,b,12));
      if(!target)return;
      entity.entityActive=false;
-     if(source.isEnemy(target))source.dealDamage(target,2);
+     if(source.isEnemy(target))source.dealDamage(target,4);
      else boost(target.services,target,effectId(ball,'stairs'),1.25,.8);
      ring(source,entity,color,12);
     },
@@ -593,40 +744,37 @@ function stairs(services,color){
 }
 
 const roster=[
- ['Riveter','铆钉钳','#cf8558',4,'.##../.##../..###/..#..',['投射物','强化'],'每4秒投出一枚贴墙铆钉，保留5秒，最多2枚。捡回后下次命中额外造成5点伤害。',riveter],
- ['Beacon','信号桩','#f3c568',3,'..#../.###./..#../#####',['陷阱','减速'],'每3秒投出一枚标记桩。落地后等待2秒，首个进入22范围的敌人受3点伤害并减速25%，持续1秒。',beacon],
- ['Pottery','陶甲','#dfa595',5,'.###./##.##/.###./..#..',['防御','加速'],'每5秒获得迎面护甲，最多等待2秒。抵消一次正面命中最多4点伤害后碎裂，提速20%持续1秒。',pottery],
- ['Tremor','震纹','#ef9f62',4,'#...#/.#.#./..#../#####',['范围','预警'],'每4秒在身后依次释放三道有预警的地面震波，每轮同一敌人最多受4点伤害。',tremor],
- ['Bellows','风箱','#86cdd3',3,'#####/.###./#####/.#.#.',['范围','击退'],'每3秒朝最近敌人吹出风带，持续1.2秒。敌人首次进入受2点伤害并被横向推开。',bellows],
- ['Cardboard','纸板工','#d2ae7d',5,'##.##/##.##/#####/##.##',['障碍','防御'],'每5秒在身后铺一块六段纸板，最多2块，各存留6秒。敌球或弹体破坏接触段，缺口足够宽时可通行。',cardboard],
- ['HourglassMagnet','沙漏磁盘','#b6a4ec',5,'#####/.#.#./..#../#####',['范围','击退'],'每5秒生成半径60的磁场，先牵引敌人，再将敌人推开并造成3点伤害。',magnet],
- ['KiteBox','风筝匣','#ef8d88',4,'..#../.###./..#../...##',['投射物','预警'],'每4秒放飞一只风筝，提前显示落点，1秒后落地对24范围内敌人造成4点伤害。',kite],
- ['Ruler','伸缩尺','#e4dc9c',3,'....#/#####/#.#.#/#####',['近战','强化'],'每3秒沿行进方向伸尺，命中造成4点伤害。落空碰墙时，下次伸出距离从62增至90。',ruler],
- ['RainBarrel','雨桶','#79c2e6',4,'.#.#./..#../#...#/.###.',['范围','预警'],'每4秒依次向敌人的三个历史位置落雨，每滴2点伤害；每轮同一敌人最多受两滴。',rain],
- ['FoldingBarrier','折尺','#c6bd73',5,'##.../.##../..##./...##',['障碍','击退'],'每5秒留下开合路障，持续3秒。每次展开改变触碰者方向，同一敌人最多受2点伤害。',foldingBarrier],
- ['TideWheel','潮轮','#75cfb3',4,'###../..###/###../..###',['投射物','范围'],'每4秒向两侧发出反向弧形波，每道3点伤害。同一敌人每轮最多受到一道。',tides],
- ['MirrorShard','碎镜','#b9d6f9',3,'.##../.#.#./#.##./..#..',['投射物','远程'],'每3秒向最近敌人射出三片散开的小镜，每片2点伤害。同一敌人每轮最多受到两片。',mirror],
- ['CarbonTape','复写带','#c995bb',5,'..##./.#..#/.###./#....',['范围','预警'],'每5秒记录自身位置并显示预警，1秒后对半径28内的敌人造成4点伤害。',carbon],
- ['InkStamp','胶印','#d77c9e',0,'.###./..#../#####/#...#',['近战','标记'],'撞击留下印记，最多两层，持续4秒。满两层敌球下次撞墙时额外受3点伤害并清空。',stamp],
- ['PrismLamp','棱灯','#ec9ce1',4,'#.#.#/.###./.###./#.#.#',['范围','预警'],'每4秒预告三个落点后依次闪光，每轮同一敌人最多受4点伤害。',prism],
- ['Spool','线轴','#ba94e8',5,'##.##/.###./.###./##.##',['陷阱','击退'],'每5秒放下两锚点并连线3秒。首个横穿的敌球受3点伤害并被沿线推开，随后断线。',spool],
- ['Gate','闸门','#e0a267',5,'#...#/#.#.#/#.#.#/#...#',['障碍','击退'],'每5秒生成两段缓慢合拢的横杆，持续2秒，端部可绕行。每轮触杆首次受3点伤害并被推开。',gate],
- ['HeatPump','热泵','#f2a078',0,'.#.#./#####/..#../.###.',['护盾','辅助'],'受伤积热三层后，给自己和90范围内生命最低的一名队友各提供3点护盾，持续3秒，冷却6秒。',heatPump],
- ['SlideLantern','幻灯','#a68fe2',5,'.###./.#.#./.#.#./.###.',['位移','标记'],'每5秒在自身经过的位置留下一处标记，存留至下次刷新。非致死受伤后移动到标记并清除它，原地闪光。',lantern],
- ['StepLight','阶梯灯','#b9dc72',5,'...##/..##./.##../##...',['陷阱','加速'],'每5秒沿行进方向逐格点亮最多四格。每格使用一次，友军提速25%持续0.8秒，敌方受2点伤害。',stairs]
+ ['Riveter','铆钉钳','#cf8558',4,'.##../.##../..###/..#..',['投射物','强化'],'每4秒投出一枚贴墙铆钉，保留5秒，最多2枚。在墙边短暂停留后飞回，拾回后下次撞击造成10点伤害。',riveter],
+ ['Beacon','信号桩','#f3c568',2.6,'..#../.###./..#../#####',['陷阱','减速'],'每2.6秒朝敌人的预计路径投出标记桩。落地后等待2秒，首个进入32范围的敌人受5点伤害并减速25%，持续1秒。',beacon],
+ ['Pottery','陶甲','#dfa595',4,'.###./##.##/.###./..#..',['防御','加速'],'每4秒获得迎面护甲，最多等待1.5秒。抵消一次正面命中最多4点伤害后提速20%持续1秒。护甲耗尽或到期时，向最近敌人射出一片陶片，造成7点伤害。',pottery],
+ ['Tremor','震纹','#ef9f62',3.2,'#...#/.#.#./..#../#####',['范围','预警'],'每3.2秒在最近敌人的预计路径上依次预警并释放三道地面震波。每轮同一敌人最多受6点伤害。',tremor],
+ ['Bellows','风箱','#86cdd3',2.8,'#####/.###./#####/.#.#.',['范围','击退'],'每2.8秒朝最近敌人的预计路径吹出一道长110的风带，持续1.2秒。敌人首次进入受4点伤害并被横向推开。',bellows],
+ ['Cardboard','纸板工','#d2ae7d',5,'##.##/##.##/#####/##.##',['障碍','防御'],'每5秒在身后尝试铺一块六段纸板，避开现有纸板。纸板留到全被打穿或对局结束。撞板的敌球受3点伤害并破坏接触段；敌方弹体也可打出缺口。',cardboard],
+ ['HourglassMagnet','沙漏磁盘','#b6a4ec',4,'#####/.#.#./..#../#####',['范围','击退'],'每4秒在附近生成半径60的磁场，先牵引敌人，再将敌人推开并造成6点伤害。',magnet],
+ ['KiteBox','风筝匣','#ef8d88',3.8,'..#../.###./..#../...##',['投射物','预警'],'每3.8秒向敌人的预计位置放飞一只风筝，提前显示落点。1秒后落地，对35范围内敌人造成7点伤害。',kite],
+ ['Ruler','伸缩尺','#e4dc9c',2.4,'....#/#####/#.#.#/#####',['近战','强化'],'每2.4秒蓄好短尺，敌人进入射程时伸尺，命中造成6点伤害。附近无敌人时可朝墙伸尺，碰墙后，下次伸出距离从96增至128。',ruler],
+ ['RainBarrel','雨桶','#79c2e6',3.2,'.#.#./..#../#...#/.###.',['范围','预警'],'每3.2秒向最近敌人的一个近期位置和两个预计位置依次落雨，每滴3点伤害；每轮同一敌人最多受两滴。',rain],
+ ['FoldingBarrier','折尺','#c6bd73',4.2,'##.../.##../..##./...##',['障碍','击退'],'每4.2秒在敌人的预计路径上放置开合路障，持续3秒。每次展开改变触碰者方向，同一敌人最多受5点伤害。',foldingBarrier],
+ ['TideWheel','潮轮','#75cfb3',3.2,'###../..###/###../..###',['投射物','范围'],'每3.2秒朝敌人的预计路径两侧放出弧形波，每道6点伤害。同一敌人每轮最多受到一道。',tides],
+ ['MirrorShard','碎镜','#b9d6f9',2.4,'.##../.#.#./#.##./..#..',['投射物','远程'],'每2.4秒朝最近敌人的预计路径射出三片散开的小镜，每片3点伤害。同一敌人每轮最多受到两片。',mirror],
+ ['CarbonTape','复写带','#c995bb',3.5,'..##./.#..#/.###./#....',['范围','预警'],'每3.5秒记录附近敌人即将经过的位置并显示预警，0.55秒后对42范围内敌人造成6点伤害。',carbon],
+ ['InkStamp','胶印','#d77c9e',0,'.###./..#../#####/#...#',['近战','标记'],'撞击留下印记，最多两层，每层持续8秒。敌球下次撞墙时消耗所有印记，每层造成5点伤害。',stamp],
+ ['PrismLamp','棱灯','#ec9ce1',3.5,'#.#.#/.###./.###./#.#.#',['范围','预警'],'每3.5秒沿敌人的预计路径预告三个落点后依次闪光，每轮同一敌人最多受6点伤害。',prism],
+ ['Spool','线轴','#ba94e8',4,'##.##/.###./.###./##.##',['陷阱','击退'],'每4秒在敌人的预计路径上放下两锚点并连线3.5秒。首个横穿连线的敌球受6点伤害并被沿线推开，随后断线。',spool],
+ ['Gate','闸门','#e0a267',4.2,'#...#/#.#.#/#.#.#/#...#',['障碍','击退'],'每4.2秒在敌人的预计路径上放置两段缓慢合拢的横杆，持续2秒，端部可绕行。每轮触杆首次受5点伤害并被推开。',gate],
+ ['HeatPump','热泵','#f2a078',4,'.#.#./#####/..#../.###.',['护盾','辅助'],'受伤积热三层后，给自己和90范围内生命最低的一名队友各提供3点护盾，持续3秒，冷却6秒。每4秒朝最近对手喷热，预警后对38范围内敌人造成6点伤害。',heatPump],
+ ['SlideLantern','幻灯','#a68fe2',3.8,'.###./.#.#./.#.#./.###.',['位移','标记'],'每3.8秒在脚下留下一处标记，存留至下次刷新。非致死受伤后移至标记，原位置闪光；标记到期则在标记处闪光。闪光对38范围内敌人造成6点伤害。',lantern],
+ ['LatticeCarpenter','镂木匠','#e7e2d0',0,'#.#.#/#####/#.#.#/#####',['障碍','反弹','回复'],'撞墙或其他木板时施工钉板。敌球撞板受2点伤害并打出缺口，镂木匠撞自己的板也会打出缺口并回复1点生命。其余木板继续挡路。',latticeCarpenter],
+ ['StepLight','阶梯灯','#b9dc72',3.8,'...##/..##./.##../##...',['陷阱','加速'],'每3.8秒朝敌人的预计路径逐格点亮最多四格。每格使用一次，友军提速25%持续0.8秒，敌方受4点伤害。',stairs]
 ];
 root.ArenaRosterExpansion=roster.map(([key,name,color,period,glyph,tags,description,build])=>{
  const id='arena'+key;
  const pixels=glyph.split('/').flatMap((row,y)=>Array.from(row).flatMap((pixel,x)=>pixel==='#'?[[x,y]]:[]));
  B.registerBall({id,name,englishName:key,color,description,rosterType:'normal',
-  stats:{radius:15,speed:150,maxHp:100},collisionDamage:2,rionCycleDuration:period||1,
+  stats:{radius:15,speed:150,maxHp:100},collisionDamage:0,rionCycleDuration:period||1,
   createBehavior(services){
    const behavior=build(services,color);
    return {...behavior,
-    onCollision(context,target){
-     context.services.dealDamage(target,2);
-     if(target.hp>0&&services.getCapabilities(context.ball).canBodyAttack)behavior.onCollision?.(context,target);
-    },
     drawAfter(context,c){
      const {ball}=context;
      c.save();c.translate(ball.x,ball.y-ball.radius*.5);c.scale(ball.radius/15,ball.radius/15);

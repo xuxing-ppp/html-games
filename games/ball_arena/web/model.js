@@ -30,24 +30,32 @@ function mapDimensions(state,api){
  const side=standardMapSide(state,api)*MAP_PRESETS[preset],stretch=Math.sqrt(ratio);
  return {width:side*stretch,height:side/stretch};
 }
-function cameraFrame(arena,balls,minSize,previous=null,dt=0){
- const {left,right,top,bottom,size}=arena;
- if(size<=minSize)return {x:0,y:0,size};
- if(!balls.length)return previous||{x:0,y:0,size};
- const minX=Math.max(left,Math.min(...balls.map(ball=>ball.x-3*ball.radius)));
- const maxX=Math.min(right,Math.max(...balls.map(ball=>ball.x+3*ball.radius)));
- const minY=Math.max(top,Math.min(...balls.map(ball=>ball.y-3*ball.radius)));
- const maxY=Math.min(bottom,Math.max(...balls.map(ball=>ball.y+3*ball.radius)));
- const targetSize=Math.min(size,Math.max(minSize,maxX-minX,maxY-minY));
- const blend=1-Math.exp(-8*dt);
- const viewSize=previous&&previous.size-targetSize>.1?previous.size+(targetSize-previous.size)*blend:targetSize;
- const origin=(low,high,start,end,last)=>{
-  if(end-start<=viewSize)return (start+end-viewSize)/2;
-  const target=(low+high-viewSize)/2;
-  const next=last===undefined||Math.abs(last-target)<.1?target:last+(target-last)*blend;
-  return Math.max(start,high-viewSize,Math.min(end-viewSize,low,next));
+function hasDynamicCamera(arena,mediumSide){
+ return arena.width*arena.height>mediumSide*mediumSide+1e-6;
+}
+function cameraFrame(arena,balls,mediumSide,previous=null,dt=0){
+ const {left,right,top,bottom,width,height}=arena;
+ const whole={x:left,y:top,width,height};
+ if(!hasDynamicCamera(arena,mediumSide))return whole;
+ if(!balls.length)return previous||whole;
+ const extent=(axis,start,end)=>{
+  const lower=Math.min(...balls.map(ball=>ball[axis]-3*ball.radius));
+  const upper=Math.max(...balls.map(ball=>ball[axis]+3*ball.radius));
+  return [Math.max(start,Math.min(end,lower)),Math.max(start,Math.min(end,upper))];
  };
- return {x:origin(minX,maxX,left,right,previous?.x),y:origin(minY,maxY,top,bottom,previous?.y),size:viewSize};
+ const [minX,maxX]=extent('x',left,right),[minY,maxY]=extent('y',top,bottom);
+ const floor=mediumSide/Math.sqrt(width*height);
+ const target=Math.min(1,Math.max(floor,(maxX-minX)/width,(maxY-minY)/height));
+ const blend=1-Math.exp(-8*dt),before=previous?previous.width/width:target;
+ const fraction=before-target>.1/Math.max(width,height)?before+(target-before)*blend:target;
+ const viewWidth=width*fraction,viewHeight=height*fraction;
+ const origin=(low,high,start,end,span,last)=>{
+  const desired=(low+high-span)/2;
+  const next=last===undefined||Math.abs(last-desired)<.1?desired:last+(desired-last)*blend;
+  return Math.max(start,high-span,Math.min(end-span,low,next));
+ };
+ return {x:origin(minX,maxX,left,right,viewWidth,previous?.x),
+  y:origin(minY,maxY,top,bottom,viewHeight,previous?.y),width:viewWidth,height:viewHeight};
 }
 function defaults(){return {mode:'duel',left:['oldWoodMaster'],right:['steelCoil'],brawl:['oldWoodMaster','steelCoil'],series:1,retainDeadSkills:true,physics:'none',map:mapSettings(),teamRings:true,hazards:{pads:false,supplies:false,laser:false},seedText:'',expanded:false,soundOn:true,soundPreferenceSet:true,speed:1,favorites:[],filter:'all',tag:'all',search:''};}
 function sanitize(value,registry){
@@ -123,5 +131,5 @@ class Series{
  }
  next(){if(this.complete||!this.history.some(r=>r.round===this.round))return false;this.round++;return true;}
 }
-return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,MAP_PRESETS,MAP_LIMITS,timeLimit,mapSettings,standardMapSide,mapDimensions,cameraFrame,defaults,sanitize,eligible,validate,configFor,installWheelSkillCleanup,Series,clone};
+return {MODES,TYPE_NAMES,ORIGINAL_IDS,TIME_LIMITS,MAP_PRESETS,MAP_LIMITS,timeLimit,mapSettings,standardMapSide,mapDimensions,hasDynamicCamera,cameraFrame,defaults,sanitize,eligible,validate,configFor,installWheelSkillCleanup,Series,clone};
 });

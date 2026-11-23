@@ -8,7 +8,7 @@ let saved;try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
 let state=M.sanitize(saved,registry),editing={side:state.mode==='brawl'?'brawl':'left',index:0},session=null,engine=null,renderer=null,mechanisms=null,series=null,matchState=null,paused=false,speed=state.speed,replaying=false,settled=false,roundSeed=0,rosterScroll=0,detailId=null,accumulator=0,lastFrame=0,lastHud=0;
 let skillsAutoResume=false,lineupAutoResume=false,matchTimeLimit=M.timeLimit(state),roundTimedOut=false;
 let soundOn=state.soundOn,toastTimer,previewObserver,battleContext=null,homeDemo=null,previousDemoIds=[];
-let mapPanel={settings:state,mode:state.mode,locked:false},camera=null,cameraMinimum=0;
+let mapPanel={settings:state,mode:state.mode,locked:false},camera=null,cameraMinimum=0,dynamicCamera=false;
 try{const ids=JSON.parse(sessionStorage.getItem('ball-arena-home-demo-v1'));if(Array.isArray(ids)&&ids.length===2&&ids.every(id=>typeof id==='string'))previousDemoIds=ids;}catch{}
 const audio=new B.BattleAudio({voiceLimit:24}),previewCache=new Map();let previewEngine,previewRenderer;
 const filters=[['all','全部'],['normal','普通'],['zako','杂鱼'],['elite','精英'],['outOfSpec','规格外'],['boss','Boss'],['original','原创'],['favorites','收藏']];
@@ -212,9 +212,10 @@ function startRound(seed,replay=false){
   session=B.createDeterministicSession({engine,seed:roundSeed,setup:e=>{e.createBattle(M.configFor(settings,B));M.installWheelSkillCleanup(e,settings);mechanisms=new ArenaMechanisms(e,settings.hazards);e.beginFight();}});
   const update=engine.update.bind(engine);
   engine.update=dt=>{if(engine.game.state!=='running')return;const t=engine.game.time;update(dt);if(engine.game.state==='running')mechanisms.update(Math.max(0,engine.game.time-t));};
-  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,teamColors:state.teamRings?teamColors:null});
+  renderer=new B.CanvasRenderer($('arena'),engine,{enableGpu:false,targetPixelSize:800,fitArenaAspect:true,teamColors:state.teamRings?teamColors:null});
   cameraMinimum=M.standardMapSide(settings,B);
-  $('arena-wrap').classList.toggle('has-world-boundary',engine.arena.shape!=='square'||engine.arena.size>cameraMinimum);
+  dynamicCamera=M.hasDynamicCamera(engine.arena,cameraMinimum);
+  $('arena-overview').hidden=!dynamicCamera;
   $('team-rings').hidden=settings.mode==='brawl';renderTeamRings();
   if(reduced.matches)renderer.readArenaShakeOffset=()=>({x:0,y:0});
   showScreen('battle');$('pause-indicator').hidden=true;$('pause').textContent='暂停';$('pause').disabled=false;$('step').disabled=true;
@@ -223,25 +224,78 @@ function startRound(seed,replay=false){
  }catch(error){console.error(error);const replayContext=battleContext?.replay===true,tournamentContext=!!battleContext;teardown();if(replayContext)battleContext=null;showScreen(tournamentContext?'tournament':'selection');toast('对局未能建立：'+error.message);return false;}
 }
 function resizeArena(){
- if($('battle').hidden)return;const stage=$('stage'),size=Math.max(40,Math.min(stage.clientHeight,stage.clientWidth,700));$('arena-wrap').style.width=size+'px';$('arena-wrap').style.height=size+'px';
- if(renderer){const target=Math.min(1600,Math.round(size*Math.min(devicePixelRatio||1,2)));if(Math.abs(renderer.targetPixelSize-target)>8){renderer.targetPixelSize=target;renderer.configureCanvas();}}
- const overlay=$('hazards'),pixels=Math.round(size*Math.min(devicePixelRatio||1,2));
- if(overlay.width!==pixels||overlay.height!==pixels)overlay.width=overlay.height=pixels;
+ if($('battle').hidden||!renderer)return;
+ const stage=$('stage'),wrap=$('arena-wrap'),overview=$('arena-overview');
+ const {width,height}=engine.arena,stageWidth=stage.clientWidth,stageHeight=stage.clientHeight;
+ const fit=(w,h)=>Math.min(w/width,h/height,700/Math.max(width,height));
+ const overviewWidth=Math.max(82,Math.min(126,Math.round(stageWidth*.16)));
+ const overviewHeight=Math.max(60,Math.min(116,Math.round(overviewWidth*height/width)));
+ const beside=!matchMedia('(max-width: 690px)').matches;
+ if(dynamicCamera){
+  stage.style.setProperty('--overview-width',overviewWidth+'px');
+  const map=$('arena-minimap');
+  map.style.height=overviewHeight+'px';
+  const pixelWidth=(overviewWidth-12)*2;
+  if(map.width!==pixelWidth)map.width=pixelWidth;
+  if(map.height!==overviewHeight*2)map.height=overviewHeight*2;
+ }
+ const widthReserved=dynamicCamera&&beside?overviewWidth+16:0;
+ const heightReserved=dynamicCamera&&!beside?overview.offsetHeight+14:0;
+ const scale=fit(Math.max(12,stageWidth-widthReserved-6),Math.max(12,stageHeight-heightReserved-6));
+ wrap.style.width=width*scale+'px';wrap.style.height=height*scale+'px';
+ const pixels=Math.max(1,Math.min(1600,Math.round(Math.max(width,height)*scale*Math.min(devicePixelRatio||1,2))));
+ if(renderer.targetPixelSize!==pixels){
+  renderer.targetPixelSize=pixels;renderer.configureCanvas();
+ }
+ const overlay=$('hazards'),canvas=$('arena');
+ if(overlay.width!==canvas.width)overlay.width=canvas.width;
+ if(overlay.height!==canvas.height)overlay.height=canvas.height;
+}
+function drawArenaFloor(c,arena){
+ const {left,right,top,bottom}=arena;
+ c.fillStyle='#17191d';c.fillRect(left,top,arena.width,arena.height);
+ const l=Math.max(left,camera.x),r=Math.min(right,camera.x+camera.width);
+ const t=Math.max(top,camera.y),b=Math.min(bottom,camera.y+camera.height);
+ const step=24;
+ for(const [pitch,color] of [[step,'#25282d'],[step*5,'#323439']]){
+  c.beginPath();
+  for(let x=left+Math.ceil((l-left)/pitch)*pitch;x<=r;x+=pitch){c.moveTo(x,t);c.lineTo(x,b);}
+  for(let y=top+Math.ceil((t-top)/pitch)*pitch;y<=b;y+=pitch){c.moveTo(l,y);c.lineTo(r,y);}
+  c.lineWidth=.55;c.strokeStyle=color;c.stroke();
+ }
+}
+function drawMinimap(arena,fighters){
+ const map=$('arena-minimap'),c=map.getContext('2d');
+ const scale=Math.min((map.width-12)/arena.width,(map.height-12)/arena.height);
+ const x=(map.width-arena.width*scale)/2,y=(map.height-arena.height*scale)/2;
+ const projectX=world=>x+(world-arena.left)*scale,projectY=world=>y+(world-arena.top)*scale;
+ c.clearRect(0,0,map.width,map.height);
+ c.fillStyle='#282722';c.fillRect(x,y,arena.width*scale,arena.height*scale);
+ c.strokeStyle='#8a7554';c.lineWidth=2;c.strokeRect(x,y,arena.width*scale,arena.height*scale);
+ c.save();c.beginPath();c.rect(x,y,arena.width*scale,arena.height*scale);c.clip();
+ for(const ball of fighters){
+  c.fillStyle=teamColors[ball.teamId]&&matchState.mode!=='brawl'&&state.teamRings?teamColors[ball.teamId]:ball.color;
+  c.beginPath();c.arc(projectX(ball.x),projectY(ball.y),Math.max(2.4,ball.radius*scale*.7),0,Math.PI*2);c.fill();
+ }
+ const left=projectX(camera.x),top=projectY(camera.y),width=camera.width*scale,height=camera.height*scale;
+ c.fillStyle='rgba(4,5,8,.35)';
+ c.beginPath();c.rect(x,y,arena.width*scale,arena.height*scale);c.rect(left,top,width,height);c.fill('evenodd');
+ c.strokeStyle='#f5d88e';c.lineWidth=3;c.strokeRect(left+1,top+1,Math.max(0,width-2),Math.max(0,height-2));
+ c.restore();
 }
 function drawBattle(dt=0){
  if(!renderer||!engine?.game)return;
  const arena=engine.arena;
- if(arena.size>cameraMinimum){
-  const fighters=engine.game.teams.flatMap(team=>team.balls).filter(ball=>
-   ball.hp>0&&engine.isBallActive(ball)&&renderer.isRenderableBall(ball));
-  camera=M.cameraFrame(arena,fighters,cameraMinimum,reduced.matches&&fighters.length?null:camera,dt);
- }
- renderer.draw(camera);
- const c=$('hazards').getContext('2d'),scale=c.canvas.width/(camera?.size??arena.size);
+ const fighters=dynamicCamera?engine.game.teams.flatMap(team=>team.balls).filter(ball=>
+  ball.hp>0&&engine.isBallActive(ball)&&renderer.isRenderableBall(ball)):[];
+ camera=M.cameraFrame(arena,fighters,cameraMinimum,reduced.matches&&fighters.length?null:camera,dt);
+ renderer.draw(camera,drawArenaFloor);
+ const c=$('hazards').getContext('2d'),{scale,x,y}=renderer.viewportTransform(camera);
  c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,c.canvas.width,c.canvas.height);
- c.setTransform(scale,0,0,scale,-(camera?.x??0)*scale,-(camera?.y??0)*scale);
+ c.setTransform(scale,0,0,scale,x,y);
  const shake=renderer.readArenaShakeOffset();
  c.save();arena.tracePath(c);c.clip();c.translate(shake.x,shake.y);mechanisms.draw(c);c.restore();
+ if(dynamicCamera)drawMinimap(arena,fighters);
 }
 function renderHud(){
  if(!engine)return;

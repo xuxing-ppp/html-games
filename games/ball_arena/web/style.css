@@ -95,5 +95,15 @@ button.battle-note{padding:6px 0 0;background:none;border:0;border-radius:0;font
 #map-dimensions{color:var(--ink);font-weight:600}
 #team-rings[aria-pressed=true]{border-color:#a88452;color:var(--amber)}
 .battle-controls{flex-wrap:wrap}
-.arena-wrap.has-world-boundary{border-color:var(--line)}
 @media(max-width:600px){.battle-controls{gap:4px}.battle-controls button{padding-inline:7px}}
+
+.stage{gap:16px}
+.arena-wrap{flex:none;border:0;aspect-ratio:auto;overflow:hidden;box-shadow:0 0 0 1px #28292d,0 14px 44px #0005}
+#arena-overview{width:var(--overview-width,126px);flex:none;align-self:center;margin:0;padding:5px;background:#1d2024;border:1px solid #383a3f;border-radius:5px}
+#arena-overview figcaption{padding:0 3px 3px;color:var(--muted);font-size:11px}
+#arena-minimap{display:block;width:100%;background:#15171a;border-radius:3px}
+.stage:has(#arena-overview:not([hidden])) .arena-wrap{max-width:calc(100% - var(--overview-width,126px) - 16px)}
+@media(max-width:690px){
+ .stage:has(#arena-overview:not([hidden])){flex-direction:column;gap:8px}
+ .stage:has(#arena-overview:not([hidden])) .arena-wrap{max-width:100%}
+}

@@ -421,12 +421,14 @@
         targetPixelSize = null,
         preserveDrawingBuffer = true,
         enableGpu = true,
-        teamColors = null
+        teamColors = null,
+        fitArenaAspect = false
       } = {}
     ) {
       this.canvas = canvas;
       this.engine = engine;
       this.teamColors = teamColors;
+      this.fitArenaAspect = fitArenaAspect && !enableGpu;
       this.defaultRenderScale = renderScale;
       this.targetPixelSize = Number.isFinite(targetPixelSize) && targetPixelSize > 0
         ? Math.round(targetPixelSize)
@@ -482,10 +484,11 @@
       // A lower-resolution intermediate texture makes text and curved bodies
       // permanently soft before the recorder ever sees the frame.
       this.sourceScale = this.renderScale;
-      this.canvas.width = outputPixelSize;
-      this.canvas.height = outputPixelSize;
-      this.sourceCanvas.width = outputPixelSize;
-      this.sourceCanvas.height = outputPixelSize;
+      const arena = this.engine.arena;
+      const width = this.fitArenaAspect ? Math.max(1, Math.round(outputPixelSize * arena.width / arenaSize)) : outputPixelSize;
+      const height = this.fitArenaAspect ? Math.max(1, Math.round(outputPixelSize * arena.height / arenaSize)) : outputPixelSize;
+      this.canvas.width = this.sourceCanvas.width = width;
+      this.canvas.height = this.sourceCanvas.height = height;
       this.context.setTransform(this.sourceScale, 0, 0, this.sourceScale, 0, 0);
       this.context.imageSmoothingEnabled = true;
       if (this.overlayCanvas && this.overlayContext) {
@@ -509,7 +512,17 @@
       this.configuredArenaSize = this.engine.arenaSize;
     }
 
-    draw(viewport = null) {
+    viewportTransform(viewport) {
+      const { width, height } = this.sourceCanvas;
+      const scale = Math.min(width / viewport.width, height / viewport.height);
+      return {
+        scale,
+        x: (width - viewport.width * scale) / 2 - viewport.x * scale,
+        y: (height - viewport.height * scale) / 2 - viewport.y * scale
+      };
+    }
+
+    draw(viewport = null, drawFloor = null) {
       if (this.configuredArenaSize !== this.engine.arenaSize) {
         this.configureCanvas();
       }
@@ -519,12 +532,15 @@
       }
 
       const { context, sourceScale, renderScale } = this;
-      const scale = this.sourceCanvas.width / viewport.size;
+      const { scale, x, y } = this.viewportTransform(viewport);
       context.save();
       this.sourceScale = this.renderScale = scale;
-      context.setTransform(scale, 0, 0, scale, -viewport.x * scale, -viewport.y * scale);
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.fillStyle = "#101115";
+      context.fillRect(0, 0, this.sourceCanvas.width, this.sourceCanvas.height);
+      context.setTransform(scale, 0, 0, scale, x, y);
       try {
-        this.drawScene(true);
+        this.drawScene(true, drawFloor);
       } finally {
         context.restore();
         this.sourceScale = sourceScale;
@@ -532,7 +548,7 @@
       }
     }
 
-    drawScene(showSquareBoundary = false) {
+    drawScene(showSquareBoundary = false, drawFloor = null) {
       const { context } = this;
       const shakeOffset = this.readArenaShakeOffset();
       if (this.gpuBatch) this.gpuBatch.reset();
@@ -558,6 +574,7 @@
         arena.tracePath(context);
         context.clip();
       }
+      drawFloor?.(context, arena);
       const hasShakeOffset = shakeOffset.x !== 0 || shakeOffset.y !== 0;
       const canTranslate = hasShakeOffset &&
         typeof context.save === "function" &&
@@ -624,20 +641,32 @@
         if (canTranslate) context.restore();
         if (customOutline) context.restore();
       }
-      if (customOutline || showSquareBoundary) this.drawArenaOutline(context);
+      if (customOutline || showSquareBoundary) this.drawArenaOutline(context, showSquareBoundary);
       this.presentGpuFrame();
       this.presentGpuPrimitives();
       this.presentGpuForegroundBalls(balls, shakeOffset);
     }
 
-    drawArenaOutline(context) {
+    drawArenaOutline(context, emphasize = false) {
       const arena = this.engine.arena;
       if (!arena) return;
       context.save();
-      context.strokeStyle = "#ffffff";
-      context.lineWidth = 2 / this.sourceScale;
-      arena.tracePath(context, 1 / this.sourceScale);
-      context.stroke();
+      const pixel = 1 / this.sourceScale;
+      if (emphasize) {
+        context.strokeStyle = "#46351f";
+        context.lineWidth = 9 * pixel;
+        arena.tracePath(context, 4.5 * pixel);
+        context.stroke();
+        context.strokeStyle = "#e4b96e";
+        context.lineWidth = 2 * pixel;
+        arena.tracePath(context, 3 * pixel);
+        context.stroke();
+      } else {
+        context.strokeStyle = "#ffffff";
+        context.lineWidth = 2 * pixel;
+        arena.tracePath(context, pixel);
+        context.stroke();
+      }
       context.restore();
     }
 

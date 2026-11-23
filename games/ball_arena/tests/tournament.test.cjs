@@ -20,10 +20,10 @@ test('original model exposed independently and all six field sizes available',()
  assert.deepEqual(plain(T.SIZES),[4,8,16,32,64,128]);assert.deepEqual(plain(B.TOURNAMENT_SIZES),[4]);
 });
 test('entry pool follows original bans, normal/elite types and elite filter',()=>{
- const pool=T.pool(registry);assert.equal(pool.length,199);assert(pool.every(d=>['normal','elite'].includes(d.rosterType)&&!T.BANNED.has(d.id)));assert.equal(T.pool(registry,true).length,196);assert(T.pool(registry,true).every(d=>d.rosterType==='normal'));
+ const pool=T.pool(registry);assert.equal(pool.length,200);assert(pool.every(d=>['normal','elite'].includes(d.rosterType)&&!T.BANNED.has(d.id)));assert.equal(T.pool(registry,true).length,197);assert(T.pool(registry,true).every(d=>d.rosterType==='normal'));
 });
 test('elite slot weighting produces the same capacities as the original',()=>{
- assert.deepEqual([1,2,3].map(n=>T.capacity(registry,n)),[199,101,67]);assert.deepEqual([1,2,3].map(n=>T.capacity(registry,n,true)),[196,98,65]);
+ assert.deepEqual([1,2,3].map(n=>T.capacity(registry,n)),[200,101,67]);assert.deepEqual([1,2,3].map(n=>T.capacity(registry,n,true)),[197,98,65]);
 });
 test('draw is reproducible, uses unique roles and packs exact weighted team sizes',()=>{
  for(const teamSize of [1,2,3])for(const size of T.SIZES){if(size>T.capacity(registry,teamSize)){assert.throws(()=>draw(size,teamSize),/不足/);continue;}const run=draw(size,teamSize),roles=[];assert.equal(run.bracket.size,size);assert.equal(JSON.stringify(run),JSON.stringify(draw(size,teamSize)));

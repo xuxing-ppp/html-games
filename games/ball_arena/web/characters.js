@@ -4,12 +4,12 @@ const B=root.BallBattle,TAU=Math.PI*2,EPSILON=1e-9;
 const MAX_POOLS=6,MAX_STRIPES=4,MAX_BOXES=3;
 
 const specs=[
- ['arenaSpring','弹簧拳','#ff936d',3,'撞墙压缩弹簧，最多 3 层 / 接触敌人造成 4+2×层数伤害并击退 / 满 3 层眩晕且高压减伤'],
+ ['arenaSpring','弹簧拳','#ff936d',3,'撞墙压缩弹簧，最多 3 层 / 有蓄力时接触敌人造成 4+2×层数伤害并击退 / 满 3 层眩晕且高压减伤'],
  ['arenaPainter','油漆匠','#bf8bea',1.6,'移动滴落油漆、撞墙刷漆线 / 油漆区域减速 35% 并持续伤害 / 最多 6 池、4 条线'],
  ['arenaCourier','快递员','#d6ac71',2.5,'快递箱绕身旋转 / 敌人触碰受到 7 点伤害并减速 / 箱子回收时回复 1 点、短暂加速并产生余波'],
  ['arenaBoomerang','回旋镖','#86d5af',2.4,'一次投出两枚回旋镖 / 碰墙反弹，最多 3 次 / 每个敌人每 0.5 秒最多受一次 3 点伤害'],
- ['arenaBubble','泡泡机','#8ddded',4,'周期进入无敌泡泡形态 / 破裂后 55 范围 5 点伤害并留下泡沫区域 / 区域减速并持续伤害'],
- ['arenaBattery','蓄电池','#dfed83',3,'受伤或撞墙蓄电，最多 4 层 / 接触敌人造成 2+2×电量伤害 / 满电自动放电并眩晕周围']
+ ['arenaBubble','泡泡机','#8ddded',4,'周期进入无敌泡泡形态 / 破裂后 67 范围 7 点伤害并留下泡沫区域 / 区域减速并持续伤害'],
+ ['arenaBattery','蓄电池','#dfed83',3,'受伤或撞墙蓄电，最多 4 层 / 有蓄电时接触敌人造成 2+2×电量伤害 / 满电自动放电并眩晕周围']
 ];
 
 function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
@@ -130,7 +130,7 @@ function createSpring(services){
    return event;
   },
   onCollision(context,target){
-   if(!target)return;
+   if(!target||stacks===0)return;
    const ball=context.ball,amount=4+stacks*2;
    if(!context.services.dealDamage(target,amount))return;
    const angle=Math.atan2(target.y-ball.y,target.x-ball.x);
@@ -147,7 +147,8 @@ function createSpring(services){
 
 function createPainter(services){
  const interval=1.6,POOL_RADIUS=30,POOL_LIFE=6,STRIPE_LIFE=8;
- let clock=0,attacks=0,pools=[],stripes=[],lastPoolTick=-Infinity,lastStripeTick=-Infinity;
+ let clock=0,attacks=0,pools=[],stripes=[];
+ let poolHits=new WeakMap(),stripeHits=new WeakMap();
  function addPool(ball){
   if(pools.length>=MAX_POOLS){const old=pools.shift();if(old)old.entityActive=false;}
   const pool=services.spawnCombatEntity({kind:'arena-paint-pool',x:ball.x,y:ball.y,radius:POOL_RADIUS,life:POOL_LIFE,drawLayer:'background',
@@ -168,23 +169,21 @@ function createPainter(services){
   stripes.push({entity,x1:first.x,y1:first.y,x2:second.x,y2:second.y});attacks++;
  }
  return {
-  onSpawn(){clock=0;attacks=0;pools=[];stripes=[];lastPoolTick=-Infinity;lastStripeTick=-Infinity;},
+  onSpawn(){clock=0;attacks=0;pools=[];stripes=[];poolHits=new WeakMap();stripeHits=new WeakMap();},
   update({ball,game},dt){
    clock+=dt;while(clock+EPSILON>=interval){clock-=interval;addPool(ball);}
    pools=pools.filter(pool=>pool.entityActive!==false);
    stripes=stripes.filter(stripe=>stripe.entity.entityActive!==false);
-   const now=game.time;let poolTouched=false,stripeTouched=false;
+   const now=game.time;
    services.forEachEnemy(enemy=>{
     let inPool=false,inStripe=false;
     for(const pool of pools)if(Math.hypot(enemy.x-pool.x,enemy.y-pool.y)<=pool.radius+enemy.radius){inPool=true;break;}
     for(const stripe of stripes)if(pointSegmentDistance(enemy.x,enemy.y,stripe.x1,stripe.y1,stripe.x2,stripe.y2)<=enemy.radius+4){inStripe=true;break;}
     if(!inPool&&!inStripe)return;
     applySlow(services,ball,enemy,.3,.65,'paint');
-    if(inPool&&now-lastPoolTick>=.8&&services.dealDamage(enemy,3))poolTouched=true;
-    if(inStripe&&now-lastStripeTick>=.5&&services.dealDamage(enemy,2))stripeTouched=true;
+    if(inPool&&now-(poolHits.get(enemy)??-Infinity)>=.8&&services.dealDamage(enemy,3))poolHits.set(enemy,now);
+    if(inStripe&&now-(stripeHits.get(enemy)??-Infinity)>=.5&&services.dealDamage(enemy,2))stripeHits.set(enemy,now);
    });
-   if(poolTouched)lastPoolTick=now;
-   if(stripeTouched)lastStripeTick=now;
   },
   onWallBounce(context){addStripe(context);},
   getNextTransitionIn(){return Math.max(.001,Math.min(interval-clock,.25));},
@@ -297,7 +296,7 @@ function createBoomerang(services){
 
 function createBubble(services){
  const SOLID_TIME=2.8,BUBBLE_TIME=1.2;
- let phaseTime=0,bubbled=false,pops=0,contactHits=0,cloud=null;
+ let phaseTime=0,bubbled=false,pops=0,cloud=null;
  function enterBubble(ball){
   bubbled=true;phaseTime=0;
   services.applyEffect(ball,{id:effectId(ball,'bubble-form'),duration:BUBBLE_TIME,locksMovement:true,preventsAttack:true,
@@ -308,11 +307,11 @@ function createBubble(services){
  function pop(ball,game){
   bubbled=false;phaseTime=0;services.clearEffect(ball,effectId(ball,'bubble-form'));
   services.forEachEnemy(enemy=>{
-   if(Math.hypot(enemy.x-ball.x,enemy.y-ball.y)>55+enemy.radius)return;
-   if(services.dealDamage(enemy,5))applyStun(services,ball,enemy,.25);
+   if(Math.hypot(enemy.x-ball.x,enemy.y-ball.y)>67+enemy.radius)return;
+   if(services.dealDamage(enemy,7))applyStun(services,ball,enemy,.25);
   });
   if(cloud)cloud.entityActive=false;
-  cloud=services.spawnCombatEntity({kind:'arena-bubble-cloud',x:ball.x,y:ball.y,radius:55,life:1,nextTick:0,drawLayer:'background',
+  cloud=services.spawnCombatEntity({kind:'arena-bubble-cloud',x:ball.x,y:ball.y,radius:67,life:1.2,nextTick:0,drawLayer:'background',
    update({effect:e,services:s,game:g}){
     if(g.time+EPSILON<e.nextTick)return;
     e.nextTick=g.time+.3;
@@ -323,10 +322,10 @@ function createBubble(services){
    },
    draw({effect:e},c){c.save();const fade=Math.max(0,Math.min(1,(e.life-e.age)*3));c.globalAlpha*=.12*fade;c.fillStyle='#8ddded';c.beginPath();c.arc(e.x,e.y,e.radius,0,TAU);c.fill();c.globalAlpha*=.7*fade;c.strokeStyle='#c9f5ff';c.lineWidth=2;c.beginPath();c.arc(e.x,e.y,e.radius*.92,0,TAU);c.stroke();c.restore();}
   },{lifecycle:'owner-bound'});
-  pops++;ring(services,ball.x,ball.y,ball.color,58);services.playSound('hit');
+  pops++;ring(services,ball.x,ball.y,ball.color,67);services.playSound('hit');
  }
  return {
-  onSpawn(){phaseTime=0;bubbled=false;pops=0;contactHits=0;cloud=null;},
+  onSpawn(){phaseTime=0;bubbled=false;pops=0;cloud=null;},
   update({ball,game},dt){
    phaseTime+=dt;
    if(!bubbled&&phaseTime+EPSILON>=SOLID_TIME)enterBubble(ball);
@@ -336,8 +335,7 @@ function createBubble(services){
   getNextTransitionIn(){return Math.max(.001,(bubbled?BUBBLE_TIME:SOLID_TIME)-phaseTime);},
   getContactProfile(){return bubbled?{physical:false,targetable:false}:null;},
   onBeforeDamage(context,event){return bubbled?{amount:0,showHitText:false,cancelAttack:true}:event;},
-  onCollision(context,target){if(!bubbled&&target&&context.services.dealDamage(target,3))contactHits++;},
-  getArenaExtensionState(){return {phaseTime,bubbled,pops,contactHits,cloud:!!cloud};},
+  getArenaExtensionState(){return {phaseTime,bubbled,pops,cloud:!!cloud};},
   drawBody,
   drawAfter({ball},c){
    if(bubbled){c.save();c.globalAlpha*=.38;c.fillStyle='rgba(141,221,237,.18)';c.strokeStyle='#c9f5ff';c.lineWidth=2;c.beginPath();c.arc(ball.x,ball.y,ball.radius+9+Math.sin(ball.x*.2)*1.5,0,TAU);c.fill();c.stroke();c.restore();}
@@ -350,6 +348,7 @@ function createBubble(services){
 function createBattery(services){
  let charge=0,discharges=0,hits=0,wallHits=0,lastWallChargeAt=-Infinity,autoClock=0;
  function fire(ball,target){
+  if(charge===0)return false;
   const amount=2+2*charge;
   if(!services.dealDamage(target,amount))return false;
   const points=[{x:ball.x,y:ball.y},{x:target.x,y:target.y}];

@@ -254,6 +254,7 @@
   }
 
   function entityContactAt(entity, x, y, radius) {
+    if (typeof entity.contactAt === "function") return entity.contactAt(x, y, radius);
     const trainContact = hikariTrainContact(entity, x, y, radius);
     if (trainContact || entity.kind === "hikari-rail-train") return trainContact;
     if (Array.isArray(entity.shieldBreakPoints)) {

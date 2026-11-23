@@ -4,7 +4,7 @@
 <header class="masthead"><button id="home-back" hidden>‹ 主界面</button><h1>小球<span>擂台</span></h1><div class="header-actions"><span id="version" data-game-version="ball_arena"></span><button id="help" aria-label="玩法帮助与致谢">?</button><button id="sound" aria-pressed="true">声音开</button></div></header>
 <section id="home" class="home-screen" aria-label="主界面">
  <div class="home-art"><div class="home-arena"><canvas id="home-arena" width="640" height="640" aria-label="随机角色对战演示"></canvas></div><p id="home-demo-label">随机对战 · 演示</p></div>
- <div class="home-menu"><h2>小球<br><span>擂台</span></h2><p class="home-description">211 个角色 · 自动对战</p><div class="home-buttons"><button id="home-free" class="primary">自由对战 <span>↗</span></button><button id="home-tournament">锦标赛 <span>♜</span></button><button id="home-continue-free" hidden>继续当前对战</button><button id="home-continue-tournament" hidden>继续锦标赛</button></div></div>
+ <div class="home-menu"><h2>小球<br><span>擂台</span></h2><p class="home-description">212 个角色 · 自动对战</p><div class="home-buttons"><button id="home-free" class="primary">自由对战 <span>↗</span></button><button id="home-tournament">锦标赛 <span>♜</span></button><button id="home-continue-free" hidden>继续当前对战</button><button id="home-continue-tournament" hidden>继续锦标赛</button></div></div>
 </section>
 <section id="selection" class="selection" hidden>
  <div class="setup-toolbar"><label>玩法 <select id="mode"><option value="duel">单挑</option><option value="team">团战</option><option value="wheel">车轮战</option><option value="brawl">自由混战</option><option value="boss">Boss 挑战</option></select></label><label id="series-label">赛制 <select id="series"><option value="1">单局</option><option value="3">三局两胜</option><option value="5">五局三胜</option></select></label><button id="random-all">随机对阵</button></div>
@@ -17,7 +17,7 @@
 <section id="battle" class="battle" hidden>
  <div class="battle-top"><div class="battle-top-left"><button id="back">‹ 调整阵容</button></div><span id="match-label"></span><span id="timer">0:00 / 4:00</span></div>
  <div id="scoreboard" class="scoreboard"><div id="score-left"></div><div class="score-center"><div id="series-score" class="series-score"></div><button id="skills" class="primary" aria-haspopup="dialog" aria-controls="skills-dialog">角色技能</button></div><div id="score-right"></div></div>
- <div id="stage" class="stage"><div id="arena-wrap" class="arena-wrap"><canvas id="arena" aria-label="自动对战场地"></canvas><canvas id="hazards" aria-hidden="true"></canvas><div id="pause-indicator" hidden>已暂停</div></div></div>
+ <div id="stage" class="stage"><div id="arena-wrap" class="arena-wrap"><canvas id="arena" aria-label="自动对战场地"></canvas><canvas id="hazards" aria-hidden="true"></canvas><div id="pause-indicator" hidden>已暂停</div></div><figure id="arena-overview" hidden><figcaption>全景</figcaption><canvas id="arena-minimap" role="img" aria-label="地图全景与当前视野"></canvas></figure></div>
  <button id="battle-note" class="battle-note" disabled aria-label="查看对局结果"></button>
  <footer class="battle-controls"><button id="pause">暂停</button><button id="step">单步</button><div id="speeds" class="speed-group" role="group" aria-label="播放速度"><button data-speed="0.5">½×</button><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button></div><button id="restart">重放本局</button><button id="team-rings" aria-pressed="true">阵营圈</button></footer>
 </section>

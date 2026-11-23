@@ -120,6 +120,14 @@
 
   // 圆（小球/子弹）与斜置矩形的接触：返回最早的交点法线与穿透深度。
   function plankContact(spec, x, y, radius) {
+    if (spec.solidParts) {
+      let closest = null;
+      for (const part of spec.solidParts) {
+        const contact = plankContact(part, x, y, radius);
+        if (contact && (!closest || contact.penetration > closest.penetration)) closest = { ...contact, part };
+      }
+      return closest;
+    }
     if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     const halfLength = spec.length / 2;
     const halfWidth = spec.width / 2;
@@ -158,6 +166,14 @@
 
   // Sweep the circle against the four faces and rounded corners, not just endpoints.
   function plankSweptContact(spec, target, radius) {
+    if (spec.solidParts) {
+      let first = null;
+      for (const part of spec.solidParts) {
+        const contact = plankSweptContact(part, target, radius);
+        if (contact && (!first || (contact.progress ?? 1) < (first.progress ?? 1))) first = { ...contact, part };
+      }
+      return first;
+    }
     const current = plankContact(spec, target.x, target.y, radius);
     if (!Number.isFinite(target.prevX) || !Number.isFinite(target.prevY)) return current;
     if (plankContact(spec, target.prevX, target.prevY, radius + EPSILON)) return current;
@@ -686,7 +702,7 @@
 
   // ── 视效 ───────────────────────────────────────────────────────────────
   // 钉板预告：板子从墙里"长"出来，每落一锤多一颗钉。
-  function createPlankPreview(spec, construction) {
+  function createPlankPreview(spec, construction, material = null) {
     return {
       kind: PLANK_PREVIEW_KIND,
       life: construction ? Number.MAX_SAFE_INTEGER : NAIL_DURATION,
@@ -712,10 +728,17 @@
           x: spec.x - spec.normalX * spec.width * (1 - growth) / 2,
           y: spec.y - spec.normalY * spec.width * (1 - growth) / 2
         });
-        drawPlankBoard(canvasContext, growing, {
-          alpha: 0.42 + 0.5 * progress,
-          nails: driven
-        });
+        if (material) {
+          canvasContext.save();
+          canvasContext.globalAlpha *= 0.42 + 0.5 * progress;
+          material.draw(canvasContext, growing, 0);
+          canvasContext.restore();
+        } else {
+          drawPlankBoard(canvasContext, growing, {
+            alpha: 0.42 + 0.5 * progress,
+            nails: driven
+          });
+        }
       }
     };
   }
@@ -806,7 +829,7 @@
   }
 
   // ── 木板实体 ───────────────────────────────────────────────────────────
-  function createPlankEntity(spec) {
+  function createPlankEntity(spec, material = null) {
     const plank = {
       kind: PLANK_KIND,
       // 第三方实体语言里的"场地陷阱"：贴上去就会被木板撞一下。
@@ -860,8 +883,11 @@
             contactY: impact.contact.y
           });
           if (impact.crush) {
-            entityServices.dealDamage(impact.attacker, PLANK_COLLISION_DAMAGE);
-            entity.hp = 1;
+            if (!material || !entity.contacts.has(impact.attacker.instanceId)) {
+              entityServices.dealDamage(impact.attacker, PLANK_COLLISION_DAMAGE);
+              if (material) entity.contacts.set(impact.attacker.instanceId, true);
+            }
+            if (!material) entity.hp = 1;
           }
           registerPlankHit(entity, entityServices, contact, impact.attacker);
         }
@@ -873,18 +899,30 @@
 
       draw({ entity }, canvasContext) {
         const flash = clamp(entity.hitFlash, 0, 1);
-        drawPlankBoard(canvasContext, entity, {
-          flash
-        });
+        if (material) material.draw(canvasContext, entity, flash);
+        else drawPlankBoard(canvasContext, entity, { flash });
       }
     };
+    if (material) {
+      plank.removeMaterial = material.remove;
+      material.initialize(plank);
+      plank.contactAt = function contactAt(x, y, radius) {
+        const contact = plankContact(this, x, y, radius);
+        return contact && { ...contact, x: contact.contactX, y: contact.contactY };
+      };
+    }
     return plank;
   }
 
   function registerPlankHit(entity, services, contact, attacker) {
     if (entity.entityActive === false || entity.hp <= 0) return true;
-    entity.hp = Math.max(0, entity.hp - 1);
-    entity.hitPoints.push(toPlankLocal(entity, contact.contactX, contact.contactY));
+    const local = toPlankLocal(entity, contact.contactX, contact.contactY);
+    if (entity.removeMaterial) {
+      if (!entity.removeMaterial(entity, local.x, attacker)) return false;
+    } else {
+      entity.hp = Math.max(0, entity.hp - 1);
+      entity.hitPoints.push(local);
+    }
     entity.hitFlash = 1;
     services.playSound("ability", { cue: entity.hp > 0 ? "wood-impact" : "wood-break" });
     spawnWoodDebris(services, contact.contactX, contact.contactY, Math.min(entity.width, 10), 5);
@@ -1003,7 +1041,7 @@
     description: "撞墙或木板表面钉板 / 板厚 5-80、板长 5-80 / 贴面搭建，层数取决于场地空间 / 受击三次碎裂，钢卷先改向再撞碎 / 碰撞伤害 2",
     stats: { radius: 15, speed: 150, maxHp: 100 },
     rionCycleDuration: 8,
-    createBehavior(services) {
+    createBehavior(services, { material = null, minimumLength = PLANK_MIN_LENGTH, drawBuilder = null } = {}) {
       let nailing = null;
       // 已经落下的锤数（收工之后仍然保留，便于观察与测试）。
       let strikesDone = 0;
@@ -1131,9 +1169,11 @@
         }
         for (const entity of context.game.combatEntities) {
           if (!isLivePlank(entity)) continue;
-          const other = plankWorldBox(entity);
-          if (spansOverlap({ min: box.minX, max: box.maxX }, { min: other.minX, max: other.maxX }) &&
-              spansOverlap({ min: box.minY, max: box.maxY }, { min: other.minY, max: other.maxY })) return false;
+          for (const part of entity.solidParts || [entity]) {
+            const other = plankWorldBox(part);
+            if (spansOverlap({ min: box.minX, max: box.maxX }, { min: other.minX, max: other.maxX }) &&
+                spansOverlap({ min: box.minY, max: box.maxY }, { min: other.minY, max: other.maxY })) return false;
+          }
         }
         const blocks = target => target !== context.ball && services.getContactProfile(target).solid &&
           plankContact(spec, target.x, target.y, target.radius - EPSILON);
@@ -1213,7 +1253,7 @@
           frame = { side, horizontal, normalX, normalY, outwardX: -normalX, outwardY: -normalY,
             angle, wallSide: horizontal ? normalX : -normalY, arenaSize: context.game.arenaSize,
             arena: battleArena(context.game) };
-          depth = inwardExtent(frame, plankWorldBox(support));
+          depth = inwardExtent(frame, plankWorldBox(contact.part || support));
           if (frame.arena.shape === "circle") {
             const direction = normalizeDirection(contact.normalX, contact.normalY);
             frame.normalX = direction.x;
@@ -1227,7 +1267,7 @@
           }
         }
         const thickness = randomSize(PLANK_MIN_THICKNESS, PLANK_MAX_THICKNESS);
-        const length = randomSize(PLANK_MIN_LENGTH, PLANK_MAX_LENGTH);
+        const length = randomSize(minimumLength, PLANK_MAX_LENGTH);
         if (depth + thickness + ball.radius * 2 + PLANK_DEPTH_MARGIN >
             (frame.horizontal ? frame.arena.width : frame.arena.height)) return false;
         const anchor = nailAnchorFor(frame, ball, thickness, length, depth);
@@ -1284,7 +1324,7 @@
         };
         holdBall(ball);
         // 预告板：干活期间以半透明的方式"长"在墙上，每落一锤多一颗钉。
-        nailing.preview = services.spawnVisualEffect(createPlankPreview(spec, nailing), { lifecycle: "owner-bound" });
+        nailing.preview = services.spawnVisualEffect(createPlankPreview(spec, nailing, material), { lifecycle: "owner-bound" });
         spawnSawdust(services, anchor.x, anchor.y, frame.normalX, frame.normalY);
         return true;
       }
@@ -1304,11 +1344,15 @@
         for (const { plank, contact } of contacts) {
           pushTargetOut(plank, ball, contact, battleArena(context.game));
           const reflected = deflectTarget(plank, ball, contact);
-          if (!supportContacts.has(plank) && reflected && canBuild) {
-            supportContacts.add(plank);
-            if (startNailing(context, plank, contact)) break;
-          }
+          const freshImpact = !supportContacts.has(plank) && reflected;
           supportContacts.add(plank);
+          if (!freshImpact) continue;
+          if (material?.onBuilderCut && plank.removeMaterial &&
+            plank.ownerInstanceId === ball.instanceId) {
+            const before = plank.hp;
+            registerPlankHit(plank, services, contact, ball);
+            if (plank.hp < before) material.onBuilderCut(ball);
+          } else if (canBuild && startNailing(context, plank, contact)) break;
         }
         for (const plank of supportContacts) {
           if (!touched.has(plank)) supportContacts.delete(plank);
@@ -1345,7 +1389,7 @@
           releaseBall(ball, false);
           return;
         }
-        const plank = services.spawnCombatEntity(createPlankEntity(spec));
+        const plank = services.spawnCombatEntity(createPlankEntity(spec, material));
         if (plank) planks.push(plank);
         services.spawnParticleBurst({
           x: spec.x,
@@ -1427,8 +1471,11 @@
           releaseBall(context.ball, true);
         },
         drawBody(context, canvasContext) {
-          drawWoodDisc(canvasContext, context.ball);
-          if (nailing) drawHammer(canvasContext, context.ball, nailing);
+          if (drawBuilder) drawBuilder(context, canvasContext, nailing);
+          else {
+            drawWoodDisc(canvasContext, context.ball);
+            if (nailing) drawHammer(canvasContext, context.ball, nailing);
+          }
           return true;
         },
         getOldWoodMasterState() {
@@ -1438,7 +1485,7 @@
             nailDuration: NAIL_DURATION,
             minThickness: PLANK_MIN_THICKNESS,
             maxThickness: PLANK_MAX_THICKNESS,
-            minLength: PLANK_MIN_LENGTH,
+            minLength: minimumLength,
             maxLength: PLANK_MAX_LENGTH,
             nailing: nailing !== null,
             strikes: strikesDone,
